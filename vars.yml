@@ -8,13 +8,11 @@ go_version: "1.25.3"
 nodejs_version: "22"
 php_version: "8.4"
 composer_version: "2"
+python_version: "3.13"
 
 # Go settings
 go_arch: "amd64"
 go_install_dir: "/usr/local"
-
-# Python version (system default + pip)
-python_ensure_pip: true
 
 # Neovim
 neovim_config_dir: "{{ ansible_env.HOME }}/.config/nvim"

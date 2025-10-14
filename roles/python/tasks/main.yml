@@ -1,7 +1,36 @@
 ---
 # Python role - Install Python and pip (PEP 668 compliant)
 
-- name: Install Python 3 and development tools
+- name: Add deadsnakes PPA for specific Python versions (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: ppa:deadsnakes/ppa
+    state: present
+  become: true
+  when:
+    - ansible_distribution == "Ubuntu"
+    - python_version is defined
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+  when: python_version is defined
+
+- name: Install specific Python version and development tools
+  ansible.builtin.package:
+    name:
+      - "python{{ python_version }}"
+      - "python{{ python_version }}-dev"
+      - "python{{ python_version }}-venv"
+      - "python{{ python_version }}-distutils"
+      - python3-pip
+      - python-is-python3
+      - pipx
+    state: present
+  become: true
+  when: python_version is defined
+
+- name: Install default Python 3 and development tools
   ansible.builtin.package:
     name:
       - python3
@@ -13,6 +42,7 @@
       - pipx
     state: present
   become: true
+  when: python_version is not defined
 
 - name: Ensure pipx path is configured
   ansible.builtin.command: pipx ensurepath
@@ -51,10 +81,17 @@
   changed_when: pipx_install.rc == 0
   failed_when: false
 
-- name: Verify Python installation
+- name: Verify specific Python version installation
+  ansible.builtin.command: "python{{ python_version }} --version"
+  register: python_version_output
+  changed_when: false
+  when: python_version is defined
+
+- name: Verify default Python installation
   ansible.builtin.command: python3 --version
   register: python_version_output
   changed_when: false
+  when: python_version is not defined
 
 - name: Display Python version
   ansible.builtin.debug:
