@@ -23,6 +23,7 @@
       - lsb-release
       - apt-transport-https
       - make
+      - jq
     state: present
   become: true
 

@@ -17,13 +17,26 @@
   ansible.builtin.set_fact:
     go_needs_install: "{{ not go_binary.stat.exists or go_version not in installed_go_version.stdout | default('') }}"
 
+- name: Fetch and parse Go versions JSON to get checksum
+  ansible.builtin.shell: |
+    curl -s 'https://go.dev/dl/?mode=json' | \
+    jq -r '.[] | select(.version == "go{{ go_version }}") | .files[] | select(.filename == "go{{ go_version }}.linux-{{ go_arch }}.tar.gz") | .sha256'
+  register: go_checksum_result
+  changed_when: false
+  when: go_needs_install
+
+- name: Set Go checksum variable
+  ansible.builtin.set_fact:
+    go_checksum: "{{ go_checksum_result.stdout }}"
+  when: go_needs_install
+
 - name: Download Go tarball
   ansible.builtin.get_url:
     url: "https://go.dev/dl/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
     dest: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
-    checksum: "sha256:https://go.dev/dl/go{{ go_version }}.linux-{{ go_arch }}.tar.gz.sha256"
+    checksum: "sha256:{{ go_checksum }}"
     mode: '0644'
-  when: go_needs_install
+  when: go_needs_install and go_checksum is defined and go_checksum | length > 0
 
 - name: Remove old Go installation
   ansible.builtin.file:
