@@ -57,3 +57,33 @@
   register: nvim_plugin_install
   changed_when: nvim_plugin_install.rc == 0
   failed_when: false
+
+- name: Set nvim as default editor system-wide
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: '^EDITOR='
+    line: 'EDITOR=nvim'
+    state: present
+  become: true
+
+- name: Set nvim as default VISUAL editor system-wide
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: '^VISUAL='
+    line: 'VISUAL=nvim'
+    state: present
+  become: true
+
+- name: Update alternatives for editor to nvim
+  community.general.alternatives:
+    name: editor
+    path: /usr/bin/nvim
+  become: true
+  failed_when: false
+
+- name: Update alternatives for vi to nvim
+  community.general.alternatives:
+    name: vi
+    path: /usr/bin/nvim
+  become: true
+  failed_when: false
