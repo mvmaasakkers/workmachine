@@ -22,13 +22,23 @@
       - "python{{ python_version }}"
       - "python{{ python_version }}-dev"
       - "python{{ python_version }}-venv"
-      - "python{{ python_version }}-distutils"
       - python3-pip
       - python-is-python3
       - pipx
     state: present
   become: true
   when: python_version is defined
+
+- name: Install distutils for Python < 3.12
+  ansible.builtin.package:
+    name:
+      - "python{{ python_version }}-distutils"
+    state: present
+  become: true
+  when:
+    - python_version is defined
+    - python_version is version('3.12', '<')
+  ignore_errors: true
 
 - name: Install default Python 3 and development tools
   ansible.builtin.package:
@@ -83,19 +93,25 @@
 
 - name: Verify specific Python version installation
   ansible.builtin.command: "python{{ python_version }} --version"
-  register: python_version_output
+  register: python_specific_version_output
   changed_when: false
   when: python_version is defined
 
 - name: Verify default Python installation
   ansible.builtin.command: python3 --version
-  register: python_version_output
+  register: python_default_version_output
   changed_when: false
   when: python_version is not defined
 
-- name: Display Python version
+- name: Display specific Python version
   ansible.builtin.debug:
-    msg: "Python installed: {{ python_version_output.stdout }}"
+    msg: "Python installed: {{ python_specific_version_output.stdout }}"
+  when: python_version is defined
+
+- name: Display default Python version
+  ansible.builtin.debug:
+    msg: "Python installed: {{ python_default_version_output.stdout }}"
+  when: python_version is not defined
 
 - name: Verify pip installation
   ansible.builtin.command: pip3 --version
