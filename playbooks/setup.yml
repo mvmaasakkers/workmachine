@@ -55,6 +55,9 @@
     - role: python
       tags: ['python', 'pip', 'languages']
 
+    - role: netbird
+      tags: ['netbird', 'vpn', 'networking']
+
   post_tasks:
     - name: Display setup completion message
       ansible.builtin.debug:
@@ -70,6 +73,7 @@
           - Editor: Neovim with plugins
           - Languages: PHP {{ php_version }}, Go {{ go_version }}, Node.js {{ nodejs_version }}, Python 3
           - Package managers: composer, npm, pip
+          - VPN: Netbird client (not connected)
 
           Next steps:
           1. Log out and back in for group changes (docker) to take effect

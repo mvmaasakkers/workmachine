@@ -2,6 +2,8 @@
 
 Automated configuration for Ubuntu/Debian servers using Ansible. This repository provides a complete, idempotent setup for a full-featured development environment.
 
+This assumes an already installed barebone server, with a user that has SSH access setup and has full NOPASSWD sudo rights. If that's the case just add an entry to the inventory.ini (see inventory.ini.example for an example) and run make setup.
+
 ## Features
 
 This setup installs and configures:

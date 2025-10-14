@@ -1,0 +1,50 @@
+---
+# Netbird role - Install Netbird VPN client
+# This role installs the Netbird client but does not configure or connect it
+
+- name: Add Netbird APT key
+  ansible.builtin.get_url:
+    url: https://pkgs.netbird.io/debian/public.key
+    dest: /usr/share/keyrings/netbird-archive-keyring.asc
+    mode: '0644'
+    force: true
+  become: true
+
+- name: Add Netbird APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/netbird-archive-keyring.asc] https://pkgs.netbird.io/debian stable main"
+    state: present
+    filename: netbird
+  become: true
+
+- name: Update apt cache for Netbird repository
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 0
+  become: true
+
+- name: Install specific version of Netbird client
+  ansible.builtin.apt:
+    name: "netbird={{ netbird_version }}"
+    state: present
+    allow_downgrade: true
+  become: true
+  when: netbird_version is defined
+
+- name: Install latest Netbird client
+  ansible.builtin.apt:
+    name: netbird
+    state: present
+  become: true
+  when: netbird_version is not defined
+
+- name: Get installed Netbird version
+  ansible.builtin.command: netbird version
+  register: netbird_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display installed Netbird version
+  ansible.builtin.debug:
+    msg: "Netbird installed: {{ netbird_version_output.stdout | default('version check failed') }}"
+  when: netbird_version_output.rc == 0
