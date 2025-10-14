@@ -80,3 +80,19 @@
     name: "{{ ansible_user_id }}"
     shell: /usr/bin/zsh
   become: true
+
+- name: Create VS Code Server data directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.vscode-server/data/Machine"
+    state: directory
+    mode: '0755'
+
+- name: Configure VS Code Remote to use zsh
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.vscode-server/data/Machine/settings.json"
+    content: |
+      {
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      }
+    mode: '0644'
+    force: false
