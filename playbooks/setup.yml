@@ -1,0 +1,83 @@
+---
+# Main playbook for development environment setup
+# This playbook configures a fresh Ubuntu/Debian server with all necessary development tools
+
+- name: Configure development environment
+  hosts: all
+  gather_facts: true
+  vars_files:
+    - ../vars.yml
+
+  pre_tasks:
+    - name: Display target host information
+      ansible.builtin.debug:
+        msg: |
+          Setting up development environment on:
+          - Host: {{ inventory_hostname }}
+          - OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          - Architecture: {{ ansible_architecture }}
+
+    - name: Ensure system is Debian/Ubuntu
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family == "Debian"
+        fail_msg: "This playbook only supports Debian/Ubuntu systems"
+        success_msg: "Compatible OS detected: {{ ansible_distribution }}"
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+
+  roles:
+    - role: common
+      tags: ['common', 'base']
+
+    - role: zsh
+      tags: ['zsh', 'shell']
+
+    - role: docker
+      tags: ['docker', 'containers']
+
+    - role: nvim
+      tags: ['nvim', 'editor']
+
+    - role: php
+      tags: ['php', 'languages']
+
+    - role: go
+      tags: ['go', 'golang', 'languages']
+
+    - role: nodejs
+      tags: ['nodejs', 'node', 'npm', 'languages']
+
+    - role: python
+      tags: ['python', 'pip', 'languages']
+
+  post_tasks:
+    - name: Display setup completion message
+      ansible.builtin.debug:
+        msg: |
+          ========================================
+          Development environment setup complete!
+          ========================================
+
+          Installed tools:
+          - Common utilities: git, curl, wget, tmux, btop
+          - Shell: zsh with oh-my-zsh
+          - Container platform: Docker with Docker Compose
+          - Editor: Neovim with plugins
+          - Languages: PHP {{ php_version }}, Go {{ go_version }}, Node.js {{ nodejs_version }}, Python 3
+          - Package managers: composer, npm, pip
+
+          Next steps:
+          1. Log out and back in for group changes (docker) to take effect
+          2. Start a new zsh session: exec zsh
+          3. Verify installations with: docker --version, go version, node --version, php --version
+
+          Happy coding!
+
+    - name: Remind about group membership
+      ansible.builtin.debug:
+        msg: "IMPORTANT: You may need to log out and back in for docker group membership to take effect"

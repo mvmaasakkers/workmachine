@@ -1,0 +1,7 @@
+[devserver]
+# Replace with your server IP address and username
+192.168.x.x ansible_user=YOUR_USERNAME
+
+[devserver:vars]
+ansible_python_interpreter=/usr/bin/python3
+ansible_become_method=sudo

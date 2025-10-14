@@ -1,0 +1,47 @@
+---
+# Common role - Install essential CLI tools and utilities
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Install common CLI tools
+  ansible.builtin.package:
+    name:
+      - git
+      - curl
+      - wget
+      - unzip
+      - btop
+      - tmux
+      - build-essential
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - apt-transport-https
+      - make
+    state: present
+  become: true
+
+- name: Install software-properties-common (Ubuntu only)
+  ansible.builtin.package:
+    name: software-properties-common
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Ensure /usr/local/bin exists
+  ansible.builtin.file:
+    path: /usr/local/bin
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Deploy tmux configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../configs/tmux/tmux.conf"
+    dest: "{{ ansible_env.HOME }}/.tmux.conf"
+    mode: '0644'

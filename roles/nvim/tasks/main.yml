@@ -1,0 +1,59 @@
+---
+# Neovim role - Install Neovim with basic configuration
+
+- name: Remove vim and vim-tiny
+  ansible.builtin.package:
+    name:
+      - vim
+      - vim-tiny
+    state: absent
+  become: true
+
+- name: Add Neovim PPA
+  ansible.builtin.apt_repository:
+    repo: ppa:neovim-ppa/unstable
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install Neovim
+  ansible.builtin.package:
+    name: neovim
+    state: present
+  become: true
+
+- name: Create Neovim config directory
+  ansible.builtin.file:
+    path: "{{ neovim_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Create Neovim lua directory
+  ansible.builtin.file:
+    path: "{{ neovim_config_dir }}/lua"
+    state: directory
+    mode: '0755'
+
+- name: Deploy init.lua configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../configs/nvim/init.lua"
+    dest: "{{ neovim_config_dir }}/init.lua"
+    mode: '0644'
+
+- name: Deploy lazy.nvim bootstrap configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../configs/nvim/lua/lazy-bootstrap.lua"
+    dest: "{{ neovim_config_dir }}/lua/lazy-bootstrap.lua"
+    mode: '0644'
+
+- name: Deploy plugins configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../configs/nvim/lua/plugins.lua"
+    dest: "{{ neovim_config_dir }}/lua/plugins.lua"
+    mode: '0644'
+
+- name: Install lazy.nvim and plugins
+  ansible.builtin.command: nvim --headless "+Lazy! sync" +qa
+  register: nvim_plugin_install
+  changed_when: nvim_plugin_install.rc == 0
+  failed_when: false

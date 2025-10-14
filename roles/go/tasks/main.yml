@@ -1,0 +1,83 @@
+---
+# Go role - Install Go programming language
+
+- name: Check if Go is already installed
+  ansible.builtin.stat:
+    path: "{{ go_install_dir }}/go/bin/go"
+  register: go_binary
+
+- name: Get installed Go version
+  ansible.builtin.command: "{{ go_install_dir }}/go/bin/go version"
+  register: installed_go_version
+  changed_when: false
+  failed_when: false
+  when: go_binary.stat.exists
+
+- name: Set Go needs installation flag
+  ansible.builtin.set_fact:
+    go_needs_install: "{{ not go_binary.stat.exists or go_version not in installed_go_version.stdout | default('') }}"
+
+- name: Download Go tarball
+  ansible.builtin.get_url:
+    url: "https://go.dev/dl/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+    dest: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+    checksum: "sha256:https://go.dev/dl/go{{ go_version }}.linux-{{ go_arch }}.tar.gz.sha256"
+    mode: '0644'
+  when: go_needs_install
+
+- name: Remove old Go installation
+  ansible.builtin.file:
+    path: "{{ go_install_dir }}/go"
+    state: absent
+  become: true
+  when: go_needs_install
+
+- name: Check if Go tarball was downloaded
+  ansible.builtin.stat:
+    path: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+  register: go_tarball_stat
+
+- name: Extract Go tarball
+  ansible.builtin.unarchive:
+    src: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+    dest: "{{ go_install_dir }}"
+    remote_src: true
+  become: true
+  when: go_needs_install and go_tarball_stat.stat.exists
+
+- name: Add Go to PATH in .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Go"
+    block: |
+      export GOROOT={{ go_install_dir }}/go
+      export GOPATH=$HOME/go
+      export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+    create: true
+    mode: '0644'
+
+- name: Add Go to PATH in .bashrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Go"
+    block: |
+      export GOROOT={{ go_install_dir }}/go
+      export GOPATH=$HOME/go
+      export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+    create: true
+    mode: '0644'
+
+- name: Create GOPATH directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/go"
+    state: directory
+    mode: '0755'
+
+- name: Verify Go installation
+  ansible.builtin.command: "{{ go_install_dir }}/go/bin/go version"
+  register: go_version_output
+  changed_when: false
+
+- name: Display Go version
+  ansible.builtin.debug:
+    msg: "Go installed: {{ go_version_output.stdout }}"

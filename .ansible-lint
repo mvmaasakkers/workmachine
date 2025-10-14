@@ -1,0 +1,37 @@
+---
+# Ansible-lint configuration file
+
+# Exclude paths from linting
+exclude_paths:
+  - .cache/
+  - .github/
+  - test/
+
+# Enable checking of loop variable prefixes in roles
+loop_var_prefix: "{role}_"
+
+# List of rules to skip
+skip_list:
+  - 'yaml[line-length]'  # Allow long lines in YAML
+  - 'no-changed-when'    # Allow commands without changed_when in some cases
+  - 'command-instead-of-module'  # Allow shell/command when necessary
+  - 'risky-shell-pipe'   # Allow shell pipes when necessary
+
+# Enable specific rules
+enable_list:
+  - 'no-jinja-when'
+  - 'no-tabs'
+
+# Set offline mode (don't check for updates)
+offline: false
+
+# Use default rules
+use_default_rules: true
+
+# Warn on specific issues
+warn_list:
+  - 'experimental'
+  - 'package-latest'
+
+# Set verbosity
+verbosity: 1

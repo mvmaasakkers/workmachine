@@ -1,0 +1,8 @@
+.idea
+.vscode
+.ansible
+.DS_Store
+.venv
+
+# Inventory files (use inventory.ini.example as template)
+inventory.ini

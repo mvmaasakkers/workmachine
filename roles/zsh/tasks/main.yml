@@ -1,0 +1,82 @@
+---
+# Zsh role - Install zsh and oh-my-zsh with Powerline fonts
+
+- name: Install zsh and font dependencies
+  ansible.builtin.package:
+    name:
+      - zsh
+      - fontconfig
+      - fonts-powerline
+    state: present
+  become: true
+
+- name: Check if oh-my-zsh is already installed
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  register: ohmyzsh_stat
+
+- name: Download oh-my-zsh installer
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+    dest: /tmp/install-ohmyzsh.sh
+    mode: '0755'
+    force: true
+    timeout: 30
+  when: not ohmyzsh_stat.stat.exists
+  register: ohmyzsh_download
+
+- name: Install oh-my-zsh
+  ansible.builtin.shell: |
+    sh /tmp/install-ohmyzsh.sh --unattended
+  args:
+    creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  environment:
+    RUNZSH: 'no'
+    CHSH: 'no'
+
+- name: Check if .zshrc exists
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+  register: zshrc_stat
+
+- name: Set zsh theme
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    regexp: '^ZSH_THEME='
+    line: 'ZSH_THEME="{{ ohmyzsh_theme }}"'
+    state: present
+    create: false
+  when:
+    - ohmyzsh_theme is defined
+    - zshrc_stat.stat.exists
+
+- name: Configure oh-my-zsh plugins
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    regexp: '^plugins='
+    line: 'plugins=({{ ohmyzsh_plugins | join(" ") }})'
+    state: present
+    create: false
+  when:
+    - ohmyzsh_plugins is defined
+    - zshrc_stat.stat.exists
+
+
+- name: Add recommended terminal settings to .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Agnoster theme settings"
+    block: |
+      # Set default user to hide username@hostname when it's your own user
+      DEFAULT_USER="{{ ansible_user_id }}"
+
+      # Enable 256 color support
+      export TERM="xterm-256color"
+    create: false
+  when: zshrc_stat.stat.exists
+
+- name: Change default shell to zsh
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    shell: /usr/bin/zsh
+  become: true

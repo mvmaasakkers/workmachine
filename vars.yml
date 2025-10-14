@@ -1,0 +1,38 @@
+---
+# Version management for development tools
+# Override these in your own vars file or via command line
+
+# Go version
+go_version: "1.25.3"
+go_arch: "amd64"
+go_install_dir: "/usr/local"
+
+# Node.js version (via NodeSource)
+nodejs_version: "22"
+
+# PHP version
+php_version: "8.4"
+
+# Python version (system default + pip)
+python_ensure_pip: true
+
+# Neovim
+neovim_config_dir: "{{ ansible_env.HOME }}/.config/nvim"
+
+# Oh-my-zsh
+ohmyzsh_theme: "agnoster"
+ohmyzsh_plugins:
+  - git
+  - docker
+  - docker-compose
+  - golang
+  - npm
+  - pip
+  - python
+
+# Docker
+docker_users:
+  - "{{ ansible_user_id }}"
+
+# Composer version
+composer_version: "2"
