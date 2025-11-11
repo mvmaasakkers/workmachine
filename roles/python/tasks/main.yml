@@ -38,7 +38,10 @@
   when:
     - python_version is defined
     - python_version is version('3.12', '<')
-  ignore_errors: true
+  register: distutils_result
+  failed_when: distutils_result is failed and
+               ('Unable to locate package' not in (distutils_result.msg | default('')) and
+                'Unable to locate package' not in (distutils_result.stderr | default('')))
 
 - name: Install default Python 3 and development tools
   ansible.builtin.package:

@@ -4,8 +4,8 @@
 
 # Versions are on the top as they are most likely to be changed
 netbird_version: "0.59.6"
-go_version: "1.25.3"
-nodejs_version: "22"
+go_version: "1.25.4"
+nodejs_version: "24"
 php_version: "8.4"
 composer_version: "2"
 python_version: "3.13"
