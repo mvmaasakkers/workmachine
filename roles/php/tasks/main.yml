@@ -25,6 +25,15 @@
       - "php{{ php_version }}-zip"
       - "php{{ php_version }}-bcmath"
       - "php{{ php_version }}-intl"
+      - "php{{ php_version }}-ctype"
+      - "php{{ php_version }}-gd"
+      - "php{{ php_version }}-iconv"
+      - "php{{ php_version }}-amqp"
+      - "php{{ php_version }}-pgsql"
+      - "php{{ php_version }}-readline"
+      - "php{{ php_version }}-soap"
+      - "php{{ php_version }}-sqlite3"
+      - "php{{ php_version }}-gmp"
     state: present
   become: true
 
@@ -81,3 +90,34 @@
   ansible.builtin.debug:
     msg: "Composer installed: {{ composer_version_output.stdout_lines[0] }}"
   when: not ansible_check_mode and composer_version_output.stdout_lines | length > 0
+
+- name: Check if Symfony CLI is installed
+  ansible.builtin.stat:
+    path: /usr/bin/symfony
+  register: symfony_cli_stat
+
+- name: Set up Symfony CLI repository
+  ansible.builtin.shell: curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
+  args:
+    creates: /etc/apt/sources.list.d/symfony-stable.list
+  become: true
+  when: ansible_os_family == "Debian" and not symfony_cli_stat.stat.exists
+
+- name: Install or update Symfony CLI
+  ansible.builtin.apt:
+    name: symfony-cli
+    state: latest
+    update_cache: true
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Verify Symfony CLI installation
+  ansible.builtin.command: symfony version
+  register: symfony_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display Symfony CLI version
+  ansible.builtin.debug:
+    msg: "Symfony CLI installed: {{ symfony_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and symfony_version_output.rc == 0 and symfony_version_output.stdout_lines | length > 0
