@@ -34,8 +34,27 @@
       - "php{{ php_version }}-soap"
       - "php{{ php_version }}-sqlite3"
       - "php{{ php_version }}-gmp"
+      - "php{{ php_version }}-dev"
+      - "php-pear"
     state: present
   become: true
+
+# - name: Install Redis extension via PECL
+#   ansible.builtin.shell: |
+#     printf "no\n" | pecl install redis
+#   args:
+#     creates: "/usr/lib/php/{{ php_version_short }}/redis.so"
+#   become: true
+#   register: pecl_redis_install
+
+# - name: Enable Redis extension
+#   ansible.builtin.lineinfile:
+#     path: "/etc/php/{{ php_version }}/cli/php.ini"
+#     line: "extension=redis.so"
+#     state: present
+#     create: false
+#   become: true
+#   when: pecl_redis_install.changed
 
 - name: Check if Composer is installed
   ansible.builtin.stat:

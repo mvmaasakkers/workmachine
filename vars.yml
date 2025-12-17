@@ -7,8 +7,11 @@ netbird_version: "0.59.6"
 go_version: "1.25.4"
 nodejs_version: "24"
 php_version: "8.4"
+php_version_short: "8.4"
 composer_version: "2"
 python_version: "3.13"
+gh_version: "2.63.2"
+claude_code_version: "1.0.17"
 
 # Go settings
 go_arch: "amd64"
@@ -31,4 +34,3 @@ ohmyzsh_plugins:
 # Docker
 docker_users:
   - "{{ ansible_user_id }}"
-

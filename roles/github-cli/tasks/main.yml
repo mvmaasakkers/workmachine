@@ -1,0 +1,39 @@
+---
+# GitHub CLI role - Install GitHub CLI (gh)
+# Authentication should be handled by users themselves via: gh auth login
+
+- name: Check current GitHub CLI version
+  ansible.builtin.command: gh --version
+  register: gh_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Install GitHub CLI
+  when: gh_current_version.rc != 0 or ('gh version ' + gh_version) not in gh_current_version.stdout
+  become: true
+  block:
+    - name: Download GitHub CLI .deb package
+      ansible.builtin.get_url:
+        url: "https://github.com/cli/cli/releases/download/v{{ gh_version }}/gh_{{ gh_version }}_linux_amd64.deb"
+        dest: "/tmp/gh_{{ gh_version }}_linux_amd64.deb"
+        mode: '0644'
+
+    - name: Install GitHub CLI from .deb package
+      ansible.builtin.apt:
+        deb: "/tmp/gh_{{ gh_version }}_linux_amd64.deb"
+        state: present
+
+    - name: Clean up downloaded .deb file
+      ansible.builtin.file:
+        path: "/tmp/gh_{{ gh_version }}_linux_amd64.deb"
+        state: absent
+
+- name: Verify GitHub CLI installation
+  ansible.builtin.command: gh --version
+  register: gh_version_output
+  changed_when: false
+
+- name: Display GitHub CLI version
+  ansible.builtin.debug:
+    msg: "GitHub CLI installed: {{ gh_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and gh_version_output.stdout_lines | length > 0
