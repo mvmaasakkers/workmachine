@@ -22,6 +22,7 @@
       - "python{{ python_version }}"
       - "python{{ python_version }}-dev"
       - "python{{ python_version }}-venv"
+      - "python{{ python_version }}-virtualenvwrapper"
       - python3-pip
       - python-is-python3
       - pipx
