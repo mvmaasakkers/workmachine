@@ -17,7 +17,8 @@ This setup installs and configures:
   - Go 1.25.3
   - Node.js 22 (+ npm, yarn, pnpm)
   - Python 3 (+ pip, virtualenv, poetry)
-- **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit
+- **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd
+- **AI Tools**: Claude Code CLI, OpenCode CLI
 
 ## Quick Start
 
@@ -99,6 +100,7 @@ Available tags:
 - `docker`, `containers` - Docker setup
 - `nvim`, `editor` - Neovim setup
 - `php`, `go`, `golang`, `nodejs`, `node`, `python`, `languages` - Programming languages
+- `claude-code`, `claude`, `opencode`, `ai`, `tools` - AI coding assistants
 
 ### Customizing Versions
 
@@ -129,7 +131,9 @@ workmachine/
 │   ├── php/                    # PHP + Composer
 │   ├── go/                     # Go language
 │   ├── nodejs/                 # Node.js + npm
-│   └── python/                 # Python + pip
+│   ├── python/                 # Python + pip
+│   ├── claude-code/            # Claude Code CLI
+│   └── opencode/               # OpenCode CLI
 ├── ansible.cfg                 # Ansible configuration
 ├── inventory.ini               # Server inventory
 ├── vars.yml                    # Version configuration
@@ -155,6 +159,13 @@ After the setup completes:
    php --version
    python3 --version
    nvim --version
+   claude --version
+   opencode --version
+   ```
+4. **Authenticate AI tools**:
+   ```bash
+   claude login        # Claude Code CLI
+   opencode            # OpenCode CLI (interactive setup)
    ```
 
 ## Configuration Files

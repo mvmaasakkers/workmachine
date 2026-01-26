@@ -64,6 +64,9 @@
     - role: claude-code
       tags: ['claude-code', 'claude', 'ai', 'tools']
 
+    - role: opencode
+      tags: ['opencode', 'ai', 'tools']
+
   post_tasks:
     - name: Display setup completion message
       ansible.builtin.debug:
@@ -80,7 +83,7 @@
           - Languages: PHP {{ php_version }}, Go {{ go_version }}, Node.js {{ nodejs_version }}, Python 3
           - Package managers: composer, npm, pip
           - VPN: Netbird client (not connected)
-          - CLI tools: GitHub CLI (gh), Claude Code CLI
+          - CLI tools: GitHub CLI (gh), Claude Code CLI, OpenCode CLI
 
           Next steps:
           1. Log out and back in for group changes (docker) to take effect
@@ -88,6 +91,7 @@
           3. Verify installations with: docker --version, go version, node --version, php --version
           4. Authenticate GitHub CLI: gh auth login
           5. Authenticate Claude Code: claude login
+          6. Configure OpenCode: opencode
 
           Happy coding!
 

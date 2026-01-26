@@ -1,19 +1,11 @@
 ---
-# Claude Code CLI role - Install Claude Code CLI
-# Authentication should be handled by users themselves via: claude login
-# Requires Node.js to be installed (npm)
-
-- name: Check current Claude Code version
-  ansible.builtin.command: claude --version
-  register: claude_current_version
-  changed_when: false
-  failed_when: false
-
-- name: Install Claude Code CLI globally via npm
-  ansible.builtin.command: npm install -g @anthropic-ai/claude-code@{{ claude_code_version }}
+- name: Install or update Claude Code CLI globally via npm
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    global: true
+    state: latest
   become: true
-  when: claude_current_version.rc != 0 or claude_code_version not in claude_current_version.stdout
-  register: claude_install_result
+  when: not ansible_check_mode
 
 - name: Verify Claude Code CLI installation
   ansible.builtin.command: claude --version

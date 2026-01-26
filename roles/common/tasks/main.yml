@@ -24,7 +24,17 @@
       - apt-transport-https
       - make
       - jq
+      - fzf
+      - ripgrep
+      - fd-find
     state: present
+  become: true
+
+- name: Create fd symlink (Debian/Ubuntu package installs as fdfind)
+  ansible.builtin.file:
+    src: /usr/bin/fdfind
+    dest: /usr/local/bin/fd
+    state: link
   become: true
 
 - name: Install software-properties-common (Ubuntu only)

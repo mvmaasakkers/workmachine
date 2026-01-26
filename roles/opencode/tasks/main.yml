@@ -1,0 +1,18 @@
+---
+- name: Install or update OpenCode CLI globally via npm
+  community.general.npm:
+    name: opencode-ai
+    global: true
+    state: latest
+  become: true
+  when: not ansible_check_mode
+
+- name: Verify OpenCode CLI installation
+  ansible.builtin.command: opencode --version
+  register: opencode_version_output
+  changed_when: false
+
+- name: Display OpenCode CLI version
+  ansible.builtin.debug:
+    msg: "OpenCode CLI installed: {{ opencode_version_output.stdout }}"
+  when: not ansible_check_mode and opencode_version_output.stdout | length > 0

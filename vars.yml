@@ -12,7 +12,6 @@ php_version_short: "8.4"
 composer_version: "2"
 python_version: "3.13"
 gh_version: "2.63.2"
-claude_code_version: "1.0.17"
 
 # Go settings
 go_arch: "amd64"
