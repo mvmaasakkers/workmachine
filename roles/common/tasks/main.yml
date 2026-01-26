@@ -41,8 +41,90 @@
     mode: '0755'
   become: true
 
-- name: Deploy tmux configuration
-  ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../configs/tmux/tmux.conf"
-    dest: "{{ ansible_env.HOME }}/.tmux.conf"
+- name: Check if lazygit is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/lazygit
+  register: lazygit_binary
+
+- name: Get installed lazygit version
+  ansible.builtin.command: /usr/local/bin/lazygit --version
+  register: installed_lazygit_version
+  changed_when: false
+  failed_when: false
+  when: lazygit_binary.stat.exists
+
+- name: Set lazygit needs installation flag
+  ansible.builtin.set_fact:
+    lazygit_needs_install: "{{ not lazygit_binary.stat.exists or lazygit_version not in (installed_lazygit_version.stdout | default('')) }}"
+
+- name: Download lazygit
+  ansible.builtin.get_url:
+    url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_x86_64.tar.gz"
+    dest: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
     mode: '0644'
+  when: lazygit_needs_install
+
+- name: Extract lazygit
+  ansible.builtin.unarchive:
+    src: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    extra_opts:
+      - lazygit
+  become: true
+  when: lazygit_needs_install
+
+- name: Ensure lazygit is executable
+  ansible.builtin.file:
+    path: /usr/local/bin/lazygit
+    mode: '0755'
+  become: true
+  when: lazygit_needs_install
+
+- name: Clean up lazygit tarball
+  ansible.builtin.file:
+    path: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
+    state: absent
+  when: lazygit_needs_install
+
+- name: Ensure sudo has correct ownership and setuid permissions
+  ansible.builtin.file:
+    path: /usr/bin/sudo
+    owner: root
+    group: root
+    mode: '4755'
+  become: true
+
+- name: Remove old ~/.tmux.conf if it exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.tmux.conf"
+    state: absent
+
+- name: Ensure ~/.config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config"
+    state: directory
+    mode: '0755'
+
+- name: Check if tmux config directory exists
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.config/tmux"
+  register: tmux_config_stat
+
+- name: Check if tmux config is a git repo
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.config/tmux/.git"
+  register: tmux_config_git_stat
+
+- name: Remove existing tmux config directory if not a git repo
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/tmux"
+    state: absent
+  when: tmux_config_stat.stat.exists and not tmux_config_git_stat.stat.exists
+
+- name: Clone tmux configuration repository
+  ansible.builtin.git:
+    repo: git@github.com:mvmaasakkers/tmux.git
+    dest: "{{ ansible_env.HOME }}/.config/tmux"
+    accept_hostkey: true
+    update: true

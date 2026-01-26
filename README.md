@@ -17,7 +17,7 @@ This setup installs and configures:
   - Go 1.25.3
   - Node.js 22 (+ npm, yarn, pnpm)
   - Python 3 (+ pip, virtualenv, poetry)
-- **CLI Tools**: curl, wget, unzip, btop, tmux
+- **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit
 
 ## Quick Start
 
@@ -130,14 +130,6 @@ workmachine/
 │   ├── go/                     # Go language
 │   ├── nodejs/                 # Node.js + npm
 │   └── python/                 # Python + pip
-├── configs/
-│   ├── nvim/
-│   │   ├── init.lua            # Neovim main config
-│   │   └── lua/
-│   │       ├── lazy-bootstrap.lua  # lazy.nvim bootstrap
-│   │       └── plugins.lua     # Plugin definitions
-│   └── tmux/
-│       └── tmux.conf           # tmux configuration
 ├── ansible.cfg                 # Ansible configuration
 ├── inventory.ini               # Server inventory
 ├── vars.yml                    # Version configuration
@@ -167,73 +159,39 @@ After the setup completes:
 
 ## Configuration Files
 
-All configuration files are stored in the [configs/](configs/) directory, organized by tool:
+Configuration files are managed via external Git repositories (private):
 
-- **[configs/nvim/](configs/nvim/)** - Neovim configuration files
-  - [init.lua](configs/nvim/init.lua) - Main Neovim configuration
-  - [lua/lazy-bootstrap.lua](configs/nvim/lua/lazy-bootstrap.lua) - lazy.nvim bootstrap
-  - [lua/plugins.lua](configs/nvim/lua/plugins.lua) - Plugin definitions
-- **[configs/tmux/](configs/tmux/)** - tmux configuration files
-  - [tmux.conf](configs/tmux/tmux.conf) - Main tmux configuration
+- **Neovim**: [git@github.com:mvmaasakkers/nvim.git](https://github.com/mvmaasakkers/nvim) → `~/.config/nvim/`
+- **tmux**: [git@github.com:mvmaasakkers/tmux.git](https://github.com/mvmaasakkers/tmux) → `~/.config/tmux/`
 
 ### Customizing Configs
 
 To modify the configurations:
 
-1. Edit the config files in the `configs/` directory
-2. Re-run the setup to deploy changes:
+1. Edit the config files in the respective Git repositories
+2. Push changes to the repository
+3. Re-run the setup to pull updates:
    ```bash
    make setup
    ```
 
-The configurations are deployed to:
-- Neovim: `~/.config/nvim/`
-- tmux: `~/.tmux.conf`
+**Note**: The setup removes any existing `~/.tmux.conf` file and uses the new XDG-compliant location `~/.config/tmux/` for tmux configuration.
 
 ## Neovim Configuration
 
-The setup includes a modern Neovim configuration with:
+Neovim configuration is managed via a separate Git repository: [mvmaasakkers/nvim](https://github.com/mvmaasakkers/nvim)
 
-- **Plugin Manager**: lazy.nvim (auto-bootstrapped)
-- **File Explorer**: NERDTree
-- **Status Line**: vim-airline
-- **Git Integration**: vim-fugitive
-- **Fuzzy Finder**: fzf
-- **Color Scheme**: gruvbox
-- **Language Support**: vim-polyglot
-
-The configuration is written in Lua and uses lazy.nvim for plugin management, which automatically installs itself on first run.
-
-### Neovim Key Bindings
-
-Leader key: `<Space>`
-
-- `<leader>n` - Toggle NERDTree
-- `<leader>f` - Find current file in NERDTree
-- `<leader>p` - Fuzzy file search
-- `<leader>g` - Search in files (ripgrep)
-- `<leader>b` - Buffer list
-- `<leader>w` - Save file
-- `<leader>q` - Quit
-- `<leader>/` - Clear search highlight
+The setup clones this repository to `~/.config/nvim/` and runs `Lazy! sync` to install plugins.
 
 ## tmux Configuration
 
-The setup includes a feature-rich tmux configuration with:
+tmux configuration is managed via a separate Git repository: [mvmaasakkers/tmux](https://github.com/mvmaasakkers/tmux)
 
-- **Prefix**: `Ctrl-a` (instead of default `Ctrl-b`)
-- **Mouse support**: Enabled
-- **Vi mode**: For copy mode navigation
-- **256 colors**: Full color support
+The setup:
+1. Removes any existing `~/.tmux.conf` file
+2. Clones the repository to `~/.config/tmux/`
 
-### tmux Key Bindings
-
-- `Ctrl-a |` - Split pane horizontally
-- `Ctrl-a -` - Split pane vertically
-- `Ctrl-a h/j/k/l` - Navigate panes (vim-style)
-- `Ctrl-a H/J/K/L` - Resize panes
-- `Ctrl-a r` - Reload config
-- `Alt-Left/Right` - Switch windows
+tmux 3.1+ supports XDG-compliant config locations, automatically loading from `~/.config/tmux/tmux.conf`.
 
 ## Troubleshooting
 

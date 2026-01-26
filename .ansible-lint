@@ -16,6 +16,7 @@ skip_list:
   - 'no-changed-when'    # Allow commands without changed_when in some cases
   - 'command-instead-of-module'  # Allow shell/command when necessary
   - 'risky-shell-pipe'   # Allow shell pipes when necessary
+  - 'latest[git]'        # Allow git clone/pull to update configs from repos
 
 # Enable specific rules
 enable_list:

@@ -3,7 +3,8 @@
 # Override these in your own vars file or via command line
 
 # Versions are on the top as they are most likely to be changed
-netbird_version: "0.59.6"
+lazygit_version: "0.58.1"
+netbird_version: "0.64.1"
 go_version: "1.25.4"
 nodejs_version: "24"
 php_version: "8.4"
@@ -30,6 +31,7 @@ ohmyzsh_plugins:
   - npm
   - pip
   - python
+  - virtualenvwrapper
 
 # Docker
 docker_users:

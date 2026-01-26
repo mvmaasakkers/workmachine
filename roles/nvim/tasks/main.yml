@@ -22,35 +22,28 @@
     state: present
   become: true
 
-- name: Create Neovim config directory
+- name: Check if Neovim config directory exists
+  ansible.builtin.stat:
+    path: "{{ neovim_config_dir }}"
+  register: neovim_config_stat
+
+- name: Check if Neovim config is a git repo
+  ansible.builtin.stat:
+    path: "{{ neovim_config_dir }}/.git"
+  register: neovim_config_git_stat
+
+- name: Remove existing Neovim config directory if not a git repo
   ansible.builtin.file:
     path: "{{ neovim_config_dir }}"
-    state: directory
-    mode: '0755'
+    state: absent
+  when: neovim_config_stat.stat.exists and not neovim_config_git_stat.stat.exists
 
-- name: Create Neovim lua directory
-  ansible.builtin.file:
-    path: "{{ neovim_config_dir }}/lua"
-    state: directory
-    mode: '0755'
-
-- name: Deploy init.lua configuration
-  ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../configs/nvim/init.lua"
-    dest: "{{ neovim_config_dir }}/init.lua"
-    mode: '0644'
-
-- name: Deploy lazy.nvim bootstrap configuration
-  ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../configs/nvim/lua/lazy-bootstrap.lua"
-    dest: "{{ neovim_config_dir }}/lua/lazy-bootstrap.lua"
-    mode: '0644'
-
-- name: Deploy plugins configuration
-  ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../configs/nvim/lua/plugins.lua"
-    dest: "{{ neovim_config_dir }}/lua/plugins.lua"
-    mode: '0644'
+- name: Clone Neovim configuration repository
+  ansible.builtin.git:
+    repo: git@github.com:mvmaasakkers/nvim.git
+    dest: "{{ neovim_config_dir }}"
+    accept_hostkey: true
+    update: true
 
 - name: Install lazy.nvim and plugins
   ansible.builtin.command: nvim --headless "+Lazy! sync" +qa
