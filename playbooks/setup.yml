@@ -67,6 +67,9 @@
     - role: opencode
       tags: ['opencode', 'ai', 'tools']
 
+    - role: devpod
+      tags: ['devpod', 'containers', 'tools']
+
   post_tasks:
     - name: Display setup completion message
       ansible.builtin.debug:

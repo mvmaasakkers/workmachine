@@ -1,0 +1,29 @@
+---
+- name: Download DevPod CLI
+  ansible.builtin.get_url:
+    url: https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64
+    dest: /tmp/devpod
+    mode: '0755'
+
+- name: Install DevPod CLI
+  ansible.builtin.copy:
+    src: /tmp/devpod
+    dest: /usr/local/bin/devpod
+    remote_src: true
+    mode: '0755'
+  become: true
+
+- name: Clean up downloaded DevPod binary
+  ansible.builtin.file:
+    path: /tmp/devpod
+    state: absent
+
+- name: Verify DevPod CLI installation
+  ansible.builtin.command: devpod version
+  register: devpod_version_output
+  changed_when: false
+
+- name: Display DevPod CLI version
+  ansible.builtin.debug:
+    msg: "DevPod CLI installed: {{ devpod_version_output.stdout }}"
+  when: not ansible_check_mode and devpod_version_output.stdout | length > 0

@@ -19,6 +19,7 @@ This setup installs and configures:
   - Python 3 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd
 - **AI Tools**: Claude Code CLI, OpenCode CLI
+- **DevOps**: DevPod CLI
 
 ## Quick Start
 
