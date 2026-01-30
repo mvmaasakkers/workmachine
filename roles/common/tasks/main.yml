@@ -27,12 +27,12 @@
     state: present
   become: true
 
-- name: Install software-properties-common (Ubuntu only)
+- name: Install software-properties-common (Ubuntu/Pop!_OS)
   ansible.builtin.package:
     name: software-properties-common
     state: present
   become: true
-  when: ansible_distribution == "Ubuntu"
+  when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
 
 - name: Ensure /usr/local/bin exists
   ansible.builtin.file:

@@ -1,13 +1,13 @@
 ---
 # Python role - Install Python and pip (PEP 668 compliant)
 
-- name: Add deadsnakes PPA for specific Python versions (Ubuntu)
+- name: Add deadsnakes PPA for specific Python versions (Ubuntu/Pop!_OS)
   ansible.builtin.apt_repository:
     repo: ppa:deadsnakes/ppa
     state: present
   become: true
   when:
-    - ansible_distribution == "Ubuntu"
+    - ansible_distribution in ["Ubuntu", "Pop!_OS"]
     - python_version is defined
 
 - name: Update apt cache
