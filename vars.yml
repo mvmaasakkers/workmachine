@@ -20,17 +20,8 @@ go_install_dir: "/usr/local"
 # Neovim
 neovim_config_dir: "{{ ansible_env.HOME }}/.config/nvim"
 
-# Oh-my-zsh
-ohmyzsh_theme: "agnoster"
-ohmyzsh_plugins:
-  - git
-  - docker
-  - docker-compose
-  - golang
-  - npm
-  - pip
-  - python
-  - virtualenvwrapper
+# Zsh
+zsh_config_dir: "{{ ansible_env.HOME }}/.config/zsh"
 
 # Docker
 docker_users:

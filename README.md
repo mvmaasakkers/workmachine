@@ -175,6 +175,7 @@ Configuration files are managed via external Git repositories (private):
 
 - **Neovim**: [git@github.com:mvmaasakkers/nvim.git](https://github.com/mvmaasakkers/nvim) → `~/.config/nvim/`
 - **tmux**: [git@github.com:mvmaasakkers/tmux.git](https://github.com/mvmaasakkers/tmux) → `~/.config/tmux/`
+- **zsh**: [git@github.com:mvmaasakkers/zsh.git](https://github.com/mvmaasakkers/zsh) → `~/.config/zsh/` (symlinked to `~/.zshrc`)
 
 ### Customizing Configs
 
@@ -204,6 +205,17 @@ The setup:
 2. Clones the repository to `~/.config/tmux/`
 
 tmux 3.1+ supports XDG-compliant config locations, automatically loading from `~/.config/tmux/tmux.conf`.
+
+## zsh Configuration
+
+zsh configuration is managed via a separate Git repository: [mvmaasakkers/zsh](https://github.com/mvmaasakkers/zsh)
+
+The setup:
+1. Installs zsh and oh-my-zsh
+2. Clones the repository to `~/.config/zsh/`
+3. Creates a symlink from `~/.zshrc` to `~/.config/zsh/.zshrc`
+
+Your zsh repo should contain a `.zshrc` file that sources oh-my-zsh and includes your customizations.
 
 ## Troubleshooting
 

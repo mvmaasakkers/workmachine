@@ -34,50 +34,39 @@
     RUNZSH: 'no'
     CHSH: 'no'
 
-- name: Check if .zshrc exists
+- name: Check if zsh config directory exists
   ansible.builtin.stat:
+    path: "{{ zsh_config_dir }}"
+  register: zsh_config_stat
+
+- name: Check if zsh config is a git repo
+  ansible.builtin.stat:
+    path: "{{ zsh_config_dir }}/.git"
+  register: zsh_config_git_stat
+
+- name: Remove existing zsh config directory if not a git repo
+  ansible.builtin.file:
+    path: "{{ zsh_config_dir }}"
+    state: absent
+  when: zsh_config_stat.stat.exists and not zsh_config_git_stat.stat.exists
+
+- name: Clone zsh configuration repository
+  ansible.builtin.git:
+    repo: git@github.com:mvmaasakkers/zsh.git
+    dest: "{{ zsh_config_dir }}"
+    accept_hostkey: true
+    update: true
+
+- name: Remove oh-my-zsh generated .zshrc
+  ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.zshrc"
-  register: zshrc_stat
+    state: absent
 
-- name: Set zsh theme
-  ansible.builtin.lineinfile:
-    path: "{{ ansible_env.HOME }}/.zshrc"
-    regexp: '^ZSH_THEME='
-    line: 'ZSH_THEME="{{ ohmyzsh_theme }}"'
-    state: present
-    create: false
-  when:
-    - ohmyzsh_theme is defined
-    - zshrc_stat.stat.exists
-
-- name: Configure oh-my-zsh plugins
-  ansible.builtin.lineinfile:
-    path: "{{ ansible_env.HOME }}/.zshrc"
-    regexp: '^plugins='
-    line: 'plugins=({{ ohmyzsh_plugins | join(" ") }})'
-    state: present
-    create: false
-  when:
-    - ohmyzsh_plugins is defined
-    - zshrc_stat.stat.exists
-
-
-- name: Add recommended terminal settings to .zshrc
-  ansible.builtin.blockinfile:
-    path: "{{ ansible_env.HOME }}/.zshrc"
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - Agnoster theme settings"
-    block: |
-      # Set default user to hide username@hostname when it's your own user
-      DEFAULT_USER="{{ ansible_user_id }}"
-
-      # Enable 256 color support
-      export TERM="xterm-256color"
-
-      # Set default editor to nvim
-      export EDITOR="nvim"
-      export VISUAL="nvim"
-    create: false
-  when: zshrc_stat.stat.exists
+- name: Create symlink from ~/.zshrc to config repo
+  ansible.builtin.file:
+    src: "{{ zsh_config_dir }}/.zshrc"
+    dest: "{{ ansible_env.HOME }}/.zshrc"
+    state: link
 
 - name: Change default shell to zsh
   ansible.builtin.user:
