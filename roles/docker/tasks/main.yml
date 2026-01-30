@@ -29,9 +29,13 @@
     mode: '0755'
   become: true
 
+- name: Set Docker distribution name (Pop!_OS uses Ubuntu repos)
+  ansible.builtin.set_fact:
+    docker_distro: "{{ 'ubuntu' if ansible_distribution == 'Pop!_OS' else ansible_distribution | lower }}"
+
 - name: Download Docker GPG key
   ansible.builtin.get_url:
-    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    url: https://download.docker.com/linux/{{ docker_distro }}/gpg
     dest: /etc/apt/keyrings/docker.asc
     mode: '0644'
     timeout: 30
@@ -47,7 +51,7 @@
   ansible.builtin.deb822_repository:
     name: docker
     types: [deb]
-    uris: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
+    uris: "https://download.docker.com/linux/{{ docker_distro }}"
     suites: ["{{ ansible_distribution_release }}"]
     components: [stable]
     architectures: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
