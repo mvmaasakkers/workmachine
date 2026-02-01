@@ -6,3 +6,8 @@
 
 # Inventory files (use inventory.ini.example as template)
 inventory.ini
+
+# Ansible vault and secrets
+vault.yml
+.vault_pass
+*.vault

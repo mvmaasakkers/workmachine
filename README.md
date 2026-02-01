@@ -1,6 +1,6 @@
 # Development Environment Setup with Ansible
 
-Automated configuration for Ubuntu/Debian servers using Ansible. This repository provides a complete, idempotent setup for a full-featured development environment.
+Automated configuration for Ubuntu/Debian/Pop!_OS servers using Ansible. This repository provides a complete, idempotent setup for a full-featured development environment.
 
 This assumes an already installed barebone server, with a user that has SSH access setup and has full NOPASSWD sudo rights. If that's the case just add an entry to the inventory.ini (see inventory.ini.example for an example) and run make setup.
 
@@ -14,9 +14,9 @@ This setup installs and configures:
 - **Editor**: Neovim with plugins and custom config
 - **Languages**:
   - PHP 8.4 (CLI + Composer)
-  - Go 1.25.3
-  - Node.js 22 (+ npm, yarn, pnpm)
-  - Python 3 (+ pip, virtualenv, poetry)
+  - Go 1.25.6
+  - Node.js 24 (+ npm, yarn, pnpm)
+  - Python 3.13 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd
 - **AI Tools**: Claude Code CLI, OpenCode CLI
 - **DevOps**: DevPod CLI
@@ -25,11 +25,13 @@ This setup installs and configures:
 
 ### Prerequisites
 
-- A fresh Ubuntu or Debian server (local or remote)
+- A fresh Ubuntu, Debian, or Pop!_OS server (local or remote)
 - SSH access to the target server (for remote setup)
 - SSH key-based authentication configured (for remote setup)
 - Python 3 installed on the target
 - Sudo privileges on the target machine
+  - **Remote setup**: User with NOPASSWD sudo rights (recommended)
+  - **Local setup**: Any user with sudo access
 
 ### Installation
 
@@ -75,6 +77,7 @@ make setup             # Run full setup on remote server
 make setup-local       # Run full setup on local machine
 make lint              # Run ansible-lint
 make check             # Dry-run (no changes made)
+make check-local       # Dry-run on local machine (no changes made)
 make test              # Dry-run with diff output
 make tags              # Show available tags
 make clean             # Clean up temporary files
@@ -108,9 +111,10 @@ Available tags:
 Edit `vars.yml` to customize versions:
 
 ```yaml
-go_version: "1.25.3"
-nodejs_version: "22"
+go_version: "1.25.6"
+nodejs_version: "24"
 php_version: "8.4"
+python_version: "3.13"
 ```
 
 Then re-run the setup:
@@ -217,6 +221,99 @@ The setup:
 
 Your zsh repo should contain a `.zshrc` file that sources oh-my-zsh and includes your customizations.
 
+## Sudo Password Configuration
+
+### Remote Server Setup
+
+This setup assumes the remote user has **NOPASSWD sudo rights**. To configure this on your remote server:
+
+```bash
+# On the remote server, add this line to /etc/sudoers
+echo "YOUR_USERNAME ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/YOUR_USERNAME
+sudo chmod 0440 /etc/sudoers.d/YOUR_USERNAME
+```
+
+If you cannot configure NOPASSWD sudo, use one of the methods below.
+
+### Alternative Methods for Sudo Password
+
+#### Method 1: Interactive Prompt (Most Secure)
+**Status**: Already configured for local setup in Makefile
+
+For local setup:
+```bash
+make setup-local  # Prompts for password
+```
+
+For remote setup, modify the Makefile:
+```bash
+ansible-playbook -i inventory.ini playbooks/setup.yml --ask-become-pass
+```
+
+#### Method 2: Environment Variable (Convenient)
+Set the password as an environment variable:
+
+```bash
+export ANSIBLE_BECOME_PASSWORD='your_sudo_password'
+make setup-local
+```
+
+Or run directly:
+```bash
+ANSIBLE_BECOME_PASSWORD='your_sudo_password' ansible-playbook -i localhost, playbooks/setup.yml --connection=local
+```
+
+#### Method 3: Ansible Vault (Secure + Automated)
+Store the password encrypted in a vault file:
+
+1. **Create a vault file**:
+   ```bash
+   ansible-vault create vault.yml
+   ```
+   
+   Add this content:
+   ```yaml
+   ansible_become_password: your_sudo_password
+   ```
+
+2. **Update inventory.ini** to use the vault:
+   ```ini
+   [devserver]
+   192.168.x.x ansible_user=YOUR_USERNAME
+   
+   [devserver:vars]
+   @vault.yml
+   ```
+
+3. **Run with vault password**:
+   ```bash
+   ansible-playbook -i inventory.ini playbooks/setup.yml --ask-vault-pass
+   ```
+
+4. **Or use a vault password file**:
+   ```bash
+   echo "your_vault_password" > .vault_pass
+   chmod 600 .vault_pass
+   echo ".vault_pass" >> .gitignore
+   
+   ansible-playbook -i inventory.ini playbooks/setup.yml --vault-password-file .vault_pass
+   ```
+
+#### Method 4: Inventory Variable (Least Secure - Not Recommended)
+Add directly to inventory.ini (⚠️ **NOT recommended** - stores password in plaintext):
+
+```ini
+[devserver]
+192.168.x.x ansible_user=YOUR_USERNAME ansible_become_password=your_password
+```
+
+### Recommendation
+
+- **Remote servers**: Configure NOPASSWD sudo (most convenient)
+- **Local machine**: Use `--ask-become-pass` (default in `make setup-local`)
+- **CI/CD pipelines**: Use Ansible Vault with vault password file
+- **Never commit plaintext passwords** to version control
+
 ## Troubleshooting
 
 ### Ansible not found
@@ -253,8 +350,15 @@ ssh-copy-id YOUR_USERNAME@YOUR_SERVER_IP
 ### Check mode (dry-run)
 To see what would change without making changes:
 ```bash
-make check
+make check          # For remote servers
+make check-local    # For local machine
 ```
+
+### Pop!_OS Support
+Pop!_OS is fully supported! The setup automatically:
+- Uses Ubuntu package repositories for Docker and other tools
+- Handles Pop!_OS distribution detection correctly
+- Works with Pop!_OS 22.04+ (based on Ubuntu 22.04+)
 
 ## Idempotency
 
@@ -265,7 +369,7 @@ This setup is fully idempotent - you can run it multiple times safely. It will:
 
 ## Requirements
 
-- Ubuntu 20.04+ or Debian 11+
+- Ubuntu 20.04+ or Debian 11+ or Pop!_OS 22.04+
 - Python 3.6+
 - SSH access (for remote setup)
 - Sudo privileges
