@@ -1,7 +1,7 @@
 ---
 # Node.js role - Install Node.js and npm
 
-- name: Remove old NodeSource repository files
+- name: Remove old NodeSource repository files (Linux)
   ansible.builtin.file:
     path: "{{ nodejs_file }}"
     state: absent
@@ -11,34 +11,52 @@
     - /etc/apt/keyrings/nodesource.gpg
   loop_control:
     loop_var: nodejs_file
+  when: ansible_os_family == "Debian"
 
-- name: Download NodeSource setup script
+- name: Download NodeSource setup script (Linux)
   ansible.builtin.get_url:
     url: "https://deb.nodesource.com/setup_{{ nodejs_version }}.x"
     dest: /tmp/nodesource_setup.sh
     mode: '0755'
+  when: ansible_os_family == "Debian"
 
-- name: Run NodeSource setup script
+- name: Run NodeSource setup script (Linux)
   ansible.builtin.command: bash /tmp/nodesource_setup.sh
   become: true
   changed_when: true
+  when: ansible_os_family == "Debian"
 
-- name: Update apt cache
+- name: Update apt cache (Linux)
   ansible.builtin.apt:
     update_cache: true
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Install Node.js
+- name: Install Node.js (Linux)
   ansible.builtin.package:
     name: nodejs
     state: present
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Install build-essential for npm native modules
+- name: Install build-essential for npm native modules (Linux)
   ansible.builtin.package:
     name: build-essential
     state: present
   become: true
+  when: ansible_os_family == "Debian"
+
+- name: Install Node.js (macOS)
+  community.general.homebrew:
+    name: "node@{{ nodejs_version }}"
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Link Node.js (macOS)
+  ansible.builtin.command: "brew link node@{{ nodejs_version }} --force --overwrite"
+  when: ansible_os_family == "Darwin"
+  changed_when: false
+  failed_when: false
 
 - name: Check if npm is available
   ansible.builtin.command: which npm

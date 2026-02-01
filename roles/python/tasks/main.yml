@@ -1,6 +1,18 @@
 ---
 # Python role - Install Python and pip (PEP 668 compliant)
 
+- name: Install Python (macOS)
+  community.general.homebrew:
+    name: "python@{{ python_version }}"
+    state: present
+  when: ansible_os_family == "Darwin" and python_version is defined
+
+- name: Install pipx (macOS)
+  community.general.homebrew:
+    name: pipx
+    state: present
+  when: ansible_os_family == "Darwin"
+
 - name: Add deadsnakes PPA for specific Python versions (Ubuntu/Pop!_OS)
   ansible.builtin.apt_repository:
     repo: ppa:deadsnakes/ppa
@@ -10,13 +22,13 @@
     - ansible_distribution in ["Ubuntu", "Pop!_OS"]
     - python_version is defined
 
-- name: Update apt cache
+- name: Update apt cache (Linux)
   ansible.builtin.apt:
     update_cache: true
   become: true
-  when: python_version is defined
+  when: ansible_os_family == "Debian" and python_version is defined
 
-- name: Install specific Python version and development tools
+- name: Install specific Python version and development tools (Linux)
   ansible.builtin.package:
     name:
       - "python{{ python_version }}"
@@ -27,7 +39,7 @@
       - pipx
     state: present
   become: true
-  when: python_version is defined
+  when: ansible_os_family == "Debian" and python_version is defined
 
 - name: Install distutils for Python < 3.12
   ansible.builtin.package:
@@ -43,7 +55,7 @@
     ('Unable to locate package' not in (distutils_result.msg | default('')) and
     'Unable to locate package' not in (distutils_result.stderr | default('')))
 
-- name: Install default Python 3 and development tools
+- name: Install default Python 3 and development tools (Linux)
   ansible.builtin.package:
     name:
       - python3
@@ -55,7 +67,7 @@
       - pipx
     state: present
   become: true
-  when: python_version is not defined
+  when: ansible_os_family == "Debian" and python_version is not defined
 
 - name: Ensure pipx path is configured
   ansible.builtin.command: pipx ensurepath

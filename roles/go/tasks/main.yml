@@ -17,25 +17,35 @@
   ansible.builtin.set_fact:
     go_needs_install: "{{ not go_binary.stat.exists or go_version not in installed_go_version.stdout | default('') }}"
 
+- name: Set Go platform
+  ansible.builtin.set_fact:
+    go_platform: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
+
 - name: Fetch and parse Go versions JSON to get checksum
   ansible.builtin.shell: |
     curl -s 'https://go.dev/dl/?mode=json' | \
-    jq -r '.[] | select(.version == "go{{ go_version }}") | .files[] | select(.filename == "go{{ go_version }}.linux-{{ go_arch }}.tar.gz") | .sha256'
+    jq -r '.[] | select(.version == "go{{ go_version }}") | .files[] | select(.filename == "go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz") | .sha256'
   register: go_checksum_result
   changed_when: false
   when: go_needs_install
 
+- name: Check if Go version exists
+  ansible.builtin.fail:
+    msg: "Go version {{ go_version }} not found. Please update go_version in vars.yml to a valid version. Check https://go.dev/dl/ for available versions."
+  when: go_needs_install and (go_checksum_result.stdout is not defined or go_checksum_result.stdout | length == 0)
+
 - name: Set Go checksum variable
   ansible.builtin.set_fact:
     go_checksum: "{{ go_checksum_result.stdout }}"
-  when: go_needs_install
+  when: go_needs_install and go_checksum_result.stdout | length > 0
 
 - name: Download Go tarball
   ansible.builtin.get_url:
-    url: "https://go.dev/dl/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
-    dest: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+    url: "https://go.dev/dl/go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz"
+    dest: "/tmp/go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz"
     checksum: "sha256:{{ go_checksum }}"
     mode: '0644'
+    timeout: 60
   when: go_needs_install and go_checksum is defined and go_checksum | length > 0
 
 - name: Remove old Go installation
@@ -47,12 +57,12 @@
 
 - name: Check if Go tarball was downloaded
   ansible.builtin.stat:
-    path: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+    path: "/tmp/go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz"
   register: go_tarball_stat
 
 - name: Extract Go tarball
   ansible.builtin.unarchive:
-    src: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+    src: "/tmp/go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz"
     dest: "{{ go_install_dir }}"
     remote_src: true
   become: true
@@ -90,7 +100,14 @@
   ansible.builtin.command: "{{ go_install_dir }}/go/bin/go version"
   register: go_version_output
   changed_when: false
+  failed_when: false
 
 - name: Display Go version
   ansible.builtin.debug:
     msg: "Go installed: {{ go_version_output.stdout }}"
+  when: go_version_output.rc == 0
+
+- name: Display Go installation error
+  ansible.builtin.debug:
+    msg: "WARNING: Go installation verification failed. Go may not be installed correctly."
+  when: go_version_output.rc != 0

@@ -1,7 +1,7 @@
 ---
-# Zsh role - Install zsh and oh-my-zsh with Powerline fonts
+# Zsh role - Install zsh and oh-my-zsh with Nerd Fonts
 
-- name: Install zsh and font dependencies
+- name: Install zsh and font dependencies (Linux)
   ansible.builtin.package:
     name:
       - zsh
@@ -11,16 +11,25 @@
       - wget
     state: present
   become: true
+  when: ansible_os_family == "Debian"
+
+- name: Install zsh and dependencies (macOS)
+  community.general.homebrew:
+    name:
+      - zsh
+      - wget
+    state: present
+  when: ansible_os_family == "Darwin"
 
 - name: Create fonts directory
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.local/share/fonts"
+    path: "{{ font_dir }}"
     state: directory
     mode: '0755'
 
 - name: Check if Nerd Fonts are already installed
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+    path: "{{ font_dir }}/NerdFonts"
   register: nerd_fonts_stat
 
 - name: Download and install Nerd Fonts (Meslo, FiraCode, JetBrainsMono)
@@ -60,28 +69,28 @@
 
     - name: Create NerdFonts directory
       ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+        path: "{{ font_dir }}/NerdFonts"
         state: directory
         mode: '0755'
 
     - name: Extract Meslo Nerd Font
       ansible.builtin.unarchive:
         src: "{{ fonts_temp_dir.path }}/Meslo.zip"
-        dest: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+        dest: "{{ font_dir }}/NerdFonts"
         remote_src: true
       when: meslo_download is succeeded
 
     - name: Extract FiraCode Nerd Font
       ansible.builtin.unarchive:
         src: "{{ fonts_temp_dir.path }}/FiraCode.zip"
-        dest: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+        dest: "{{ font_dir }}/NerdFonts"
         remote_src: true
       when: firacode_download is succeeded
 
     - name: Extract JetBrainsMono Nerd Font
       ansible.builtin.unarchive:
         src: "{{ fonts_temp_dir.path }}/JetBrainsMono.zip"
-        dest: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+        dest: "{{ font_dir }}/NerdFonts"
         remote_src: true
       when: jetbrains_download is succeeded
 
@@ -91,9 +100,10 @@
         state: absent
   when: not nerd_fonts_stat.stat.exists
 
-- name: Update font cache
+- name: Update font cache (Linux only)
   ansible.builtin.command: fc-cache -fv
   changed_when: false
+  when: ansible_os_family == "Debian"
 
 - name: Check if oh-my-zsh is already installed
   ansible.builtin.stat:
@@ -153,10 +163,15 @@
     dest: "{{ ansible_env.HOME }}/.zshrc"
     state: link
 
+- name: Get zsh path
+  ansible.builtin.command: which zsh
+  register: zsh_path_result
+  changed_when: false
+
 - name: Change default shell to zsh
   ansible.builtin.user:
     name: "{{ ansible_user_id }}"
-    shell: /usr/bin/zsh
+    shell: "{{ zsh_path_result.stdout }}"
   become: true
 
 - name: Create VS Code Server data directory

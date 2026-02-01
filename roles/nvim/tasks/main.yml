@@ -1,26 +1,34 @@
 ---
 # Neovim role - Install Neovim with basic configuration
 
-- name: Remove vim and vim-tiny
+- name: Remove vim and vim-tiny (Linux)
   ansible.builtin.package:
     name:
       - vim
       - vim-tiny
     state: absent
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Add Neovim PPA
+- name: Add Neovim PPA (Ubuntu/Pop!_OS)
   ansible.builtin.apt_repository:
     repo: ppa:neovim-ppa/unstable
     state: present
   become: true
   when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
 
-- name: Install Neovim
+- name: Install Neovim (Linux)
   ansible.builtin.package:
     name: neovim
     state: present
   become: true
+  when: ansible_os_family == "Debian"
+
+- name: Install Neovim (macOS)
+  community.general.homebrew:
+    name: neovim
+    state: present
+  when: ansible_os_family == "Darwin"
 
 - name: Check if Neovim config directory exists
   ansible.builtin.stat:
@@ -51,32 +59,36 @@
   changed_when: nvim_plugin_install.rc == 0
   failed_when: false
 
-- name: Set nvim as default editor system-wide
+- name: Set nvim as default editor system-wide (Linux)
   ansible.builtin.lineinfile:
     path: /etc/environment
     regexp: '^EDITOR='
     line: 'EDITOR=nvim'
     state: present
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Set nvim as default VISUAL editor system-wide
+- name: Set nvim as default VISUAL editor system-wide (Linux)
   ansible.builtin.lineinfile:
     path: /etc/environment
     regexp: '^VISUAL='
     line: 'VISUAL=nvim'
     state: present
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Update alternatives for editor to nvim
+- name: Update alternatives for editor to nvim (Linux)
   community.general.alternatives:
     name: editor
     path: /usr/bin/nvim
   become: true
   failed_when: false
+  when: ansible_os_family == "Debian"
 
-- name: Update alternatives for vi to nvim
+- name: Update alternatives for vi to nvim (Linux)
   community.general.alternatives:
     name: vi
     path: /usr/bin/nvim
   become: true
   failed_when: false
+  when: ansible_os_family == "Debian"

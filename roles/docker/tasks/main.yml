@@ -1,7 +1,25 @@
 ---
 # Docker role - Install Docker and Docker Compose
 
-- name: Remove old Docker packages
+# macOS installation (using Colima)
+- name: Install Colima and Docker CLI (macOS)
+  community.general.homebrew:
+    name:
+      - colima
+      - docker
+      - docker-compose
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Start Colima (macOS)
+  ansible.builtin.command: colima start
+  when: ansible_os_family == "Darwin"
+  register: colima_start
+  changed_when: "'already running' not in colima_start.stderr"
+  failed_when: false
+
+# Linux installation
+- name: Remove old Docker packages (Linux)
   ansible.builtin.package:
     name:
       - docker
@@ -11,8 +29,9 @@
       - runc
     state: absent
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Install Docker dependencies
+- name: Install Docker dependencies (Linux)
   ansible.builtin.package:
     name:
       - ca-certificates
@@ -21,17 +40,20 @@
       - lsb-release
     state: present
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Create /etc/apt/keyrings directory
+- name: Create /etc/apt/keyrings directory (Linux)
   ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
     mode: '0755'
   become: true
+  when: ansible_os_family == "Debian"
 
 - name: Set Docker distribution name (Pop!_OS uses Ubuntu repos)
   ansible.builtin.set_fact:
     docker_distro: "{{ 'ubuntu' if ansible_distribution == 'Pop!_OS' else ansible_distribution | lower }}"
+  when: ansible_os_family == "Debian"
 
 - name: Download Docker GPG key
   ansible.builtin.get_url:
@@ -41,6 +63,7 @@
     timeout: 30
     force: true
   become: true
+  when: ansible_os_family == "Debian"
 
 - name: Verify Docker GPG key was downloaded
   ansible.builtin.stat:
@@ -58,12 +81,14 @@
     signed_by: /etc/apt/keyrings/docker.asc
     state: present
   become: true
+  when: ansible_os_family == "Debian"
   when: docker_gpg_key.stat.exists
 
 - name: Update apt cache after adding Docker repo
   ansible.builtin.apt:
     update_cache: true
   become: true
+  when: ansible_os_family == "Debian"
 
 - name: Install Docker
   ansible.builtin.package:
@@ -75,6 +100,7 @@
       - docker-compose-plugin
     state: present
   become: true
+  when: ansible_os_family == "Debian"
   notify: restart docker
 
 - name: Ensure Docker service is started and enabled
@@ -83,6 +109,7 @@
     state: started
     enabled: true
   become: true
+  when: ansible_os_family == "Debian"
 
 - name: Add user to docker group
   ansible.builtin.user:
@@ -90,6 +117,7 @@
     groups: docker
     append: true
   become: true
+  when: ansible_os_family == "Debian"
   loop: "{{ docker_users }}"
   loop_control:
     loop_var: docker_user

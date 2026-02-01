@@ -1,7 +1,7 @@
 ---
 # Alacritty role - Install Alacritty terminal emulator
 
-- name: Install Alacritty dependencies
+- name: Install Alacritty dependencies (Linux)
   ansible.builtin.package:
     name:
       - cmake
@@ -22,18 +22,25 @@
   become: true
   when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
 
-- name: Update apt cache
+- name: Update apt cache (Linux)
   ansible.builtin.apt:
     update_cache: true
   become: true
   when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
 
-- name: Install Alacritty
+- name: Install Alacritty (Linux)
   ansible.builtin.package:
     name:
       - alacritty
     state: present
   become: true
+  when: ansible_os_family == "Debian"
+
+- name: Install Alacritty (macOS)
+  community.general.homebrew_cask:
+    name: alacritty
+    state: present
+  when: ansible_os_family == "Darwin"
 
 - name: Check if alacritty config directory exists
   ansible.builtin.stat:
