@@ -1,4 +1,4 @@
-.PHONY: help setup setup-local setup-remote lint check install-ansible install-ansible-lint test tags clean
+.PHONY: help setup setup-local setup-remote lint check check-local install-ansible install-ansible-lint test tags clean
 
 # Default target
 help:
@@ -8,6 +8,7 @@ help:
 	@echo "  make setup-remote   - Same as 'make setup'"
 	@echo "  make lint           - Run ansible-lint on playbooks"
 	@echo "  make check          - Dry-run the playbook (check mode)"
+	@echo "  make check-local    - Dry-run the playbook locally (check mode)"
 	@echo "  make install-ansible - Install Ansible via pip"
 	@echo "  make install-ansible-lint - Install ansible-lint"
 	@echo "  make test           - Run playbook in check mode with diff"
@@ -48,7 +49,7 @@ setup-remote: setup
 # Setup local machine
 setup-local: install-ansible
 	@echo "Running playbook locally..."
-	ansible-playbook -i localhost, playbooks/setup.yml --connection=local
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass
 
 # Run ansible-lint
 lint: install-ansible-lint
@@ -58,7 +59,12 @@ lint: install-ansible-lint
 # Check mode (dry-run)
 check: install-ansible
 	@echo "Running playbook in check mode (dry-run)..."
-	ansible-playbook -i inventory.ini playbooks/setup.yml --check 
+	ansible-playbook -i inventory.ini playbooks/setup.yml --check
+
+# Check mode for local setup (dry-run)
+check-local: install-ansible
+	@echo "Running playbook locally in check mode (dry-run)..."
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass --check 
 
 # Test with diff
 test: install-ansible
