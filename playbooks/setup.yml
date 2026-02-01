@@ -17,18 +17,32 @@
           - OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
           - Architecture: {{ ansible_architecture }}
 
-    - name: Ensure system is Debian/Ubuntu
+    - name: Ensure system is supported
       ansible.builtin.assert:
         that:
-          - ansible_os_family == "Debian"
-        fail_msg: "This playbook only supports Debian/Ubuntu systems"
+          - ansible_os_family in ["Debian", "Darwin"]
+        fail_msg: "This playbook only supports Debian/Ubuntu/Pop!_OS and macOS systems"
         success_msg: "Compatible OS detected: {{ ansible_distribution }}"
 
-    - name: Update apt cache
+    - name: Update apt cache (Linux)
       ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
       become: true
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Homebrew is installed (macOS)
+      ansible.builtin.stat:
+        path: "{{ homebrew_prefix }}/bin/brew"
+      register: homebrew_installed
+      when: ansible_os_family == "Darwin"
+
+    - name: Display Homebrew warning if not installed (macOS)
+      ansible.builtin.fail:
+        msg: |
+          Homebrew is not installed. Please install it first:
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      when: ansible_os_family == "Darwin" and not homebrew_installed.stat.exists
 
   roles:
     - role: common

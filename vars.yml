@@ -13,12 +13,22 @@ composer_version: "2"
 python_version: "3.13"
 gh_version: "2.63.2"
 
+# Platform detection
+is_macos: "{{ ansible_os_family == 'Darwin' }}"
+is_linux: "{{ ansible_os_family == 'Debian' }}"
+
 # Architecture mapping
 # Maps ansible_architecture to common architecture names used in downloads
 arch_map:
   x86_64: "amd64"
   aarch64: "arm64"
+  arm64: "arm64"  # macOS reports as 'arm64' for Apple Silicon
   armv7l: "armv7"
+
+# macOS-specific paths
+homebrew_prefix_intel: "/usr/local"
+homebrew_prefix_silicon: "/opt/homebrew"
+homebrew_prefix: "{{ homebrew_prefix_silicon if ansible_machine == 'arm64' else homebrew_prefix_intel }}"
 
 # Go settings
 go_arch: "{{ arch_map[ansible_architecture] | default('amd64') }}"
@@ -32,6 +42,11 @@ zsh_config_dir: "{{ ansible_env.HOME }}/.config/zsh"
 
 # Alacritty
 alacritty_config_dir: "{{ ansible_env.HOME }}/.config/alacritty"
+
+# Font directories (OS-specific)
+font_dir_linux: "{{ ansible_env.HOME }}/.local/share/fonts"
+font_dir_macos: "{{ ansible_env.HOME }}/Library/Fonts"
+font_dir: "{{ font_dir_macos if is_macos else font_dir_linux }}"
 
 # Docker
 docker_users:
