@@ -8,7 +8,8 @@ This assumes an already installed barebone server, with a user that has SSH acce
 
 This setup installs and configures:
 
-- **Shell**: zsh with oh-my-zsh
+- **Shell**: zsh with oh-my-zsh, Nerd Fonts (Meslo, FiraCode, JetBrainsMono)
+- **Terminal**: Alacritty with custom config
 - **Version Control**: git
 - **Containers**: Docker + Docker Compose
 - **Editor**: Neovim with plugins and custom config
@@ -101,6 +102,7 @@ make run-role TAG=languages
 Available tags:
 - `common`, `base` - Basic tools
 - `zsh`, `shell` - Shell setup
+- `alacritty`, `terminal` - Alacritty terminal
 - `docker`, `containers` - Docker setup
 - `nvim`, `editor` - Neovim setup
 - `php`, `go`, `golang`, `nodejs`, `node`, `python`, `languages` - Programming languages
@@ -130,7 +132,8 @@ workmachine/
 │   └── setup.yml               # Main playbook
 ├── roles/
 │   ├── common/                 # Basic CLI tools
-│   ├── zsh/                    # Zsh + oh-my-zsh
+│   ├── zsh/                    # Zsh + oh-my-zsh + Nerd Fonts
+│   ├── alacritty/              # Alacritty terminal
 │   ├── docker/                 # Docker setup
 │   ├── nvim/                   # Neovim + config
 │   ├── php/                    # PHP + Composer
@@ -180,6 +183,7 @@ Configuration files are managed via external Git repositories (private):
 - **Neovim**: [git@github.com:mvmaasakkers/nvim.git](https://github.com/mvmaasakkers/nvim) → `~/.config/nvim/`
 - **tmux**: [git@github.com:mvmaasakkers/tmux.git](https://github.com/mvmaasakkers/tmux) → `~/.config/tmux/`
 - **zsh**: [git@github.com:mvmaasakkers/zsh.git](https://github.com/mvmaasakkers/zsh) → `~/.config/zsh/` (symlinked to `~/.zshrc`)
+- **Alacritty**: [git@github.com:mvmaasakkers/alacritty.git](https://github.com/mvmaasakkers/alacritty) → `~/.config/alacritty/`
 
 ### Customizing Configs
 
@@ -220,6 +224,29 @@ The setup:
 3. Creates a symlink from `~/.zshrc` to `~/.config/zsh/.zshrc`
 
 Your zsh repo should contain a `.zshrc` file that sources oh-my-zsh and includes your customizations.
+
+## Alacritty Configuration
+
+Alacritty configuration is managed via a separate Git repository: [mvmaasakkers/alacritty](https://github.com/mvmaasakkers/alacritty)
+
+The setup:
+1. Installs Alacritty via PPA (Ubuntu/Pop!_OS)
+2. Clones the repository to `~/.config/alacritty/`
+
+Your alacritty repo should contain configuration files (e.g., `alacritty.toml` or `alacritty.yml`) with your customizations.
+
+## Nerd Fonts
+
+The zsh role automatically installs three popular Nerd Fonts with powerline glyphs:
+- **Meslo Nerd Font** - A variant of Menlo with added glyphs
+- **FiraCode Nerd Font** - Popular monospaced font with ligatures
+- **JetBrainsMono Nerd Font** - Designed for developers by JetBrains
+
+Fonts are installed to `~/.local/share/fonts/NerdFonts/` and the font cache is updated automatically.
+
+To use these fonts in your terminal:
+- **Alacritty**: Set `font.normal.family` in your config to `"MesloLGS Nerd Font"`, `"FiraCode Nerd Font"`, or `"JetBrainsMono Nerd Font"`
+- **Other terminals**: Select the Nerd Font variant in your terminal preferences
 
 ## Sudo Password Configuration
 

@@ -1,0 +1,68 @@
+---
+# Alacritty role - Install Alacritty terminal emulator
+
+- name: Install Alacritty dependencies
+  ansible.builtin.package:
+    name:
+      - cmake
+      - pkg-config
+      - libfreetype6-dev
+      - libfontconfig1-dev
+      - libxcb-xfixes0-dev
+      - libxkbcommon-dev
+      - python3
+    state: present
+  become: true
+  when: ansible_distribution in ["Ubuntu", "Debian", "Pop!_OS"]
+
+- name: Add Alacritty PPA (Ubuntu/Pop!_OS)
+  ansible.builtin.apt_repository:
+    repo: ppa:aslatter/ppa
+    state: present
+  become: true
+  when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+  when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
+
+- name: Install Alacritty
+  ansible.builtin.package:
+    name:
+      - alacritty
+    state: present
+  become: true
+
+- name: Check if alacritty config directory exists
+  ansible.builtin.stat:
+    path: "{{ alacritty_config_dir }}"
+  register: alacritty_config_stat
+
+- name: Check if alacritty config is a git repo
+  ansible.builtin.stat:
+    path: "{{ alacritty_config_dir }}/.git"
+  register: alacritty_config_git_stat
+
+- name: Remove existing alacritty config directory if not a git repo
+  ansible.builtin.file:
+    path: "{{ alacritty_config_dir }}"
+    state: absent
+  when: alacritty_config_stat.stat.exists and not alacritty_config_git_stat.stat.exists
+
+- name: Clone alacritty configuration repository
+  ansible.builtin.git:
+    repo: git@github.com:mvmaasakkers/alacritty.git
+    dest: "{{ alacritty_config_dir }}"
+    accept_hostkey: true
+    update: true
+
+- name: Verify Alacritty installation
+  ansible.builtin.command: alacritty --version
+  register: alacritty_version
+  changed_when: false
+
+- name: Display Alacritty version
+  ansible.builtin.debug:
+    msg: "Alacritty installed: {{ alacritty_version.stdout }}"

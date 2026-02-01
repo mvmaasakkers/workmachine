@@ -5,7 +5,7 @@
 # Versions are on the top as they are most likely to be changed
 lazygit_version: "0.58.1"
 netbird_version: "0.64.1"
-go_version: "1.25.4"
+go_version: "1.25.6"
 nodejs_version: "24"
 php_version: "8.4"
 php_version_short: "8.4"
@@ -22,6 +22,9 @@ neovim_config_dir: "{{ ansible_env.HOME }}/.config/nvim"
 
 # Zsh
 zsh_config_dir: "{{ ansible_env.HOME }}/.config/zsh"
+
+# Alacritty
+alacritty_config_dir: "{{ ansible_env.HOME }}/.config/alacritty"
 
 # Docker
 docker_users:

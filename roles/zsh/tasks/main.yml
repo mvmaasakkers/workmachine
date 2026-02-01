@@ -7,8 +7,90 @@
       - zsh
       - fontconfig
       - fonts-powerline
+      - unzip
+      - wget
     state: present
   become: true
+
+- name: Create fonts directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/share/fonts"
+    state: directory
+    mode: '0755'
+
+- name: Check if Nerd Fonts are already installed
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+  register: nerd_fonts_stat
+
+- name: Download and install Nerd Fonts (Meslo, FiraCode, JetBrainsMono)
+  block:
+    - name: Create temporary directory for fonts
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: nerdfonts
+      register: fonts_temp_dir
+
+    - name: Download Meslo Nerd Font
+      ansible.builtin.get_url:
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip"
+        dest: "{{ fonts_temp_dir.path }}/Meslo.zip"
+        timeout: 60
+      register: meslo_download
+      failed_when: false
+
+    - name: Download FiraCode Nerd Font
+      ansible.builtin.get_url:
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
+        dest: "{{ fonts_temp_dir.path }}/FiraCode.zip"
+        timeout: 60
+      register: firacode_download
+      failed_when: false
+
+    - name: Download JetBrainsMono Nerd Font
+      ansible.builtin.get_url:
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+        dest: "{{ fonts_temp_dir.path }}/JetBrainsMono.zip"
+        timeout: 60
+      register: jetbrains_download
+      failed_when: false
+
+    - name: Create NerdFonts directory
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+        state: directory
+        mode: '0755'
+
+    - name: Extract Meslo Nerd Font
+      ansible.builtin.unarchive:
+        src: "{{ fonts_temp_dir.path }}/Meslo.zip"
+        dest: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+        remote_src: true
+      when: meslo_download is succeeded
+
+    - name: Extract FiraCode Nerd Font
+      ansible.builtin.unarchive:
+        src: "{{ fonts_temp_dir.path }}/FiraCode.zip"
+        dest: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+        remote_src: true
+      when: firacode_download is succeeded
+
+    - name: Extract JetBrainsMono Nerd Font
+      ansible.builtin.unarchive:
+        src: "{{ fonts_temp_dir.path }}/JetBrainsMono.zip"
+        dest: "{{ ansible_env.HOME }}/.local/share/fonts/NerdFonts"
+        remote_src: true
+      when: jetbrains_download is succeeded
+
+    - name: Clean up temporary font files
+      ansible.builtin.file:
+        path: "{{ fonts_temp_dir.path }}"
+        state: absent
+  when: not nerd_fonts_stat.stat.exists
+
+- name: Update font cache
+  ansible.builtin.command: fc-cache -fv
+  changed_when: false
 
 - name: Check if oh-my-zsh is already installed
   ansible.builtin.stat:
