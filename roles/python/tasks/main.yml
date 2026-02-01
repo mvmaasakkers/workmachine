@@ -75,7 +75,7 @@
   changed_when: "'already in PATH' not in pipx_ensurepath.stdout"
   failed_when: false
 
-- name: Install common Python tools via apt (PEP 668 compliant)
+- name: Install common Python tools via apt (PEP 668 compliant, Linux only)
   ansible.builtin.package:
     name:
       - python3-setuptools
@@ -84,6 +84,7 @@
       - python3-pytest
     state: present
   become: true
+  when: ansible_os_family == "Debian"
 
 - name: Check if poetry is installed
   ansible.builtin.command: pipx list

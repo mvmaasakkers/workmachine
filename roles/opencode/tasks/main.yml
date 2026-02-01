@@ -16,3 +16,16 @@
   ansible.builtin.debug:
     msg: "OpenCode CLI installed: {{ opencode_version_output.stdout }}"
   when: not ansible_check_mode and opencode_version_output.stdout | length > 0
+
+- name: Install Oh My OpenCode plugin globally via npm
+  community.general.npm:
+    name: "@reinamaccredy/oh-my-opencode"
+    global: true
+    state: present
+  become: true
+  when: not ansible_check_mode
+
+- name: Display Oh My OpenCode installation status
+  ansible.builtin.debug:
+    msg: "Oh My OpenCode plugin installed. Configure in ~/.config/opencode/opencode.json"
+  when: not ansible_check_mode

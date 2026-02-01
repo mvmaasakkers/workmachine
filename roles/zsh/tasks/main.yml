@@ -33,6 +33,7 @@
   register: nerd_fonts_stat
 
 - name: Download and install Nerd Fonts (Meslo, FiraCode, JetBrainsMono)
+  when: not nerd_fonts_stat.stat.exists
   block:
     - name: Create temporary directory for fonts
       ansible.builtin.tempfile:
@@ -98,7 +99,6 @@
       ansible.builtin.file:
         path: "{{ fonts_temp_dir.path }}"
         state: absent
-  when: not nerd_fonts_stat.stat.exists
 
 - name: Update font cache (Linux only)
   ansible.builtin.command: fc-cache -fv

@@ -128,6 +128,7 @@
     line: 'export PATH="$HOME/.bun/bin:$PATH"'
     state: present
     create: true
+    mode: '0644'
   when: bun_available.rc != 0
 
 - name: Add Bun to PATH in .bashrc
@@ -136,6 +137,7 @@
     line: 'export PATH="$HOME/.bun/bin:$PATH"'
     state: present
     create: true
+    mode: '0644'
   when: bun_available.rc != 0
 
 - name: Verify Bun installation

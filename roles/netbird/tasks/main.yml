@@ -2,41 +2,50 @@
 # Netbird role - Install Netbird VPN client
 # This role installs the Netbird client but does not configure or connect it
 
-- name: Add Netbird APT key
+- name: Install Netbird (macOS)
+  community.general.homebrew:
+    name: netbirdio/tap/netbird
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Add Netbird APT key (Linux)
   ansible.builtin.get_url:
     url: https://pkgs.netbird.io/debian/public.key
     dest: /usr/share/keyrings/netbird-archive-keyring.asc
     mode: '0644'
     force: true
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Add Netbird APT repository
+- name: Add Netbird APT repository (Linux)
   ansible.builtin.apt_repository:
     repo: "deb [signed-by=/usr/share/keyrings/netbird-archive-keyring.asc] https://pkgs.netbird.io/debian stable main"
     state: present
     filename: netbird
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Update apt cache for Netbird repository
+- name: Update apt cache for Netbird repository (Linux)
   ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 0
   become: true
+  when: ansible_os_family == "Debian"
 
-- name: Install specific version of Netbird client
+- name: Install specific version of Netbird client (Linux)
   ansible.builtin.apt:
     name: "netbird={{ netbird_version }}"
     state: present
     allow_downgrade: true
   become: true
-  when: netbird_version is defined
+  when: ansible_os_family == "Debian" and netbird_version is defined
 
-- name: Install latest Netbird client
+- name: Install latest Netbird client (Linux)
   ansible.builtin.apt:
     name: netbird
     state: present
   become: true
-  when: netbird_version is not defined
+  when: ansible_os_family == "Debian" and netbird_version is not defined
 
 - name: Get installed Netbird version
   ansible.builtin.command: netbird version

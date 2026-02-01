@@ -12,8 +12,18 @@
   ansible.builtin.set_fact:
     gh_arch: "{{ arch_map[ansible_architecture] | default('amd64') }}"
 
-- name: Install GitHub CLI
-  when: gh_current_version.rc != 0 or ('gh version ' + gh_version) not in gh_current_version.stdout
+# macOS installation via Homebrew
+- name: Install GitHub CLI (macOS)
+  community.general.homebrew:
+    name: gh
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via .deb package
+- name: Install GitHub CLI (Linux)
+  when:
+    - ansible_os_family == "Debian"
+    - gh_current_version.rc != 0 or ('gh version ' + gh_version) not in gh_current_version.stdout
   become: true
   block:
     - name: Download GitHub CLI .deb package

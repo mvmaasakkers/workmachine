@@ -81,8 +81,7 @@
     signed_by: /etc/apt/keyrings/docker.asc
     state: present
   become: true
-  when: ansible_os_family == "Debian"
-  when: docker_gpg_key.stat.exists
+  when: ansible_os_family == "Debian" and docker_gpg_key.stat.exists
 
 - name: Update apt cache after adding Docker repo
   ansible.builtin.apt:
@@ -117,11 +116,10 @@
     groups: docker
     append: true
   become: true
-  when: ansible_os_family == "Debian"
   loop: "{{ docker_users }}"
   loop_control:
     loop_var: docker_user
-  when: docker_users is defined
+  when: ansible_os_family == "Debian" and docker_users is defined
 
 - name: Verify Docker installation
   ansible.builtin.command: docker --version
