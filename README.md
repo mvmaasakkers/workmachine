@@ -23,7 +23,7 @@ This setup installs and configures:
 - **Languages**:
   - PHP 8.4 (CLI + Composer)
   - Go 1.25.6
-  - Node.js 24 (+ npm, yarn, pnpm)
+  - Node.js 24 (+ npm, yarn, pnpm, Bun)
   - Python 3.13 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd
 - **AI Tools**: Claude Code CLI, OpenCode CLI

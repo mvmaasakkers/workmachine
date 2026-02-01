@@ -102,7 +102,7 @@
           - Container platform: Docker with Docker Compose
           - Editor: Neovim with plugins
           - Languages: PHP {{ php_version }}, Go {{ go_version }}, Node.js {{ nodejs_version }}, Python 3
-          - Package managers: composer, npm, pip
+          - Package managers: composer, npm, pip, bun
           - VPN: Netbird client (not connected)
           - CLI tools: GitHub CLI (gh), Claude Code CLI, OpenCode CLI
 

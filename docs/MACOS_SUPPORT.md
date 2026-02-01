@@ -48,7 +48,7 @@ You'll be prompted for your sudo password.
 
 ### Programming Languages
 - ✅ **Go** 1.25.6
-- ✅ **Node.js** 24 (+ npm, yarn, pnpm, TypeScript)
+- ✅ **Node.js** 24 (+ npm, yarn, pnpm, TypeScript, Bun)
 - ✅ **Python** 3.13 (+ pipx, poetry, pipenv)
 - ✅ **PHP** 8.4 (+ Composer)
 

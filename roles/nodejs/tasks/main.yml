@@ -105,3 +105,46 @@
 - name: Display npm version
   ansible.builtin.debug:
     msg: "npm installed: {{ npm_version_output.stdout }}"
+
+# Install Bun (cross-platform JavaScript runtime and toolkit)
+- name: Check if Bun is already installed
+  ansible.builtin.command: which bun
+  register: bun_available
+  changed_when: false
+  failed_when: false
+
+- name: Install Bun (Linux/macOS)
+  ansible.builtin.shell: |
+    curl -fsSL https://bun.sh/install | bash
+  args:
+    creates: "{{ ansible_env.HOME }}/.bun/bin/bun"
+  environment:
+    BUN_INSTALL: "{{ ansible_env.HOME }}/.bun"
+  when: bun_available.rc != 0
+
+- name: Add Bun to PATH in .zshrc
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'export PATH="$HOME/.bun/bin:$PATH"'
+    state: present
+    create: true
+  when: bun_available.rc != 0
+
+- name: Add Bun to PATH in .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: 'export PATH="$HOME/.bun/bin:$PATH"'
+    state: present
+    create: true
+  when: bun_available.rc != 0
+
+- name: Verify Bun installation
+  ansible.builtin.command: "{{ ansible_env.HOME }}/.bun/bin/bun --version"
+  register: bun_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display Bun version
+  ansible.builtin.debug:
+    msg: "Bun installed: {{ bun_version_output.stdout }}"
+  when: bun_version_output.rc == 0 and bun_version_output.stdout | length > 0
