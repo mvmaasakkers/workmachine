@@ -67,11 +67,16 @@
   ansible.builtin.set_fact:
     lazygit_needs_install: "{{ not lazygit_binary.stat.exists or lazygit_version not in (installed_lazygit_version.stdout | default('')) }}"
 
+- name: Set architecture for lazygit
+  ansible.builtin.set_fact:
+    lazygit_arch: "{{ arch_map[ansible_architecture] | default('amd64') }}"
+
 - name: Download lazygit
   ansible.builtin.get_url:
-    url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_x86_64.tar.gz"
+    url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_{{ 'x86_64' if lazygit_arch == 'amd64' else 'arm64' }}.tar.gz"
     dest: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
     mode: '0644'
+    timeout: 30
   when: lazygit_needs_install
 
 - name: Extract lazygit

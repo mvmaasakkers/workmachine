@@ -1,9 +1,9 @@
 ---
-- name: Install or update OpenCode CLI globally via npm
+- name: Install OpenCode CLI globally via npm
   community.general.npm:
     name: opencode-ai
     global: true
-    state: latest
+    state: present
   become: true
   when: not ansible_check_mode
 

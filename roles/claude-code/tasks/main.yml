@@ -1,9 +1,9 @@
 ---
-- name: Install or update Claude Code CLI globally via npm
+- name: Install Claude Code CLI globally via npm
   community.general.npm:
     name: "@anthropic-ai/claude-code"
     global: true
-    state: latest
+    state: present
   become: true
   when: not ansible_check_mode
 

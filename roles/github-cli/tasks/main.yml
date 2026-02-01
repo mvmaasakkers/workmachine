@@ -8,24 +8,29 @@
   changed_when: false
   failed_when: false
 
+- name: Set architecture for GitHub CLI
+  ansible.builtin.set_fact:
+    gh_arch: "{{ arch_map[ansible_architecture] | default('amd64') }}"
+
 - name: Install GitHub CLI
   when: gh_current_version.rc != 0 or ('gh version ' + gh_version) not in gh_current_version.stdout
   become: true
   block:
     - name: Download GitHub CLI .deb package
       ansible.builtin.get_url:
-        url: "https://github.com/cli/cli/releases/download/v{{ gh_version }}/gh_{{ gh_version }}_linux_amd64.deb"
-        dest: "/tmp/gh_{{ gh_version }}_linux_amd64.deb"
+        url: "https://github.com/cli/cli/releases/download/v{{ gh_version }}/gh_{{ gh_version }}_linux_{{ gh_arch }}.deb"
+        dest: "/tmp/gh_{{ gh_version }}_linux_{{ gh_arch }}.deb"
         mode: '0644'
+        timeout: 30
 
     - name: Install GitHub CLI from .deb package
       ansible.builtin.apt:
-        deb: "/tmp/gh_{{ gh_version }}_linux_amd64.deb"
+        deb: "/tmp/gh_{{ gh_version }}_linux_{{ gh_arch }}.deb"
         state: present
 
     - name: Clean up downloaded .deb file
       ansible.builtin.file:
-        path: "/tmp/gh_{{ gh_version }}_linux_amd64.deb"
+        path: "/tmp/gh_{{ gh_version }}_linux_{{ gh_arch }}.deb"
         state: absent
 
 - name: Verify GitHub CLI installation

@@ -35,25 +35,28 @@
       ansible.builtin.get_url:
         url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip"
         dest: "{{ fonts_temp_dir.path }}/Meslo.zip"
+        mode: '0644'
         timeout: 60
       register: meslo_download
-      failed_when: false
+      failed_when: meslo_download is failed and 'HTTP Error 404' not in (meslo_download.msg | default(''))
 
     - name: Download FiraCode Nerd Font
       ansible.builtin.get_url:
         url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
         dest: "{{ fonts_temp_dir.path }}/FiraCode.zip"
+        mode: '0644'
         timeout: 60
       register: firacode_download
-      failed_when: false
+      failed_when: firacode_download is failed and 'HTTP Error 404' not in (firacode_download.msg | default(''))
 
     - name: Download JetBrainsMono Nerd Font
       ansible.builtin.get_url:
         url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
         dest: "{{ fonts_temp_dir.path }}/JetBrainsMono.zip"
+        mode: '0644'
         timeout: 60
       register: jetbrains_download
-      failed_when: false
+      failed_when: jetbrains_download is failed and 'HTTP Error 404' not in (jetbrains_download.msg | default(''))
 
     - name: Create NerdFonts directory
       ansible.builtin.file:

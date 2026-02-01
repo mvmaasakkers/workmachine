@@ -116,16 +116,18 @@
   register: symfony_cli_stat
 
 - name: Set up Symfony CLI repository
-  ansible.builtin.shell: curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
+  ansible.builtin.shell: >
+    curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' |
+    {{ 'distro=ubuntu' if ansible_distribution == 'Pop!_OS' else '' }} bash
   args:
     creates: /etc/apt/sources.list.d/symfony-stable.list
   become: true
   when: ansible_os_family == "Debian" and not symfony_cli_stat.stat.exists
 
-- name: Install or update Symfony CLI
+- name: Install Symfony CLI
   ansible.builtin.apt:
     name: symfony-cli
-    state: latest
+    state: present
     update_cache: true
   become: true
   when: ansible_os_family == "Debian"
