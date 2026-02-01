@@ -1,8 +1,15 @@
 # Development Environment Setup with Ansible
 
-Automated configuration for Ubuntu/Debian/Pop!_OS servers using Ansible. This repository provides a complete, idempotent setup for a full-featured development environment.
+Automated configuration for **Linux** (Ubuntu/Debian/Pop!_OS) and **macOS** (Intel/Apple Silicon) using Ansible. This repository provides a complete, idempotent setup for a full-featured development environment.
 
-This assumes an already installed barebone server, with a user that has SSH access setup and has full NOPASSWD sudo rights. If that's the case just add an entry to the inventory.ini (see inventory.ini.example for an example) and run make setup.
+## Platform Support
+
+- ✅ **Linux**: Ubuntu 20.04+, Debian 11+, Pop!_OS 22.04+
+- ✅ **macOS**: Intel and Apple Silicon (requires Homebrew)
+
+For remote Linux servers: Assumes a barebone server with SSH access and NOPASSWD sudo rights. Add an entry to inventory.ini and run `make setup`.
+
+For local machines (Linux or macOS): Run `make setup-local` and enter your sudo password when prompted.
 
 ## Features
 
@@ -26,13 +33,27 @@ This setup installs and configures:
 
 ### Prerequisites
 
-- A fresh Ubuntu, Debian, or Pop!_OS server (local or remote)
-- SSH access to the target server (for remote setup)
-- SSH key-based authentication configured (for remote setup)
-- Python 3 installed on the target
-- Sudo privileges on the target machine
-  - **Remote setup**: User with NOPASSWD sudo rights (recommended)
-  - **Local setup**: Any user with sudo access
+**For Linux:**
+- Ubuntu 20.04+, Debian 11+, or Pop!_OS 22.04+
+- Python 3 installed
+- Sudo privileges
+  - **Remote**: User with NOPASSWD sudo rights (recommended)
+  - **Local**: Any user with sudo access
+
+**For macOS:**
+- macOS with Intel or Apple Silicon
+- **Homebrew** installed (required):
+  ```bash
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ```
+- Ansible installed via Homebrew:
+  ```bash
+  brew install ansible
+  ```
+
+**For Remote Setup (SSH):**
+- SSH access to the target server
+- SSH key-based authentication configured
 
 ### Installation
 
@@ -396,10 +417,17 @@ This setup is fully idempotent - you can run it multiple times safely. It will:
 
 ## Requirements
 
-- Ubuntu 20.04+ or Debian 11+ or Pop!_OS 22.04+
-- Python 3.6+
-- SSH access (for remote setup)
-- Sudo privileges
+- **OS**: Ubuntu 20.04+, Debian 11+, Pop!_OS 22.04+, or macOS (Intel/Apple Silicon)
+- **Python**: 3.6+
+- **macOS Only**: Homebrew (package manager)
+- **SSH**: Required for remote setup
+- **Sudo**: Privileges required
+
+## Documentation
+
+- **[macOS Support Guide](docs/MACOS_SUPPORT.md)** - Complete macOS setup guide, troubleshooting, and platform differences
+- **[Config Repository Prompts](docs/config-repo-prompts/README.md)** - AI-assisted prompts for reviewing your personal config repos for cross-platform compatibility
+- **[Sudo Password Configuration](#sudo-password-configuration)** - Multiple methods for setting ansible sudo password
 
 ## Contributing
 
