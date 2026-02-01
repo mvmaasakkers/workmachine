@@ -87,6 +87,7 @@
     - black
     - flake8
     - pylint
+    - virtualenvwrapper
   loop_control:
     loop_var: python_tool
   when: python_tool not in pipx_list.stdout
