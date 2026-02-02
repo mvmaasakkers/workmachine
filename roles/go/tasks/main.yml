@@ -72,12 +72,11 @@
   register: go_tarball_stat
 
 - name: Extract Go tarball
-  ansible.builtin.unarchive:
-    src: "/tmp/go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz"
-    dest: "{{ go_install_dir }}"
-    remote_src: true
+  ansible.builtin.command:
+    cmd: tar -xzf "/tmp/go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz" -C "{{ go_install_dir }}"
   become: true
   when: go_needs_install and go_tarball_stat.stat.exists
+  changed_when: true
 
 - name: Add Go to PATH in .zshrc
   ansible.builtin.blockinfile:

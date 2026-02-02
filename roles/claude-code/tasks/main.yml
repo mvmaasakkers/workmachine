@@ -1,16 +1,25 @@
 ---
 - name: Install Claude Code CLI globally via npm
-  community.general.npm:
-    name: "@anthropic-ai/claude-code"
-    global: true
-    state: present
-  become: true
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm install -g @anthropic-ai/claude-code
+  args:
+    executable: /bin/bash
+  register: claude_install_result
+  changed_when: "'added' in claude_install_result.stdout or 'up to date' not in claude_install_result.stdout"
   when: not ansible_check_mode
 
 - name: Verify Claude Code CLI installation
-  ansible.builtin.command: claude --version
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    claude --version
+  args:
+    executable: /bin/bash
   register: claude_version_output
   changed_when: false
+  failed_when: false
 
 - name: Display Claude Code CLI version
   ansible.builtin.debug:

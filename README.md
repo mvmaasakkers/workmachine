@@ -23,7 +23,7 @@ This setup installs and configures:
 - **Languages**:
   - PHP 8.4 (CLI + Composer)
   - Go 1.25.6
-  - Node.js 24 (+ npm, yarn, pnpm, Bun)
+  - Node.js 24 via nvm (+ npm, yarn, pnpm, Bun)
   - Python 3.13 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd
 - **AI Tools**: Claude Code CLI, OpenCode CLI
@@ -159,7 +159,7 @@ workmachine/
 │   ├── nvim/                   # Neovim + config
 │   ├── php/                    # PHP + Composer
 │   ├── go/                     # Go language
-│   ├── nodejs/                 # Node.js + npm
+│   ├── nodejs/                 # Node.js via nvm
 │   ├── python/                 # Python + pip
 │   ├── claude-code/            # Claude Code CLI
 │   └── opencode/               # OpenCode CLI
@@ -255,6 +255,29 @@ The setup:
 2. Clones the repository to `~/.config/alacritty/`
 
 Your alacritty repo should contain configuration files (e.g., `alacritty.toml` or `alacritty.yml`) with your customizations.
+
+## Node.js via nvm
+
+Node.js is installed using [nvm](https://github.com/nvm-sh/nvm) (Node Version Manager) for consistent cross-platform behavior.
+
+The setup:
+1. Installs nvm to `~/.nvm/`
+2. Installs the configured Node.js version (default: 24)
+3. Sets it as the default version
+4. Installs global packages: yarn, pnpm, typescript, ts-node, nodemon
+
+To switch Node.js versions:
+```bash
+nvm install 22        # Install Node 22
+nvm use 22            # Use Node 22 in current shell
+nvm alias default 22  # Set Node 22 as default
+```
+
+To use a specific version per project, create a `.nvmrc` file:
+```bash
+echo "22" > .nvmrc
+nvm use  # Reads from .nvmrc
+```
 
 ## Nerd Fonts
 

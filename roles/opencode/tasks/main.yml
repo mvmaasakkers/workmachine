@@ -1,16 +1,25 @@
 ---
 - name: Install OpenCode CLI globally via npm
-  community.general.npm:
-    name: opencode-ai
-    global: true
-    state: present
-  become: true
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm install -g opencode-ai
+  args:
+    executable: /bin/bash
+  register: opencode_install_result
+  changed_when: "'added' in opencode_install_result.stdout or 'up to date' not in opencode_install_result.stdout"
   when: not ansible_check_mode
 
 - name: Verify OpenCode CLI installation
-  ansible.builtin.command: opencode --version
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    opencode --version
+  args:
+    executable: /bin/bash
   register: opencode_version_output
   changed_when: false
+  failed_when: false
 
 - name: Display OpenCode CLI version
   ansible.builtin.debug:
@@ -18,11 +27,14 @@
   when: not ansible_check_mode and opencode_version_output.stdout | length > 0
 
 - name: Install Oh My OpenCode plugin globally via npm
-  community.general.npm:
-    name: "@reinamaccredy/oh-my-opencode"
-    global: true
-    state: present
-  become: true
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm install -g @reinamaccredy/oh-my-opencode
+  args:
+    executable: /bin/bash
+  register: omo_install_result
+  changed_when: "'added' in omo_install_result.stdout or 'up to date' not in omo_install_result.stdout"
   when: not ansible_check_mode
 
 - name: Display Oh My OpenCode installation status

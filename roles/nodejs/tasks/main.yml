@@ -1,89 +1,94 @@
 ---
-# Node.js role - Install Node.js and npm
+# Node.js role - Install Node.js via nvm (cross-platform)
 
-- name: Remove old NodeSource repository files (Linux)
-  ansible.builtin.file:
-    path: "{{ nodejs_file }}"
-    state: absent
-  become: true
-  loop:
-    - /etc/apt/sources.list.d/nodesource.list
-    - /etc/apt/keyrings/nodesource.gpg
-  loop_control:
-    loop_var: nodejs_file
-  when: ansible_os_family == "Debian"
+- name: Check if nvm is already installed
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+  register: nvm_installed
 
-- name: Download NodeSource setup script (Linux)
-  ansible.builtin.get_url:
-    url: "https://deb.nodesource.com/setup_{{ nodejs_version }}.x"
-    dest: /tmp/nodesource_setup.sh
-    mode: '0755'
-  when: ansible_os_family == "Debian"
+- name: Install nvm
+  ansible.builtin.shell: |
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+  args:
+    creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+  when: not nvm_installed.stat.exists
 
-- name: Run NodeSource setup script (Linux)
-  ansible.builtin.command: bash /tmp/nodesource_setup.sh
-  become: true
-  changed_when: true
-  when: ansible_os_family == "Debian"
+- name: Ensure nvm is sourced in .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - nvm"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    create: true
+    mode: '0644'
 
-- name: Update apt cache (Linux)
-  ansible.builtin.apt:
-    update_cache: true
-  become: true
-  when: ansible_os_family == "Debian"
+- name: Ensure nvm is sourced in .bashrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - nvm"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    create: true
+    mode: '0644'
 
-- name: Install Node.js (Linux)
-  ansible.builtin.package:
-    name: nodejs
-    state: present
-  become: true
-  when: ansible_os_family == "Debian"
+- name: Install Node.js via nvm
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    nvm install {{ nodejs_version }}
+  args:
+    executable: /bin/bash
+  register: nvm_install_result
+  changed_when: "'is already installed' not in nvm_install_result.stderr"
 
-- name: Install build-essential for npm native modules (Linux)
-  ansible.builtin.package:
-    name: build-essential
-    state: present
-  become: true
-  when: ansible_os_family == "Debian"
-
-- name: Install Node.js (macOS)
-  community.general.homebrew:
-    name: "node@{{ nodejs_version }}"
-    state: present
-  when: ansible_os_family == "Darwin"
-
-- name: Link Node.js (macOS)
-  ansible.builtin.command: "brew link node@{{ nodejs_version }} --force --overwrite"
-  when: ansible_os_family == "Darwin"
+- name: Set default Node.js version
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    nvm alias default {{ nodejs_version }}
+  args:
+    executable: /bin/bash
   changed_when: false
-  failed_when: false
 
-- name: Check if npm is available
-  ansible.builtin.command: which npm
-  register: npm_available
+- name: Get Node.js version
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    node --version
+  args:
+    executable: /bin/bash
+  register: node_version_output
   changed_when: false
-  failed_when: false
 
-- name: Update npm to latest version
-  community.general.npm:
-    name: npm
-    global: true
-    state: present
-  become: true
-  when: not ansible_check_mode and npm_available.rc == 0
+- name: Display Node.js version
+  ansible.builtin.debug:
+    msg: "Node.js installed: {{ node_version_output.stdout }}"
 
-- name: Install pnpm via Homebrew (macOS)
-  community.general.homebrew:
-    name: pnpm
-    state: present
-  when: ansible_os_family == "Darwin"
+- name: Get npm version
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm --version
+  args:
+    executable: /bin/bash
+  register: npm_version_output
+  changed_when: false
+
+- name: Display npm version
+  ansible.builtin.debug:
+    msg: "npm installed: {{ npm_version_output.stdout }}"
 
 - name: Install common global npm packages
-  community.general.npm:
-    name: "{{ nodejs_package }}"
-    global: true
-    state: present
-  become: true
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm install -g {{ nodejs_package }}
+  args:
+    executable: /bin/bash
   loop:
     - yarn
     - pnpm
@@ -93,77 +98,42 @@
     - nodemon
   loop_control:
     loop_var: nodejs_package
-  when: not ansible_check_mode and npm_available.rc == 0 and ansible_os_family == "Debian"
-
-- name: Install common global npm packages (macOS - excluding pnpm)
-  community.general.npm:
-    name: "{{ nodejs_package }}"
-    global: true
-    state: present
-  become: true
-  loop:
-    - yarn
-    - typescript
-    - typescript-language-server
-    - ts-node
-    - nodemon
-  loop_control:
-    loop_var: nodejs_package
-  when: not ansible_check_mode and npm_available.rc == 0 and ansible_os_family == "Darwin"
-
-- name: Verify Node.js installation
-  ansible.builtin.command: node --version
-  register: node_version_output
-  changed_when: false
-
-- name: Display Node.js version
-  ansible.builtin.debug:
-    msg: "Node.js installed: {{ node_version_output.stdout }}"
-
-- name: Verify npm installation
-  ansible.builtin.command: npm --version
-  register: npm_version_output
-  changed_when: false
-
-- name: Display npm version
-  ansible.builtin.debug:
-    msg: "npm installed: {{ npm_version_output.stdout }}"
+  register: npm_install_result
+  changed_when: "'added' in npm_install_result.stdout or 'up to date' not in npm_install_result.stdout"
+  when: not ansible_check_mode
 
 # Install Bun (cross-platform JavaScript runtime and toolkit)
 - name: Check if Bun is already installed
-  ansible.builtin.command: which bun
-  register: bun_available
-  changed_when: false
-  failed_when: false
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.bun/bin/bun"
+  register: bun_installed
 
-- name: Install Bun (Linux/macOS)
+- name: Install Bun
   ansible.builtin.shell: |
     curl -fsSL https://bun.sh/install | bash
   args:
     creates: "{{ ansible_env.HOME }}/.bun/bin/bun"
   environment:
     BUN_INSTALL: "{{ ansible_env.HOME }}/.bun"
-  when: bun_available.rc != 0
+  when: not bun_installed.stat.exists
 
-- name: Add Bun to PATH in .zshrc
+- name: Ensure Bun PATH in .zshrc
   ansible.builtin.lineinfile:
     path: "{{ ansible_env.HOME }}/.zshrc"
     line: 'export PATH="$HOME/.bun/bin:$PATH"'
     state: present
     create: true
     mode: '0644'
-  when: bun_available.rc != 0
 
-- name: Add Bun to PATH in .bashrc
+- name: Ensure Bun PATH in .bashrc
   ansible.builtin.lineinfile:
     path: "{{ ansible_env.HOME }}/.bashrc"
     line: 'export PATH="$HOME/.bun/bin:$PATH"'
     state: present
     create: true
     mode: '0644'
-  when: bun_available.rc != 0
 
-- name: Verify Bun installation
+- name: Get Bun version
   ansible.builtin.command: "{{ ansible_env.HOME }}/.bun/bin/bun --version"
   register: bun_version_output
   changed_when: false
