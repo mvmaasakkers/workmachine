@@ -11,11 +11,16 @@
   register: installed_go_version
   changed_when: false
   failed_when: false
+  check_mode: false
   when: go_binary.stat.exists
+
+- name: Debug Go version check
+  ansible.builtin.debug:
+    msg: "Binary exists: {{ go_binary.stat.exists }}, Installed version: '{{ installed_go_version.stdout | default('N/A') }}', Target version: '{{ go_version }}'"
 
 - name: Set Go needs installation flag
   ansible.builtin.set_fact:
-    go_needs_install: "{{ not go_binary.stat.exists or go_version not in installed_go_version.stdout | default('') }}"
+    go_needs_install: "{{ not go_binary.stat.exists or go_version not in (installed_go_version.stdout | default('')) }}"
 
 - name: Set Go platform
   ansible.builtin.set_fact:
@@ -24,9 +29,15 @@
 - name: Fetch and parse Go versions JSON to get checksum
   ansible.builtin.shell: |
     curl -s 'https://go.dev/dl/?mode=json' | \
-    jq -r '.[] | select(.version == "go{{ go_version }}") | .files[] | select(.filename == "go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz") | .sha256'
+    jq -r '.[] | select(.version == "go{{ go_version }}") | .files[] | select(.filename == "go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz") | .sha256' | head -1
   register: go_checksum_result
   changed_when: false
+  check_mode: false
+  when: go_needs_install
+
+- name: Debug Go checksum result
+  ansible.builtin.debug:
+    msg: "Go checksum fetch result: stdout='{{ go_checksum_result.stdout | default('UNDEFINED') }}' rc={{ go_checksum_result.rc | default('UNDEFINED') }}"
   when: go_needs_install
 
 - name: Check if Go version exists

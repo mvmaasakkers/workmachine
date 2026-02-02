@@ -32,7 +32,7 @@
     path: "{{ font_dir }}/NerdFonts"
   register: nerd_fonts_stat
 
-- name: Download and install Nerd Fonts (Meslo, FiraCode, JetBrainsMono)
+- name: Download and install Nerd Fonts (Hack, Meslo, FiraCode, JetBrainsMono)
   when: not nerd_fonts_stat.stat.exists
   block:
     - name: Create temporary directory for fonts
@@ -41,10 +41,19 @@
         suffix: nerdfonts
       register: fonts_temp_dir
 
+    - name: Download Hack Nerd Font
+      ansible.builtin.get_url:
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.zip"
+        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/Hack.zip"
+        mode: '0644'
+        timeout: 60
+      register: hack_download
+      failed_when: hack_download is failed and 'HTTP Error 404' not in (hack_download.msg | default(''))
+
     - name: Download Meslo Nerd Font
       ansible.builtin.get_url:
         url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip"
-        dest: "{{ fonts_temp_dir.path }}/Meslo.zip"
+        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/Meslo.zip"
         mode: '0644'
         timeout: 60
       register: meslo_download
@@ -53,7 +62,7 @@
     - name: Download FiraCode Nerd Font
       ansible.builtin.get_url:
         url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
-        dest: "{{ fonts_temp_dir.path }}/FiraCode.zip"
+        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/FiraCode.zip"
         mode: '0644'
         timeout: 60
       register: firacode_download
@@ -62,7 +71,7 @@
     - name: Download JetBrainsMono Nerd Font
       ansible.builtin.get_url:
         url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
-        dest: "{{ fonts_temp_dir.path }}/JetBrainsMono.zip"
+        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/JetBrainsMono.zip"
         mode: '0644'
         timeout: 60
       register: jetbrains_download
@@ -73,32 +82,41 @@
         path: "{{ font_dir }}/NerdFonts"
         state: directory
         mode: '0755'
+      register: nerd_fonts_dir_created
+
+    - name: Extract Hack Nerd Font
+      ansible.builtin.unarchive:
+        src: "{{ fonts_temp_dir.path | default('/tmp') }}/Hack.zip"
+        dest: "{{ font_dir }}/NerdFonts"
+        remote_src: true
+      when: hack_download is succeeded and not ansible_check_mode
 
     - name: Extract Meslo Nerd Font
       ansible.builtin.unarchive:
-        src: "{{ fonts_temp_dir.path }}/Meslo.zip"
+        src: "{{ fonts_temp_dir.path | default('/tmp') }}/Meslo.zip"
         dest: "{{ font_dir }}/NerdFonts"
         remote_src: true
-      when: meslo_download is succeeded
+      when: meslo_download is succeeded and not ansible_check_mode
 
     - name: Extract FiraCode Nerd Font
       ansible.builtin.unarchive:
-        src: "{{ fonts_temp_dir.path }}/FiraCode.zip"
+        src: "{{ fonts_temp_dir.path | default('/tmp') }}/FiraCode.zip"
         dest: "{{ font_dir }}/NerdFonts"
         remote_src: true
-      when: firacode_download is succeeded
+      when: firacode_download is succeeded and not ansible_check_mode
 
     - name: Extract JetBrainsMono Nerd Font
       ansible.builtin.unarchive:
-        src: "{{ fonts_temp_dir.path }}/JetBrainsMono.zip"
+        src: "{{ fonts_temp_dir.path | default('/tmp') }}/JetBrainsMono.zip"
         dest: "{{ font_dir }}/NerdFonts"
         remote_src: true
-      when: jetbrains_download is succeeded
+      when: jetbrains_download is succeeded and not ansible_check_mode
 
     - name: Clean up temporary font files
       ansible.builtin.file:
-        path: "{{ fonts_temp_dir.path }}"
+        path: "{{ fonts_temp_dir.path | default('/tmp/nerdfonts') }}"
         state: absent
+      when: fonts_temp_dir.path is defined
 
 - name: Update font cache (Linux only)
   ansible.builtin.command: fc-cache -fv
@@ -157,22 +175,35 @@
     path: "{{ ansible_env.HOME }}/.zshrc"
     state: absent
 
+- name: Check if zsh config .zshrc exists
+  ansible.builtin.stat:
+    path: "{{ zsh_config_dir }}/.zshrc"
+  register: zsh_config_zshrc_stat
+
 - name: Create symlink from ~/.zshrc to config repo
   ansible.builtin.file:
     src: "{{ zsh_config_dir }}/.zshrc"
     dest: "{{ ansible_env.HOME }}/.zshrc"
     state: link
+  when: zsh_config_zshrc_stat.stat.exists
 
 - name: Get zsh path
   ansible.builtin.command: which zsh
   register: zsh_path_result
   changed_when: false
 
+- name: Check if shell is already zsh
+  ansible.builtin.shell: "echo $SHELL"
+  register: current_shell_result
+  changed_when: false
+  check_mode: false
+
 - name: Change default shell to zsh
   ansible.builtin.user:
     name: "{{ ansible_user_id }}"
     shell: "{{ zsh_path_result.stdout }}"
   become: true
+  when: "'zsh' not in (current_shell_result.stdout | default(''))"
 
 - name: Create VS Code Server data directory
   ansible.builtin.file:

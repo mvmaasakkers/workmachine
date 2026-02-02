@@ -2,9 +2,16 @@
 # Netbird role - Install Netbird VPN client
 # This role installs the Netbird client but does not configure or connect it
 
+- name: Add Netbird Homebrew tap (macOS)
+  community.general.homebrew_tap:
+    name: netbirdio/tap
+    state: present
+  check_mode: false
+  when: ansible_os_family == "Darwin"
+
 - name: Install Netbird (macOS)
   community.general.homebrew:
-    name: netbirdio/tap/netbird
+    name: netbird
     state: present
   when: ansible_os_family == "Darwin"
 

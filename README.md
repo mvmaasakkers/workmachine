@@ -15,7 +15,7 @@ For local machines (Linux or macOS): Run `make setup-local` and enter your sudo 
 
 This setup installs and configures:
 
-- **Shell**: zsh with oh-my-zsh, Nerd Fonts (Meslo, FiraCode, JetBrainsMono)
+- **Shell**: zsh with oh-my-zsh, Nerd Fonts (Hack, Meslo, FiraCode, JetBrainsMono)
 - **Terminal**: Alacritty with custom config
 - **Version Control**: git
 - **Containers**: Docker + Docker Compose
@@ -258,7 +258,8 @@ Your alacritty repo should contain configuration files (e.g., `alacritty.toml` o
 
 ## Nerd Fonts
 
-The zsh role automatically installs three popular Nerd Fonts with powerline glyphs:
+The zsh role automatically installs four popular Nerd Fonts with powerline glyphs:
+- **Hack Nerd Font** - Clean, monospaced font optimized for source code
 - **Meslo Nerd Font** - A variant of Menlo with added glyphs
 - **FiraCode Nerd Font** - Popular monospaced font with ligatures
 - **JetBrainsMono Nerd Font** - Designed for developers by JetBrains
@@ -266,7 +267,7 @@ The zsh role automatically installs three popular Nerd Fonts with powerline glyp
 Fonts are installed to `~/.local/share/fonts/NerdFonts/` and the font cache is updated automatically.
 
 To use these fonts in your terminal:
-- **Alacritty**: Set `font.normal.family` in your config to `"MesloLGS Nerd Font"`, `"FiraCode Nerd Font"`, or `"JetBrainsMono Nerd Font"`
+- **Alacritty**: Set `font.normal.family` in your config to `"Hack Nerd Font Mono"`, `"MesloLGS Nerd Font"`, `"FiraCode Nerd Font"`, or `"JetBrainsMono Nerd Font"`
 - **Other terminals**: Select the Nerd Font variant in your terminal preferences
 
 ## Sudo Password Configuration

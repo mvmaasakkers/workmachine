@@ -82,6 +82,7 @@
     - yarn
     - pnpm
     - typescript
+    - typescript-language-server
     - ts-node
     - nodemon
   loop_control:

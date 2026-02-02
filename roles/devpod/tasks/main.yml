@@ -14,6 +14,11 @@
     mode: '0755'
     timeout: 30
 
+- name: Check if DevPod binary was downloaded
+  ansible.builtin.stat:
+    path: /tmp/devpod
+  register: devpod_download_stat
+
 - name: Install DevPod CLI
   ansible.builtin.copy:
     src: /tmp/devpod
@@ -21,6 +26,7 @@
     remote_src: true
     mode: '0755'
   become: true
+  when: devpod_download_stat.stat.exists
 
 - name: Clean up downloaded DevPod binary
   ansible.builtin.file:

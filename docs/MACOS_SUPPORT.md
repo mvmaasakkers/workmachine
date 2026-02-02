@@ -34,7 +34,7 @@ You'll be prompted for your sudo password.
 
 ### Shell & Terminal
 - ✅ **zsh** with oh-my-zsh
-- ✅ **Nerd Fonts** (Meslo, FiraCode, JetBrainsMono) → `~/Library/Fonts/`
+- ✅ **Nerd Fonts** (Hack, Meslo, FiraCode, JetBrainsMono) → `~/Library/Fonts/`
 - ✅ **Alacritty** terminal emulator
 
 ### Development Tools

@@ -100,8 +100,8 @@
   ansible.builtin.file:
     path: /usr/local/bin/composer
     mode: '0755'
-  become: true
-  when: composer_installed.stat.exists
+  become: "{{ ansible_os_family == 'Debian' }}"
+  when: composer_installed.stat.exists and (composer_installed.stat.mode is not defined or composer_installed.stat.mode != '0755')
 
 - name: Verify PHP installation
   ansible.builtin.command: php --version

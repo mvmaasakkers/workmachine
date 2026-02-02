@@ -65,12 +65,13 @@
   become: true
   when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
 
-- name: Ensure /usr/local/bin exists
+- name: Ensure /usr/local/bin exists (Linux)
   ansible.builtin.file:
     path: /usr/local/bin
     state: directory
     mode: '0755'
   become: true
+  when: ansible_os_family == "Debian"
 
 - name: Check if lazygit is installed
   ansible.builtin.stat:
@@ -101,6 +102,11 @@
     timeout: 30
   when: lazygit_needs_install
 
+- name: Check if lazygit tarball was downloaded
+  ansible.builtin.stat:
+    path: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
+  register: lazygit_tarball_stat
+
 - name: Extract lazygit
   ansible.builtin.unarchive:
     src: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
@@ -109,20 +115,20 @@
     extra_opts:
       - lazygit
   become: true
-  when: lazygit_needs_install
+  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists
 
 - name: Ensure lazygit is executable
   ansible.builtin.file:
     path: /usr/local/bin/lazygit
     mode: '0755'
   become: true
-  when: lazygit_needs_install
+  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists
 
 - name: Clean up lazygit tarball
   ansible.builtin.file:
     path: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
     state: absent
-  when: lazygit_needs_install
+  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists
 
 - name: Ensure sudo has correct ownership and setuid permissions (Linux)
   ansible.builtin.file:

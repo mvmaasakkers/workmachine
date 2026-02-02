@@ -1,4 +1,4 @@
-.PHONY: help setup setup-local setup-remote lint check check-local install-ansible install-ansible-lint test tags clean
+.PHONY: help setup setup-local setup-remote lint check check-local install-ansible install-ansible-lint install-collections test tags clean
 
 # Default target
 help:
@@ -10,6 +10,7 @@ help:
 	@echo "  make check          - Dry-run the playbook (check mode)"
 	@echo "  make check-local    - Dry-run the playbook locally (check mode)"
 	@echo "  make install-ansible - Install Ansible via pip"
+	@echo "  make install-collections - Install required Ansible collections"
 	@echo "  make install-ansible-lint - Install ansible-lint"
 	@echo "  make test           - Run playbook in check mode with diff"
 	@echo "  make tags           - Show available tags"
@@ -24,7 +25,7 @@ install-ansible:
 		sudo apt update && sudo apt install -y ansible; \
 	else \
 		echo "Installing Ansible via pip..."; \
-		pip3 install --user ansible 2>/dev/null || pipx install ansible-core; \
+		pip3 install --user ansible 2>/dev/null || pip install ansible-core; \
 	fi
 
 # Install ansible-lint
@@ -33,23 +34,32 @@ install-ansible-lint:
 		echo "ansible-lint is already installed"; \
 	elif which apt > /dev/null 2>&1; then \
 		echo "Installing ansible-lint via apt..."; \
-		sudo apt install -y ansible-lint 2>/dev/null || pipx install ansible-lint; \
+		sudo apt install -y ansible-lint 2>/dev/null || pip install ansible-lint; \
 	else \
 		echo "Installing ansible-lint via pipx..."; \
 		pipx install ansible-lint; \
 	fi
 
+# Install Ansible collections
+install-collections: install-ansible
+	@echo "Installing required Ansible collections..."
+	ansible-galaxy collection install -r collections/requirements.yml
+
 # Setup remote server (default)
-setup: install-ansible
+setup: install-collections
 	@echo "Running playbook on remote server..."
 	ansible-playbook -i inventory.ini playbooks/setup.yml
 
 setup-remote: setup
 
 # Setup local machine
-setup-local: install-ansible
+setup-local: install-collections
 	@echo "Running playbook locally..."
 	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass
+
+setup-local-no-pw: install-collections
+	@echo "Running playbook locally without asking for become pass..."
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local 
 
 # Run ansible-lint
 lint: install-ansible-lint
@@ -57,17 +67,21 @@ lint: install-ansible-lint
 	ansible-lint playbooks/setup.yml roles/*/tasks/*.yml
 
 # Check mode (dry-run)
-check: install-ansible
+check: install-collections
 	@echo "Running playbook in check mode (dry-run)..."
 	ansible-playbook -i inventory.ini playbooks/setup.yml --check
 
 # Check mode for local setup (dry-run)
-check-local: install-ansible
+check-local: install-collections
 	@echo "Running playbook locally in check mode (dry-run)..."
 	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass --check 
 
+check-local-no-pw: install-collections
+	@echo "Running playbook locally in check mode (dry-run) without asking for become pass..."
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --check 
+
 # Test with diff
-test: install-ansible
+test: install-collections
 	@echo "Running playbook in check mode with diff..."
 	ansible-playbook -i inventory.ini playbooks/setup.yml --check --diff
 
@@ -78,7 +92,7 @@ tags: install-ansible
 
 # Run specific role by tag
 # Example: make run-role TAG=docker
-run-role: install-ansible
+run-role: install-collections
 	@if [ -z "$(TAG)" ]; then \
 		echo "Error: Please specify TAG=<tag>"; \
 		echo "Run 'make tags' to see available tags"; \
