@@ -107,15 +107,21 @@
     path: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
   register: lazygit_tarball_stat
 
-- name: Extract lazygit
+- name: Extract lazygit (macOS)
+  ansible.builtin.shell: |
+    tar -xzf "/tmp/lazygit_{{ lazygit_version }}.tar.gz" -C /usr/local/bin lazygit
+  become: true
+  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists and ansible_os_family == "Darwin"
+
+- name: Extract lazygit (Linux)
   ansible.builtin.unarchive:
     src: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
     dest: /usr/local/bin
     remote_src: true
-    extra_opts:
+    include:
       - lazygit
   become: true
-  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists
+  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists and ansible_os_family == "Debian"
 
 - name: Ensure lazygit is executable
   ansible.builtin.file:

@@ -36,11 +36,17 @@
   become: true
   when: ansible_os_family == "Debian"
 
+- name: Check if Alacritty is already installed (macOS)
+  ansible.builtin.stat:
+    path: /Applications/Alacritty.app
+  register: alacritty_app_stat
+  when: ansible_os_family == "Darwin"
+
 - name: Install Alacritty (macOS)
   community.general.homebrew_cask:
     name: alacritty
     state: present
-  when: ansible_os_family == "Darwin"
+  when: ansible_os_family == "Darwin" and not alacritty_app_stat.stat.exists
 
 - name: Check if alacritty config directory exists
   ansible.builtin.stat:
@@ -66,7 +72,14 @@
     update: true
 
 - name: Verify Alacritty installation
-  ansible.builtin.command: alacritty --version
+  ansible.builtin.shell: |
+    if command -v alacritty &>/dev/null; then
+      alacritty --version
+    elif [ -d "/Applications/Alacritty.app" ]; then
+      echo "Alacritty.app installed (CLI not in PATH)"
+    else
+      exit 1
+    fi
   register: alacritty_version
   changed_when: false
 

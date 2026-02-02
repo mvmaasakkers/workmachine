@@ -72,6 +72,12 @@
   become: true
   when: not ansible_check_mode and npm_available.rc == 0
 
+- name: Install pnpm via Homebrew (macOS)
+  community.general.homebrew:
+    name: pnpm
+    state: present
+  when: ansible_os_family == "Darwin"
+
 - name: Install common global npm packages
   community.general.npm:
     name: "{{ nodejs_package }}"
@@ -87,7 +93,23 @@
     - nodemon
   loop_control:
     loop_var: nodejs_package
-  when: not ansible_check_mode and npm_available.rc == 0
+  when: not ansible_check_mode and npm_available.rc == 0 and ansible_os_family == "Debian"
+
+- name: Install common global npm packages (macOS - excluding pnpm)
+  community.general.npm:
+    name: "{{ nodejs_package }}"
+    global: true
+    state: present
+  become: true
+  loop:
+    - yarn
+    - typescript
+    - typescript-language-server
+    - ts-node
+    - nodemon
+  loop_control:
+    loop_var: nodejs_package
+  when: not ansible_check_mode and npm_available.rc == 0 and ansible_os_family == "Darwin"
 
 - name: Verify Node.js installation
   ansible.builtin.command: node --version
