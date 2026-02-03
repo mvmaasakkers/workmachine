@@ -30,6 +30,17 @@
     state: present
   when: ansible_os_family == "Darwin"
 
+- name: Check if Neovim config is a git repo
+  ansible.builtin.stat:
+    path: "{{ neovim_config_dir }}/.git"
+  register: neovim_config_git
+
+- name: Remove Neovim config directory if it was a git clone
+  ansible.builtin.file:
+    path: "{{ neovim_config_dir }}"
+    state: absent
+  when: neovim_config_git.stat.exists
+
 - name: Deploy Neovim configuration
   ansible.builtin.copy:
     src: files/

@@ -6,6 +6,17 @@
     path: "{{ ansible_env.HOME }}/.tmux.conf"
     state: absent
 
+- name: Check if tmux config is a git repo
+  ansible.builtin.stat:
+    path: "{{ tmux_config_dir }}/.git"
+  register: tmux_config_git
+
+- name: Remove tmux config directory if it was a git clone
+  ansible.builtin.file:
+    path: "{{ tmux_config_dir }}"
+    state: absent
+  when: tmux_config_git.stat.exists
+
 - name: Deploy tmux configuration
   ansible.builtin.copy:
     src: files/

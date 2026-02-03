@@ -147,6 +147,17 @@
     RUNZSH: 'no'
     CHSH: 'no'
 
+- name: Check if zsh config is a git repo
+  ansible.builtin.stat:
+    path: "{{ zsh_config_dir }}/.git"
+  register: zsh_config_git
+
+- name: Remove zsh config directory if it was a git clone
+  ansible.builtin.file:
+    path: "{{ zsh_config_dir }}"
+    state: absent
+  when: zsh_config_git.stat.exists
+
 - name: Deploy zsh configuration
   ansible.builtin.copy:
     src: files/
