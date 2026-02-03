@@ -123,7 +123,7 @@ make run-role TAG=languages
 Available tags:
 - `common`, `base` - Basic tools
 - `zsh`, `shell` - Shell setup
-- `alacritty`, `terminal` - Alacritty terminal
+- `alacritty`, `tmux`, `terminal` - Terminal setup
 - `docker`, `containers` - Docker setup
 - `nvim`, `editor` - Neovim setup
 - `php`, `go`, `golang`, `nodejs`, `node`, `python`, `languages` - Programming languages
@@ -152,11 +152,20 @@ workmachine/
 ├── playbooks/
 │   └── setup.yml               # Main playbook
 ├── roles/
-│   ├── common/                 # Basic CLI tools
-│   ├── zsh/                    # Zsh + oh-my-zsh + Nerd Fonts
-│   ├── alacritty/              # Alacritty terminal
+│   ├── common/                 # Basic CLI tools (git, tmux, lazygit, etc.)
+│   ├── zsh/
+│   │   ├── files/              # zsh config (.zshrc)
+│   │   └── tasks/
+│   ├── alacritty/
+│   │   ├── files/              # Alacritty config (alacritty.toml, etc.)
+│   │   └── tasks/
+│   ├── tmux/
+│   │   ├── files/              # tmux config (tmux.conf, plugins/)
+│   │   └── tasks/
+│   ├── nvim/
+│   │   ├── files/              # Neovim config (init.lua, lua/)
+│   │   └── tasks/
 │   ├── docker/                 # Docker setup
-│   ├── nvim/                   # Neovim + config
 │   ├── php/                    # PHP + Composer
 │   ├── go/                     # Go language
 │   ├── nodejs/                 # Node.js via nvm
@@ -199,62 +208,60 @@ After the setup completes:
 
 ## Configuration Files
 
-Configuration files are managed via external Git repositories (private):
+Configuration files are embedded directly in this repository under each role's `files/` directory:
 
-- **Neovim**: [git@github.com:mvmaasakkers/nvim.git](https://github.com/mvmaasakkers/nvim) → `~/.config/nvim/`
-- **tmux**: [git@github.com:mvmaasakkers/tmux.git](https://github.com/mvmaasakkers/tmux) → `~/.config/tmux/`
-- **zsh**: [git@github.com:mvmaasakkers/zsh.git](https://github.com/mvmaasakkers/zsh) → `~/.config/zsh/` (symlinked to `~/.zshrc`)
-- **Alacritty**: [git@github.com:mvmaasakkers/alacritty.git](https://github.com/mvmaasakkers/alacritty) → `~/.config/alacritty/`
+| Config | Source | Destination |
+|--------|--------|-------------|
+| Neovim | `roles/nvim/files/` | `~/.config/nvim/` |
+| tmux | `roles/tmux/files/` | `~/.config/tmux/` |
+| zsh | `roles/zsh/files/` | `~/.config/zsh/` |
+| Alacritty | `roles/alacritty/files/` | `~/.config/alacritty/` |
 
 ### Customizing Configs
 
-To modify the configurations:
+Edit the files directly in this repository and re-run the setup:
 
-1. Edit the config files in the respective Git repositories
-2. Push changes to the repository
-3. Re-run the setup to pull updates:
-   ```bash
-   make setup
-   ```
+```bash
+# Edit config
+vim roles/nvim/files/lua/config/options.lua
 
-**Note**: The setup removes any existing `~/.tmux.conf` file and uses the new XDG-compliant location `~/.config/tmux/` for tmux configuration.
+# Deploy changes
+make setup-local
+```
+
+Changes are deployed atomically with the rest of your environment setup.
 
 ## Neovim Configuration
 
-Neovim configuration is managed via a separate Git repository: [mvmaasakkers/nvim](https://github.com/mvmaasakkers/nvim)
+Located in `roles/nvim/files/`. Uses [LazyVim](https://www.lazyvim.org/) as the base configuration.
 
-The setup clones this repository to `~/.config/nvim/` and runs `Lazy! sync` to install plugins.
+The setup copies the configuration to `~/.config/nvim/` and runs `Lazy! sync` to install plugins.
 
 ## tmux Configuration
 
-tmux configuration is managed via a separate Git repository: [mvmaasakkers/tmux](https://github.com/mvmaasakkers/tmux)
+Located in `roles/tmux/files/`. Features:
+- Catppuccin theme (Frappe flavor)
+- Mouse support enabled
+- OSC 52 clipboard (works over SSH)
+- Vi-mode copy bindings
 
-The setup:
-1. Removes any existing `~/.tmux.conf` file
-2. Clones the repository to `~/.config/tmux/`
-
-tmux 3.1+ supports XDG-compliant config locations, automatically loading from `~/.config/tmux/tmux.conf`.
+The setup removes any existing `~/.tmux.conf` and deploys to `~/.config/tmux/` (XDG-compliant).
 
 ## zsh Configuration
 
-zsh configuration is managed via a separate Git repository: [mvmaasakkers/zsh](https://github.com/mvmaasakkers/zsh)
-
-The setup:
+Located in `roles/zsh/files/`. The setup:
 1. Installs zsh and oh-my-zsh
-2. Clones the repository to `~/.config/zsh/`
+2. Deploys config to `~/.config/zsh/`
 3. Creates a symlink from `~/.zshrc` to `~/.config/zsh/.zshrc`
-
-Your zsh repo should contain a `.zshrc` file that sources oh-my-zsh and includes your customizations.
 
 ## Alacritty Configuration
 
-Alacritty configuration is managed via a separate Git repository: [mvmaasakkers/alacritty](https://github.com/mvmaasakkers/alacritty)
+Located in `roles/alacritty/files/`. Includes:
+- `alacritty.toml` - Main configuration
+- `linux.toml` - Linux-specific settings
+- `macos.toml` - macOS-specific settings
 
-The setup:
-1. Installs Alacritty via PPA (Ubuntu/Pop!_OS)
-2. Clones the repository to `~/.config/alacritty/`
-
-Your alacritty repo should contain configuration files (e.g., `alacritty.toml` or `alacritty.yml`) with your customizations.
+The setup installs Alacritty and deploys config to `~/.config/alacritty/`.
 
 ## Node.js via nvm
 

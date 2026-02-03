@@ -145,36 +145,8 @@
   become: true
   when: ansible_os_family == "Debian"
 
-- name: Remove old ~/.tmux.conf if it exists
-  ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.tmux.conf"
-    state: absent
-
 - name: Ensure ~/.config directory exists
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.config"
     state: directory
     mode: '0755'
-
-- name: Check if tmux config directory exists
-  ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.config/tmux"
-  register: tmux_config_stat
-
-- name: Check if tmux config is a git repo
-  ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.config/tmux/.git"
-  register: tmux_config_git_stat
-
-- name: Remove existing tmux config directory if not a git repo
-  ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.config/tmux"
-    state: absent
-  when: tmux_config_stat.stat.exists and not tmux_config_git_stat.stat.exists
-
-- name: Clone tmux configuration repository
-  ansible.builtin.git:
-    repo: git@github.com:mvmaasakkers/tmux.git
-    dest: "{{ ansible_env.HOME }}/.config/tmux"
-    accept_hostkey: true
-    update: true

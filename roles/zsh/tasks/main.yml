@@ -147,28 +147,11 @@
     RUNZSH: 'no'
     CHSH: 'no'
 
-- name: Check if zsh config directory exists
-  ansible.builtin.stat:
-    path: "{{ zsh_config_dir }}"
-  register: zsh_config_stat
-
-- name: Check if zsh config is a git repo
-  ansible.builtin.stat:
-    path: "{{ zsh_config_dir }}/.git"
-  register: zsh_config_git_stat
-
-- name: Remove existing zsh config directory if not a git repo
-  ansible.builtin.file:
-    path: "{{ zsh_config_dir }}"
-    state: absent
-  when: zsh_config_stat.stat.exists and not zsh_config_git_stat.stat.exists
-
-- name: Clone zsh configuration repository
-  ansible.builtin.git:
-    repo: git@github.com:mvmaasakkers/zsh.git
-    dest: "{{ zsh_config_dir }}"
-    accept_hostkey: true
-    update: true
+- name: Deploy zsh configuration
+  ansible.builtin.copy:
+    src: files/
+    dest: "{{ zsh_config_dir }}/"
+    mode: preserve
 
 - name: Remove oh-my-zsh generated .zshrc
   ansible.builtin.file:

@@ -101,6 +101,7 @@
     - flake8
     - pylint
     - virtualenvwrapper
+    - python-lsp-server
   loop_control:
     loop_var: python_tool
   when: python_tool not in pipx_list.stdout

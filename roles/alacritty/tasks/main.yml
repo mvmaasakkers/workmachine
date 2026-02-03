@@ -48,28 +48,11 @@
     state: present
   when: ansible_os_family == "Darwin" and not alacritty_app_stat.stat.exists
 
-- name: Check if alacritty config directory exists
-  ansible.builtin.stat:
-    path: "{{ alacritty_config_dir }}"
-  register: alacritty_config_stat
-
-- name: Check if alacritty config is a git repo
-  ansible.builtin.stat:
-    path: "{{ alacritty_config_dir }}/.git"
-  register: alacritty_config_git_stat
-
-- name: Remove existing alacritty config directory if not a git repo
-  ansible.builtin.file:
-    path: "{{ alacritty_config_dir }}"
-    state: absent
-  when: alacritty_config_stat.stat.exists and not alacritty_config_git_stat.stat.exists
-
-- name: Clone alacritty configuration repository
-  ansible.builtin.git:
-    repo: git@github.com:mvmaasakkers/alacritty.git
-    dest: "{{ alacritty_config_dir }}"
-    accept_hostkey: true
-    update: true
+- name: Deploy Alacritty configuration
+  ansible.builtin.copy:
+    src: files/
+    dest: "{{ alacritty_config_dir }}/"
+    mode: preserve
 
 - name: Verify Alacritty installation
   ansible.builtin.shell: |

@@ -30,28 +30,11 @@
     state: present
   when: ansible_os_family == "Darwin"
 
-- name: Check if Neovim config directory exists
-  ansible.builtin.stat:
-    path: "{{ neovim_config_dir }}"
-  register: neovim_config_stat
-
-- name: Check if Neovim config is a git repo
-  ansible.builtin.stat:
-    path: "{{ neovim_config_dir }}/.git"
-  register: neovim_config_git_stat
-
-- name: Remove existing Neovim config directory if not a git repo
-  ansible.builtin.file:
-    path: "{{ neovim_config_dir }}"
-    state: absent
-  when: neovim_config_stat.stat.exists and not neovim_config_git_stat.stat.exists
-
-- name: Clone Neovim configuration repository
-  ansible.builtin.git:
-    repo: git@github.com:mvmaasakkers/nvim.git
-    dest: "{{ neovim_config_dir }}"
-    accept_hostkey: true
-    update: true
+- name: Deploy Neovim configuration
+  ansible.builtin.copy:
+    src: files/
+    dest: "{{ neovim_config_dir }}/"
+    mode: preserve
 
 - name: Install lazy.nvim and plugins
   ansible.builtin.command: nvim --headless "+Lazy! sync" +qa

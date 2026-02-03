@@ -54,6 +54,9 @@
     - role: alacritty
       tags: ['alacritty', 'terminal', 'shell']
 
+    - role: tmux
+      tags: ['tmux', 'terminal', 'shell']
+
     - role: docker
       tags: ['docker', 'containers']
 

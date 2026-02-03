@@ -1,0 +1,13 @@
+---
+# tmux role - Deploy tmux configuration
+
+- name: Remove old ~/.tmux.conf if it exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.tmux.conf"
+    state: absent
+
+- name: Deploy tmux configuration
+  ansible.builtin.copy:
+    src: files/
+    dest: "{{ tmux_config_dir }}/"
+    mode: preserve

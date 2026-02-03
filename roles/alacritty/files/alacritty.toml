@@ -1,0 +1,200 @@
+# Alacritty Configuration
+# Cross-platform config for Linux (Pop!_OS/Ubuntu) and macOS
+# 
+# This config uses platform-specific imports for font sizes:
+# - Linux: import linux.toml (font size 11)
+# - macOS: import macos.toml (font size 13, option_as_alt)
+#
+# Fonts installed via workmachine Ansible:
+# - Hack Nerd Font Mono (primary)
+# - JetBrainsMono Nerd Font
+# - FiraCode Nerd Font
+# - MesloLGS Nerd Font
+
+# =============================================================================
+# PLATFORM-SPECIFIC IMPORTS
+# =============================================================================
+# Alacritty will only import files that exist, making this cross-platform safe.
+# Create the appropriate file for your platform.
+
+[general]
+import = [
+    "~/.config/alacritty/linux.toml",
+    "~/.config/alacritty/macos.toml",
+]
+
+# =============================================================================
+# FONT CONFIGURATION
+# =============================================================================
+# Using Hack Nerd Font Mono for proper powerline/icon support.
+# Font size is set in platform-specific files; this is the fallback.
+
+[font]
+size = 12.0
+
+[font.normal]
+family = "Hack Nerd Font Mono"
+style = "Regular"
+
+[font.bold]
+family = "Hack Nerd Font Mono"
+style = "Bold"
+
+[font.italic]
+family = "Hack Nerd Font Mono"
+style = "Italic"
+
+[font.bold_italic]
+family = "Hack Nerd Font Mono"
+style = "Bold Italic"
+
+# =============================================================================
+# WINDOW CONFIGURATION
+# =============================================================================
+
+[window]
+# Padding adds breathing room around terminal content
+padding = { x = 8, y = 8 }
+
+# Window opacity (1.0 = fully opaque)
+opacity = 1.0
+
+# Window decorations: "Full" | "None" | "Transparent" | "Buttonless"
+decorations = "Full"
+
+# Startup mode: "Windowed" | "Maximized" | "Fullscreen"
+startup_mode = "Windowed"
+
+# Dynamic title based on running program
+dynamic_title = true
+
+# =============================================================================
+# CURSOR CONFIGURATION
+# =============================================================================
+
+[cursor]
+# Cursor style: "Block" | "Underline" | "Beam"
+style = { shape = "Block", blinking = "Off" }
+
+# Hollow cursor when window is unfocused
+unfocused_hollow = true
+
+# =============================================================================
+# SCROLLING
+# =============================================================================
+
+[scrolling]
+# Maximum lines in scrollback buffer
+history = 10000
+
+# Scroll multiplier (lines per scroll event)
+multiplier = 3
+
+# =============================================================================
+# SELECTION
+# =============================================================================
+
+[selection]
+# Characters considered part of a word for double-click selection
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+
+# Copy selected text to clipboard automatically
+save_to_clipboard = true
+
+# =============================================================================
+# TERMINAL SETTINGS
+# =============================================================================
+
+[terminal]
+# OSC 52 clipboard handling
+osc52 = "CopyPaste"
+
+# =============================================================================
+# COLORS - Catppuccin Frappe
+# =============================================================================
+# Matches tmux Catppuccin Frappe theme for visual consistency.
+# Official colors from: https://github.com/catppuccin/alacritty
+
+[colors.primary]
+background = "#303446"
+foreground = "#c6d0f5"
+dim_foreground = "#838ba7"
+bright_foreground = "#c6d0f5"
+
+[colors.cursor]
+text = "#303446"
+cursor = "#f2d5cf"
+
+[colors.vi_mode_cursor]
+text = "#303446"
+cursor = "#babbf1"
+
+[colors.search.matches]
+foreground = "#303446"
+background = "#a5adce"
+
+[colors.search.focused_match]
+foreground = "#303446"
+background = "#a6d189"
+
+[colors.footer_bar]
+foreground = "#303446"
+background = "#a5adce"
+
+[colors.hints.start]
+foreground = "#303446"
+background = "#e5c890"
+
+[colors.hints.end]
+foreground = "#303446"
+background = "#a5adce"
+
+[colors.selection]
+text = "#303446"
+background = "#f2d5cf"
+
+[colors.normal]
+black = "#51576d"
+red = "#e78284"
+green = "#a6d189"
+yellow = "#e5c890"
+blue = "#8caaee"
+magenta = "#f4b8e4"
+cyan = "#81c8be"
+white = "#b5bfe2"
+
+[colors.bright]
+black = "#626880"
+red = "#e78284"
+green = "#a6d189"
+yellow = "#e5c890"
+blue = "#8caaee"
+magenta = "#f4b8e4"
+cyan = "#81c8be"
+white = "#a5adce"
+
+[[colors.indexed_colors]]
+index = 16
+color = "#ef9f76"
+
+[[colors.indexed_colors]]
+index = 17
+color = "#f2d5cf"
+
+# =============================================================================
+# KEYBOARD SHORTCUTS
+# =============================================================================
+# Common shortcuts that work well across platforms.
+# Platform-specific shortcuts can be added in linux.toml / macos.toml.
+
+[[keyboard.bindings]]
+# Clear scrollback and screen (Ctrl+Shift+K)
+key = "K"
+mods = "Control|Shift"
+action = "ClearHistory"
+
+[[keyboard.bindings]]
+# Search backward (Ctrl+Shift+F)
+key = "F"
+mods = "Control|Shift"
+action = "SearchForward"

@@ -1,0 +1,5 @@
+# Linux-specific Alacritty settings (Pop!_OS/Ubuntu)
+# Imported by alacritty.toml
+
+[font]
+size = 11.0

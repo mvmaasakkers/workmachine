@@ -37,6 +37,9 @@ go_install_dir: "/usr/local"
 # Neovim
 neovim_config_dir: "{{ ansible_env.HOME }}/.config/nvim"
 
+# tmux
+tmux_config_dir: "{{ ansible_env.HOME }}/.config/tmux"
+
 # Zsh
 zsh_config_dir: "{{ ansible_env.HOME }}/.config/zsh"
 

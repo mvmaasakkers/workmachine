@@ -1,0 +1,9 @@
+# macOS-specific Alacritty settings (Intel and Apple Silicon)
+# Imported by alacritty.toml
+
+[font]
+size = 13.0
+
+[window]
+# Use native macOS fullscreen with its own space
+option_as_alt = "Both"
