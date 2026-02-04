@@ -27,6 +27,7 @@
       - fzf
       - ripgrep
       - fd-find
+      - git-delta
     state: present
   become: true
   when: ansible_os_family == "Debian"
@@ -47,6 +48,7 @@
       - fzf
       - ripgrep
       - fd
+      - git-delta
     state: present
   when: ansible_os_family == "Darwin"
 

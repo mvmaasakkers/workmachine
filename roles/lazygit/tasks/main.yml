@@ -1,0 +1,30 @@
+---
+# Lazygit role - Configure lazygit with syntax highlighting via delta pager
+
+- name: Ensure lazygit config directory exists (Linux)
+  ansible.builtin.file:
+    path: "{{ lazygit_config_dir_linux }}"
+    state: directory
+    mode: '0755'
+  when: ansible_os_family == "Debian"
+
+- name: Ensure lazygit config directory exists (macOS)
+  ansible.builtin.file:
+    path: "{{ lazygit_config_dir_macos }}"
+    state: directory
+    mode: '0755'
+  when: ansible_os_family == "Darwin"
+
+- name: Deploy lazygit config (Linux)
+  ansible.builtin.copy:
+    src: config.yml
+    dest: "{{ lazygit_config_dir_linux }}/config.yml"
+    mode: '0644'
+  when: ansible_os_family == "Debian"
+
+- name: Deploy lazygit config (macOS)
+  ansible.builtin.copy:
+    src: config.yml
+    dest: "{{ lazygit_config_dir_macos }}/config.yml"
+    mode: '0644'
+  when: ansible_os_family == "Darwin"

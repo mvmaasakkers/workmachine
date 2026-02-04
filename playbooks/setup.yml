@@ -90,6 +90,9 @@
     - role: devpod
       tags: ['devpod', 'containers', 'tools']
 
+    - role: lazygit
+      tags: ['lazygit', 'git', 'tools']
+
   post_tasks:
     - name: Display setup completion message
       ansible.builtin.debug:
@@ -99,7 +102,7 @@
           ========================================
 
           Installed tools:
-          - Common utilities: git, curl, wget, tmux, btop
+          - Common utilities: git, curl, wget, tmux, btop, delta
           - Shell: zsh with oh-my-zsh, Nerd Fonts
           - Terminal: Alacritty
           - Container platform: Docker with Docker Compose
@@ -107,7 +110,7 @@
           - Languages: PHP {{ php_version }}, Go {{ go_version }}, Node.js {{ nodejs_version }}, Python 3
           - Package managers: composer, npm, pip, bun
           - VPN: Netbird client (not connected)
-          - CLI tools: GitHub CLI (gh), Claude Code CLI, OpenCode CLI
+          - CLI tools: GitHub CLI (gh), Claude Code CLI, OpenCode CLI, lazygit (with syntax highlighting)
 
           Next steps:
           1. Log out and back in for group changes (docker) to take effect

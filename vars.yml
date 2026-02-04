@@ -46,6 +46,10 @@ zsh_config_dir: "{{ ansible_env.HOME }}/.config/zsh"
 # Alacritty
 alacritty_config_dir: "{{ ansible_env.HOME }}/.config/alacritty"
 
+# Lazygit (OS-specific paths)
+lazygit_config_dir_linux: "{{ ansible_env.HOME }}/.config/lazygit"
+lazygit_config_dir_macos: "{{ ansible_env.HOME }}/Library/Application Support/lazygit"
+
 # Font directories (OS-specific)
 font_dir_linux: "{{ ansible_env.HOME }}/.local/share/fonts"
 font_dir_macos: "{{ ansible_env.HOME }}/Library/Fonts"
