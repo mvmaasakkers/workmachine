@@ -11,3 +11,6 @@ inventory.ini
 vault.yml
 .vault_pass
 *.vault
+
+# Debug logs
+tmux-client-*.log
