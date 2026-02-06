@@ -1,19 +1,56 @@
 ---
-- name: Install Claude Code CLI globally via npm
+# Install Claude Code CLI using the official installer
+# Documentation: https://code.claude.com/docs/en/overview
+
+# macOS: Clean up ALL existing Claude Code installations before Homebrew cask install
+- name: Remove user-level Claude Code installations (macOS)
   ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
-    npm install -g @anthropic-ai/claude-code
+    set -euo pipefail
+    shopt -s nullglob
+    rm -f {{ ansible_env.HOME }}/.local/bin/claude
+    rm -rf /opt/homebrew/lib/node_modules/@anthropic-ai
+    export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
+    if [ -s "$NVM_DIR/nvm.sh" ]; then
+      . "$NVM_DIR/nvm.sh"
+      npm uninstall -g @anthropic-ai/claude-code 2>/dev/null || true
+    fi
+    for dir in {{ ansible_env.HOME }}/.nvm/versions/node/*/lib/node_modules/@anthropic-ai; do
+      rm -rf "$dir"
+    done
+    for bin in {{ ansible_env.HOME }}/.nvm/versions/node/*/bin/claude; do
+      rm -f "$bin"
+    done
   args:
     executable: /bin/bash
-  register: claude_install_result
-  changed_when: "'added' in claude_install_result.stdout or 'up to date' not in claude_install_result.stdout"
-  when: not ansible_check_mode
+  when: ansible_os_family == "Darwin"
+  changed_when: false
+
+- name: Remove system-level Claude Code installations (macOS)
+  ansible.builtin.file:
+    path: /usr/local/bin/claude
+    state: absent
+  become: true
+  when: ansible_os_family == "Darwin"
+
+# macOS: Use Homebrew cask (integrates with existing Homebrew setup)
+- name: Install Claude Code via Homebrew (macOS)
+  community.general.homebrew_cask:
+    name: claude-code
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux: Use official installer script (supports auto-updates)
+- name: Install Claude Code via official installer (Linux)
+  ansible.builtin.shell: |
+    curl -fsSL https://claude.ai/install.sh | bash
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.claude/local/claude"
+  when: ansible_os_family == "Debian" and not ansible_check_mode
 
 - name: Verify Claude Code CLI installation
   ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
+    export PATH="/opt/homebrew/bin:$HOME/.claude/local:$PATH"
     claude --version
   args:
     executable: /bin/bash
@@ -24,4 +61,4 @@
 - name: Display Claude Code CLI version
   ansible.builtin.debug:
     msg: "Claude Code CLI installed: {{ claude_version_output.stdout }}"
-  when: not ansible_check_mode and claude_version_output.stdout | length > 0
+  when: not ansible_check_mode and claude_version_output.stdout | default('') | length > 0

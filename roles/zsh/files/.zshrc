@@ -42,6 +42,9 @@ fi
 # Add local bin to PATH (highest priority - user scripts override everything)
 export PATH="$HOME/.local/bin:$PATH"
 
+# Claude Code CLI (native installer location)
+[[ -d "$HOME/.claude/local" ]] && export PATH="$HOME/.claude/local:$PATH"
+
 # ==============================================================================
 # Oh My Zsh Configuration
 # ==============================================================================
