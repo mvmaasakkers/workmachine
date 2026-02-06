@@ -3,7 +3,6 @@
 .ansible
 .DS_Store
 .venv
-.opencode
 
 # Inventory files (use inventory.ini.example as template)
 inventory.ini
