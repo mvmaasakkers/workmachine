@@ -4,14 +4,22 @@
 
 # Versions are on the top as they are most likely to be changed
 lazygit_version: "0.58.1"
-netbird_version: "0.64.1"
-go_version: "1.25.6"
+netbird_version: "0.64.5"
+go_version: "1.25.7"
 nodejs_version: "24"
 php_version: "8.4"
 php_version_short: "8.4"
 composer_version: "2"
 python_version: "3.13"
-gh_version: "2.63.2"
+gh_version: "2.86.0"
+terraform_version: "1.14.4"
+terraform_checksums:
+  linux_amd64: "4a24b18865d9419ba7882567cb7429dd1525b3e2029a9e38f612d476ba8c3dea"
+  linux_arm64: "dcbc9d4b9fcd47e76ae194d5d569bfbf9f15bf1c59ca692aff6d2a92eb8e8994"
+packer_version: "1.15.0"
+packer_checksums:
+  linux_amd64: "2fd1149c5c6c7604ced64d7b56638af05f6b7ed3f6835182bc913ddaba1f16b8"
+  linux_arm64: "1687f43bd120601f62e54b970b1cc06f83e95897357dc5c679b57ec9d2fb40a7"
 
 # Platform detection
 is_macos: "{{ ansible_os_family == 'Darwin' }}"

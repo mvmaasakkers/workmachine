@@ -1,0 +1,69 @@
+---
+# Packer role - Install HashiCorp Packer
+
+- name: Check current Packer version
+  ansible.builtin.command: packer version
+  register: packer_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Set Packer needs installation flag
+  ansible.builtin.set_fact:
+    packer_needs_install: "{{ packer_current_version.rc != 0 or packer_version not in (packer_current_version.stdout | default('')) }}"
+
+- name: Set Packer architecture
+  ansible.builtin.set_fact:
+    packer_arch: "{{ arch_map[ansible_architecture] | default('amd64') }}"
+
+- name: Set Packer platform
+  ansible.builtin.set_fact:
+    packer_platform: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
+
+# macOS installation via Homebrew
+- name: Install Packer (macOS)
+  community.general.homebrew:
+    name: packer
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via zip download
+- name: Install Packer (Linux)
+  when:
+    - ansible_os_family == "Debian"
+    - packer_needs_install
+  become: true
+  block:
+    - name: Download Packer zip
+      ansible.builtin.get_url:
+        url: "https://releases.hashicorp.com/packer/{{ packer_version }}/packer_{{ packer_version }}_{{ packer_platform }}_{{ packer_arch }}.zip"
+        dest: "/tmp/packer_{{ packer_version }}.zip"
+        checksum: "sha256:{{ packer_checksums[packer_platform + '_' + packer_arch] }}"
+        mode: '0644'
+        timeout: 60
+
+    - name: Install unzip if needed
+      ansible.builtin.package:
+        name: unzip
+        state: present
+
+    - name: Extract Packer binary
+      ansible.builtin.unarchive:
+        src: "/tmp/packer_{{ packer_version }}.zip"
+        dest: /usr/local/bin
+        remote_src: true
+        mode: '0755'
+
+    - name: Clean up downloaded zip
+      ansible.builtin.file:
+        path: "/tmp/packer_{{ packer_version }}.zip"
+        state: absent
+
+- name: Verify Packer installation
+  ansible.builtin.command: packer version
+  register: packer_version_output
+  changed_when: false
+
+- name: Display Packer version
+  ansible.builtin.debug:
+    msg: "Packer installed: {{ packer_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and packer_version_output.stdout_lines | length > 0

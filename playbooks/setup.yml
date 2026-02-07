@@ -93,6 +93,18 @@
     - role: lazygit
       tags: ['lazygit', 'git', 'tools']
 
+    - role: terraform
+      tags: ['terraform', 'iac', 'devops', 'tools']
+
+    - role: packer
+      tags: ['packer', 'iac', 'devops', 'tools']
+
+    - role: azure-cli
+      tags: ['azure-cli', 'azure', 'cloud', 'devops', 'tools']
+
+    - role: gcloud
+      tags: ['gcloud', 'gcp', 'cloud', 'devops', 'tools']
+
   post_tasks:
     - name: Display setup completion message
       ansible.builtin.debug:
@@ -111,6 +123,7 @@
           - Package managers: composer, npm, pip, bun
           - VPN: Netbird client (not connected)
           - CLI tools: GitHub CLI (gh), Claude Code CLI, OpenCode CLI, lazygit (with syntax highlighting)
+          - DevOps: Terraform {{ terraform_version }}, Packer {{ packer_version }}, Azure CLI, Google Cloud SDK
 
           Next steps:
           1. Log out and back in for group changes (docker) to take effect
@@ -119,6 +132,8 @@
           4. Authenticate GitHub CLI: gh auth login
           5. Authenticate Claude Code: claude login
           6. Configure OpenCode: opencode
+          7. Authenticate Azure CLI: az login
+          8. Authenticate Google Cloud: gcloud init
 
           Happy coding!
 

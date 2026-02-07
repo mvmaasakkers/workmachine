@@ -1,0 +1,69 @@
+---
+# Terraform role - Install HashiCorp Terraform
+
+- name: Check current Terraform version
+  ansible.builtin.command: terraform version -json
+  register: terraform_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Set Terraform needs installation flag
+  ansible.builtin.set_fact:
+    terraform_needs_install: "{{ terraform_current_version.rc != 0 or (terraform_current_version.stdout | from_json).terraform_version != terraform_version }}"
+
+- name: Set Terraform architecture
+  ansible.builtin.set_fact:
+    terraform_arch: "{{ arch_map[ansible_architecture] | default('amd64') }}"
+
+- name: Set Terraform platform
+  ansible.builtin.set_fact:
+    terraform_platform: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
+
+# macOS installation via Homebrew
+- name: Install Terraform (macOS)
+  community.general.homebrew:
+    name: terraform
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via zip download
+- name: Install Terraform (Linux)
+  when:
+    - ansible_os_family == "Debian"
+    - terraform_needs_install
+  become: true
+  block:
+    - name: Download Terraform zip
+      ansible.builtin.get_url:
+        url: "https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_{{ terraform_platform }}_{{ terraform_arch }}.zip"
+        dest: "/tmp/terraform_{{ terraform_version }}.zip"
+        checksum: "sha256:{{ terraform_checksums[terraform_platform + '_' + terraform_arch] }}"
+        mode: '0644'
+        timeout: 60
+
+    - name: Install unzip if needed
+      ansible.builtin.package:
+        name: unzip
+        state: present
+
+    - name: Extract Terraform binary
+      ansible.builtin.unarchive:
+        src: "/tmp/terraform_{{ terraform_version }}.zip"
+        dest: /usr/local/bin
+        remote_src: true
+        mode: '0755'
+
+    - name: Clean up downloaded zip
+      ansible.builtin.file:
+        path: "/tmp/terraform_{{ terraform_version }}.zip"
+        state: absent
+
+- name: Verify Terraform installation
+  ansible.builtin.command: terraform version
+  register: terraform_version_output
+  changed_when: false
+
+- name: Display Terraform version
+  ansible.builtin.debug:
+    msg: "Terraform installed: {{ terraform_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and terraform_version_output.stdout_lines | length > 0

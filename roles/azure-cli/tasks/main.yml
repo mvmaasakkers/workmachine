@@ -1,0 +1,83 @@
+---
+# Azure CLI role - Install Microsoft Azure CLI
+# Authentication should be handled by users themselves via: az login
+
+- name: Check current Azure CLI version
+  ansible.builtin.command: az version --output json
+  register: az_current_version
+  changed_when: false
+  failed_when: false
+
+# macOS installation via Homebrew
+- name: Install Azure CLI (macOS)
+  community.general.homebrew:
+    name: azure-cli
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via Microsoft's official method
+- name: Install Azure CLI (Linux)
+  when: ansible_os_family == "Debian"
+  become: true
+  block:
+    - name: Install Azure CLI dependencies
+      ansible.builtin.package:
+        name:
+          - ca-certificates
+          - curl
+          - apt-transport-https
+          - lsb-release
+          - gnupg
+        state: present
+
+    - name: Create /etc/apt/keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Microsoft signing key
+      ansible.builtin.get_url:
+        url: https://packages.microsoft.com/keys/microsoft.asc
+        dest: /etc/apt/keyrings/microsoft.asc
+        mode: '0644'
+        timeout: 30
+
+    - name: Get Ubuntu/Debian codename for Azure CLI repo
+      ansible.builtin.command: lsb_release -cs
+      register: az_distro_codename
+      changed_when: false
+
+    - name: Set Azure CLI distribution (Pop!_OS uses Ubuntu repos)
+      ansible.builtin.set_fact:
+        az_distro_codename_resolved: "{{ az_distro_codename.stdout }}"
+
+    - name: Add Azure CLI repository
+      ansible.builtin.deb822_repository:
+        name: azure-cli
+        types: [deb]
+        uris: "https://packages.microsoft.com/repos/azure-cli/"
+        suites: ["{{ az_distro_codename_resolved }}"]
+        components: [main]
+        architectures: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
+        signed_by: /etc/apt/keyrings/microsoft.asc
+        state: present
+
+    - name: Update apt cache after adding Azure CLI repo
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Azure CLI
+      ansible.builtin.package:
+        name: azure-cli
+        state: present
+
+- name: Verify Azure CLI installation
+  ansible.builtin.command: az version
+  register: az_version_output
+  changed_when: false
+
+- name: Display Azure CLI version
+  ansible.builtin.debug:
+    msg: "Azure CLI installed: {{ az_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and az_version_output.stdout_lines | length > 0

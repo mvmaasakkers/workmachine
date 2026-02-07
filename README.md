@@ -27,7 +27,7 @@ This setup installs and configures:
   - Python 3.13 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd
 - **AI Tools**: Claude Code CLI, OpenCode CLI
-- **DevOps**: DevPod CLI
+- **DevOps**: DevPod CLI, Terraform, Packer, Azure CLI, Google Cloud SDK
 
 ## Quick Start
 
@@ -128,6 +128,8 @@ Available tags:
 - `nvim`, `editor` - Neovim setup
 - `php`, `go`, `golang`, `nodejs`, `node`, `python`, `languages` - Programming languages
 - `claude-code`, `claude`, `opencode`, `ai`, `tools` - AI coding assistants
+- `terraform`, `packer`, `iac`, `devops` - Infrastructure as Code tools
+- `azure-cli`, `azure`, `gcloud`, `gcp`, `cloud` - Cloud provider CLIs
 
 ### Customizing Versions
 
@@ -138,6 +140,8 @@ go_version: "1.25.6"
 nodejs_version: "24"
 php_version: "8.4"
 python_version: "3.13"
+terraform_version: "1.14.4"
+packer_version: "1.15.0"
 ```
 
 Then re-run the setup:
@@ -171,7 +175,11 @@ workmachine/
 │   ├── nodejs/                 # Node.js via nvm
 │   ├── python/                 # Python + pip
 │   ├── claude-code/            # Claude Code CLI
-│   └── opencode/               # OpenCode CLI
+│   ├── opencode/               # OpenCode CLI
+│   ├── terraform/              # HashiCorp Terraform
+│   ├── packer/                 # HashiCorp Packer
+│   ├── azure-cli/              # Microsoft Azure CLI
+│   └── gcloud/                 # Google Cloud SDK
 ├── ansible.cfg                 # Ansible configuration
 ├── inventory.ini               # Server inventory
 ├── vars.yml                    # Version configuration
@@ -199,11 +207,20 @@ After the setup completes:
    nvim --version
    claude --version
    opencode --version
+   terraform --version
+   packer --version
+   az --version
+   gcloud --version
    ```
 4. **Authenticate AI tools**:
    ```bash
    claude login        # Claude Code CLI
    opencode            # OpenCode CLI (interactive setup)
+   ```
+5. **Authenticate cloud CLIs**:
+   ```bash
+   az login            # Azure CLI
+   gcloud init         # Google Cloud SDK
    ```
 
 ## Configuration Files

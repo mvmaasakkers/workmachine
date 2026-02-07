@@ -1,0 +1,72 @@
+---
+# Google Cloud SDK role - Install Google Cloud CLI (gcloud)
+# Authentication should be handled by users themselves via: gcloud init
+
+- name: Check current gcloud version
+  ansible.builtin.command: gcloud version --format=json
+  register: gcloud_current_version
+  changed_when: false
+  failed_when: false
+
+# macOS installation via Homebrew
+- name: Install Google Cloud SDK (macOS)
+  community.general.homebrew_cask:
+    name: google-cloud-sdk
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via Google's official apt repository
+- name: Install Google Cloud SDK (Linux)
+  when: ansible_os_family == "Debian"
+  become: true
+  block:
+    - name: Install Google Cloud SDK dependencies
+      ansible.builtin.package:
+        name:
+          - ca-certificates
+          - curl
+          - apt-transport-https
+          - gnupg
+        state: present
+
+    - name: Create /etc/apt/keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Google Cloud signing key
+      ansible.builtin.get_url:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        dest: /etc/apt/keyrings/cloud.google.gpg
+        mode: '0644'
+        timeout: 30
+
+    - name: Add Google Cloud SDK repository
+      ansible.builtin.deb822_repository:
+        name: google-cloud-sdk
+        types: [deb]
+        uris: "https://packages.cloud.google.com/apt"
+        suites: ["cloud-sdk"]
+        components: [main]
+        signed_by: /etc/apt/keyrings/cloud.google.gpg
+        state: present
+
+    - name: Update apt cache after adding Google Cloud SDK repo
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Google Cloud SDK
+      ansible.builtin.package:
+        name: google-cloud-cli
+        state: present
+
+- name: Verify Google Cloud SDK installation
+  ansible.builtin.command: gcloud version
+  register: gcloud_version_output
+  changed_when: false
+
+- name: Display Google Cloud SDK version
+  ansible.builtin.debug:
+    msg: "Google Cloud SDK installed: {{ gcloud_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and gcloud_version_output.stdout_lines | length > 0
