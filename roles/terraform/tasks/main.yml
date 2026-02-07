@@ -20,9 +20,15 @@
     terraform_platform: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
 
 # macOS installation via Homebrew
+- name: Tap HashiCorp Homebrew repository (macOS)
+  community.general.homebrew_tap:
+    name: hashicorp/tap
+    state: present
+  when: ansible_os_family == "Darwin"
+
 - name: Install Terraform (macOS)
   community.general.homebrew:
-    name: terraform
+    name: hashicorp/tap/terraform
     state: present
   when: ansible_os_family == "Darwin"
 

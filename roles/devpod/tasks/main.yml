@@ -7,28 +7,41 @@
   ansible.builtin.set_fact:
     devpod_platform: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
 
-- name: Download DevPod CLI
-  ansible.builtin.get_url:
-    url: "https://github.com/loft-sh/devpod/releases/latest/download/devpod-{{ devpod_platform }}-{{ devpod_arch }}"
-    dest: /tmp/devpod
-    mode: '0755'
-    timeout: 30
+- name: Check if DevPod CLI is already available (macOS)
+  ansible.builtin.command: devpod version
+  register: devpod_macos_check
+  changed_when: false
+  failed_when: false
+  when: ansible_os_family == "Darwin"
 
-- name: Check if DevPod binary was downloaded
-  ansible.builtin.stat:
-    path: /tmp/devpod
-  register: devpod_download_stat
+- name: Install DevPod CLI (macOS)
+  community.general.homebrew_cask:
+    name: devpod
+    state: present
+  when: ansible_os_family == "Darwin" and devpod_macos_check.rc != 0
 
-- name: Install DevPod CLI
-  ansible.builtin.copy:
-    src: /tmp/devpod
-    dest: /usr/local/bin/devpod
-    remote_src: true
-    mode: '0755'
+- name: Install DevPod CLI (Linux)
+  when: ansible_os_family == "Debian"
   become: true
-  when: devpod_download_stat.stat.exists
+  block:
+    - name: Download DevPod CLI binary
+      ansible.builtin.get_url:
+        url: "https://github.com/loft-sh/devpod/releases/latest/download/devpod-{{ devpod_platform }}-{{ devpod_arch }}"
+        dest: /tmp/devpod-binary
+        mode: '0755'
+        timeout: 60
 
-- name: Clean up downloaded DevPod binary
+    - name: Install DevPod CLI to /usr/local/bin
+      ansible.builtin.command:
+        cmd: mv /tmp/devpod-binary /usr/local/bin/devpod
+      changed_when: true
+
+    - name: Set DevPod CLI permissions
+      ansible.builtin.file:
+        path: /usr/local/bin/devpod
+        mode: '0755'
+
+- name: Clean up stale /tmp/devpod if present
   ansible.builtin.file:
     path: /tmp/devpod
     state: absent
