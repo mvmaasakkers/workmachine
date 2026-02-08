@@ -5,5 +5,7 @@
 size = 13.0
 
 [window]
-# Use native macOS fullscreen with its own space
 option_as_alt = "Both"
+
+[terminal]
+shell = { program = "/bin/zsh", args = ["-l"] }

@@ -56,6 +56,10 @@ style = "Bold Italic"
 # Padding adds breathing room around terminal content
 padding = { x = 8, y = 8 }
 
+# macOS only: Treat Option key as Alt for terminal navigation (Option+Arrow = word jump)
+# Values: "OnlyLeft" | "OnlyRight" | "Both" | "None" (default)
+option_as_alt = "Both"
+
 # Window opacity (1.0 = fully opaque)
 opacity = 1.0
 

@@ -67,14 +67,19 @@ plugins=(
     python
 )
 
-# Only load virtualenvwrapper plugin if virtualenvwrapper is available
-if command -v virtualenvwrapper.sh &> /dev/null || \
-   [[ -f "$HOME/.local/bin/virtualenvwrapper.sh" ]] || \
-   [[ "$_IS_MACOS" == true && -f "${_HOMEBREW_PREFIX}/bin/virtualenvwrapper.sh" ]]; then
-  plugins+=(virtualenvwrapper)
-fi
-
 source $ZSH/oh-my-zsh.sh
+
+# Virtualenvwrapper setup (after oh-my-zsh, with proper Python path)
+# Note: Don't use the oh-my-zsh virtualenvwrapper plugin - it has initialization issues
+if [[ -f "$HOME/.local/bin/virtualenvwrapper.sh" ]]; then
+  export VIRTUALENVWRAPPER_PYTHON="$(command -v python3)"
+  export WORKON_HOME="$HOME/.virtualenvs"
+  source "$HOME/.local/bin/virtualenvwrapper.sh" 2>/dev/null
+elif [[ "$_IS_MACOS" == true && -f "${_HOMEBREW_PREFIX}/bin/virtualenvwrapper.sh" ]]; then
+  export VIRTUALENVWRAPPER_PYTHON="$(command -v python3)"
+  export WORKON_HOME="$HOME/.virtualenvs"
+  source "${_HOMEBREW_PREFIX}/bin/virtualenvwrapper.sh" 2>/dev/null
+fi
 
 # ==============================================================================
 # Shell Settings
