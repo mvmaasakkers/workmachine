@@ -4,11 +4,11 @@
 
 # Versions are on the top as they are most likely to be changed
 lazygit_version: "0.58.1"
-netbird_version: "0.64.5"
-go_version: "1.25.7"
+netbird_version: "0.64.6"
+go_version: "1.26.0"
 nodejs_version: "24"
-php_version: "8.4"
-php_version_short: "8.4"
+php_version: "8.5"
+php_version_short: "8.5"
 composer_version: "2"
 python_version: "3.13"
 gh_version: "2.86.0"
@@ -30,7 +30,7 @@ is_linux: "{{ ansible_os_family == 'Debian' }}"
 arch_map:
   x86_64: "amd64"
   aarch64: "arm64"
-  arm64: "arm64"  # macOS reports as 'arm64' for Apple Silicon
+  arm64: "arm64" # macOS reports as 'arm64' for Apple Silicon
   armv7l: "armv7"
 
 # macOS-specific paths

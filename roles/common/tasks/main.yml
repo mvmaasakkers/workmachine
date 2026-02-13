@@ -28,6 +28,7 @@
       - ripgrep
       - fd-find
       - git-delta
+      - libimage-exiftool-perl
     state: present
   become: true
   when: ansible_os_family == "Debian"
@@ -49,6 +50,7 @@
       - ripgrep
       - fd
       - git-delta
+      - exiftool
     state: present
   when: ansible_os_family == "Darwin"
 
