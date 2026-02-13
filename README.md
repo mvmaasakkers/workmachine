@@ -21,7 +21,7 @@ This setup installs and configures:
 - **Containers**: Docker + Docker Compose
 - **Editor**: Neovim with plugins and custom config
 - **Languages**:
-  - PHP 8.4 (CLI + Composer)
+  - PHP 8.4 (CLI + Composer + Phpactor)
   - Go 1.25.6
   - Node.js 24 via nvm (+ npm, yarn, pnpm, Bun)
   - Python 3.13 (+ pip, virtualenv, poetry)
@@ -126,7 +126,7 @@ Available tags:
 - `alacritty`, `tmux`, `terminal` - Terminal setup
 - `docker`, `containers` - Docker setup
 - `nvim`, `editor` - Neovim setup
-- `php`, `go`, `golang`, `nodejs`, `node`, `python`, `languages` - Programming languages
+- `php`, `phpactor`, `go`, `golang`, `nodejs`, `node`, `python`, `languages` - Programming languages
 - `claude-code`, `claude`, `opencode`, `ai`, `tools` - AI coding assistants
 - `terraform`, `packer`, `iac`, `devops` - Infrastructure as Code tools
 - `azure-cli`, `azure`, `gcloud`, `gcp`, `cloud` - Cloud provider CLIs
@@ -171,6 +171,7 @@ workmachine/
 │   │   └── tasks/
 │   ├── docker/                 # Docker setup
 │   ├── php/                    # PHP + Composer
+│   ├── phpactor/               # Phpactor (PHP language server)
 │   ├── go/                     # Go language
 │   ├── nodejs/                 # Node.js via nvm
 │   ├── python/                 # Python + pip

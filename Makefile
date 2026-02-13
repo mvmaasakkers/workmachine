@@ -59,7 +59,7 @@ setup-local: install-collections
 
 setup-local-no-pw: install-collections
 	@echo "Running playbook locally without asking for become pass..."
-	ansible-playbook -i localhost, playbooks/setup.yml --connection=local 
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local
 
 # Run ansible-lint
 lint: install-ansible-lint
@@ -74,11 +74,11 @@ check: install-collections
 # Check mode for local setup (dry-run)
 check-local: install-collections
 	@echo "Running playbook locally in check mode (dry-run)..."
-	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass --check 
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass --check
 
 check-local-no-pw: install-collections
 	@echo "Running playbook locally in check mode (dry-run) without asking for become pass..."
-	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --check 
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --check
 
 # Test with diff
 test: install-collections
