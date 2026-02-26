@@ -87,9 +87,6 @@
     - role: claude-code
       tags: ['claude-code', 'claude', 'ai', 'tools']
 
-    - role: opencode
-      tags: ['opencode', 'ai', 'tools']
-
     - role: devpod
       tags: ['devpod', 'containers', 'tools']
 
@@ -126,7 +123,7 @@
           - PHP tools: Composer, Symfony CLI, Phpactor
           - Package managers: composer, npm, pip, bun
           - VPN: Netbird client (not connected)
-          - CLI tools: GitHub CLI (gh), Claude Code CLI, OpenCode CLI, lazygit (with syntax highlighting)
+          - CLI tools: GitHub CLI (gh), Claude Code CLI, lazygit (with syntax highlighting)
           - DevOps: Terraform {{ terraform_version }}, Packer {{ packer_version }}, Azure CLI, Google Cloud SDK
 
           Next steps:
@@ -135,9 +132,8 @@
           3. Verify installations with: docker --version, go version, node --version, php --version
           4. Authenticate GitHub CLI: gh auth login
           5. Authenticate Claude Code: claude login
-          6. Configure OpenCode: opencode
-          7. Authenticate Azure CLI: az login
-          8. Authenticate Google Cloud: gcloud init
+          6. Authenticate Azure CLI: az login
+          7. Authenticate Google Cloud: gcloud init
 
           Happy coding!
 

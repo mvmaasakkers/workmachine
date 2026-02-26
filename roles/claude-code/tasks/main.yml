@@ -1,9 +1,10 @@
 ---
 # Install Claude Code CLI using the official installer
 # Documentation: https://code.claude.com/docs/en/overview
+# Uses the same official installer on both macOS and Linux for consistency
 
-# macOS: Clean up ALL existing Claude Code installations before Homebrew cask install
-- name: Remove user-level Claude Code installations (macOS)
+# Clean up old installations (npm, nvm, Homebrew) before installing via official installer
+- name: Remove old Claude Code npm/nvm installations
   ansible.builtin.shell: |
     set -euo pipefail
     shopt -s nullglob
@@ -22,35 +23,37 @@
     done
   args:
     executable: /bin/bash
-  when: ansible_os_family == "Darwin"
   changed_when: false
 
-- name: Remove system-level Claude Code installations (macOS)
+- name: Remove old Homebrew cask Claude Code installation (macOS)
+  ansible.builtin.shell: |
+    if brew list --cask claude-code &>/dev/null; then
+      brew uninstall --cask claude-code
+    fi
+  args:
+    executable: /bin/bash
+  register: homebrew_cask_removal
+  changed_when: "'Uninstalling' in homebrew_cask_removal.stdout"
+  when: ansible_os_family == "Darwin"
+
+- name: Remove system-level Claude Code installations
   ansible.builtin.file:
     path: /usr/local/bin/claude
     state: absent
   become: true
-  when: ansible_os_family == "Darwin"
 
-# macOS: Use Homebrew cask (integrates with existing Homebrew setup)
-- name: Install Claude Code via Homebrew (macOS)
-  community.general.homebrew_cask:
-    name: claude-code
-    state: present
-  when: ansible_os_family == "Darwin"
-
-# Linux: Use official installer script (supports auto-updates)
-- name: Install Claude Code via official installer (Linux)
+# Install via official installer (same method on both macOS and Linux)
+- name: Install Claude Code via official installer
   ansible.builtin.shell: |
     curl -fsSL https://claude.ai/install.sh | bash
   args:
     executable: /bin/bash
     creates: "{{ ansible_env.HOME }}/.claude/local/claude"
-  when: ansible_os_family == "Debian" and not ansible_check_mode
+  when: not ansible_check_mode
 
 - name: Verify Claude Code CLI installation
   ansible.builtin.shell: |
-    export PATH="/opt/homebrew/bin:$HOME/.claude/local:$PATH"
+    export PATH="$HOME/.claude/local:$PATH"
     claude --version
   args:
     executable: /bin/bash

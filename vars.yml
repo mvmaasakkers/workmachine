@@ -3,19 +3,19 @@
 # Override these in your own vars file or via command line
 
 # Versions are on the top as they are most likely to be changed
-lazygit_version: "0.58.1"
-netbird_version: "0.64.6"
+lazygit_version: "0.59.0"
+netbird_version: "0.66.0"
 go_version: "1.26.0"
 nodejs_version: "24"
 php_version: "8.5"
 php_version_short: "8.5"
 composer_version: "2"
-python_version: "3.13"
-gh_version: "2.86.0"
-terraform_version: "1.14.4"
+python_version: "3.14"
+gh_version: "2.87.3"
+terraform_version: "1.14.6"
 terraform_checksums:
-  linux_amd64: "4a24b18865d9419ba7882567cb7429dd1525b3e2029a9e38f612d476ba8c3dea"
-  linux_arm64: "dcbc9d4b9fcd47e76ae194d5d569bfbf9f15bf1c59ca692aff6d2a92eb8e8994"
+  linux_amd64: "364c6ee08b0cb8fcbb28a115aacb2aa48e88abc56c149170bd65c2f75d98ea8d"
+  linux_arm64: "190037f64695556ac75965c00da5d85b3663f38553d909e9a51c4490cba4b6c1"
 packer_version: "1.15.0"
 packer_checksums:
   linux_amd64: "2fd1149c5c6c7604ced64d7b56638af05f6b7ed3f6835182bc913ddaba1f16b8"

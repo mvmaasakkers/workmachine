@@ -47,10 +47,10 @@ You'll be prompted for your sudo password.
 - ✅ **Neovim** with LazyVim configuration
 
 ### Programming Languages
-- ✅ **Go** 1.25.6
+- ✅ **Go** 1.26.0
 - ✅ **Node.js** 24 (+ npm, yarn, pnpm, TypeScript, Bun)
-- ✅ **Python** 3.13 (+ pipx, poetry, pipenv)
-- ✅ **PHP** 8.4 (+ Composer)
+- ✅ **Python** 3.14 (+ pipx, poetry, pipenv)
+- ✅ **PHP** 8.5 (+ Composer)
 
 ### Containers
 - ✅ **Colima** (lightweight Docker runtime)
@@ -59,7 +59,6 @@ You'll be prompted for your sudo password.
 
 ### AI Tools
 - ✅ **Claude Code CLI**
-- ✅ **OpenCode CLI**
 
 ### Other Tools
 - ✅ **GitHub CLI** (gh)

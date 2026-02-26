@@ -21,12 +21,12 @@ This setup installs and configures:
 - **Containers**: Docker + Docker Compose
 - **Editor**: Neovim with plugins and custom config
 - **Languages**:
-  - PHP 8.4 (CLI + Composer + Phpactor)
-  - Go 1.25.6
+  - PHP 8.5 (CLI + Composer + Phpactor)
+  - Go 1.26.0
   - Node.js 24 via nvm (+ npm, yarn, pnpm, Bun)
-  - Python 3.13 (+ pip, virtualenv, poetry)
+  - Python 3.14 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd
-- **AI Tools**: Claude Code CLI, OpenCode CLI
+- **AI Tools**: Claude Code CLI
 - **DevOps**: DevPod CLI, Terraform, Packer, Azure CLI, Google Cloud SDK
 
 ## Quick Start
@@ -127,7 +127,7 @@ Available tags:
 - `docker`, `containers` - Docker setup
 - `nvim`, `editor` - Neovim setup
 - `php`, `phpactor`, `go`, `golang`, `nodejs`, `node`, `python`, `languages` - Programming languages
-- `claude-code`, `claude`, `opencode`, `ai`, `tools` - AI coding assistants
+- `claude-code`, `claude`, `ai`, `tools` - AI coding assistant
 - `terraform`, `packer`, `iac`, `devops` - Infrastructure as Code tools
 - `azure-cli`, `azure`, `gcloud`, `gcp`, `cloud` - Cloud provider CLIs
 
@@ -136,10 +136,10 @@ Available tags:
 Edit `vars.yml` to customize versions:
 
 ```yaml
-go_version: "1.25.6"
+go_version: "1.26.0"
 nodejs_version: "24"
-php_version: "8.4"
-python_version: "3.13"
+php_version: "8.5"
+python_version: "3.14"
 terraform_version: "1.14.4"
 packer_version: "1.15.0"
 ```
@@ -176,7 +176,6 @@ workmachine/
 │   ├── nodejs/                 # Node.js via nvm
 │   ├── python/                 # Python + pip
 │   ├── claude-code/            # Claude Code CLI
-│   ├── opencode/               # OpenCode CLI
 │   ├── terraform/              # HashiCorp Terraform
 │   ├── packer/                 # HashiCorp Packer
 │   ├── azure-cli/              # Microsoft Azure CLI
@@ -207,7 +206,6 @@ After the setup completes:
    python3 --version
    nvim --version
    claude --version
-   opencode --version
    terraform --version
    packer --version
    az --version
@@ -216,7 +214,6 @@ After the setup completes:
 4. **Authenticate AI tools**:
    ```bash
    claude login        # Claude Code CLI
-   opencode            # OpenCode CLI (interactive setup)
    ```
 5. **Authenticate cloud CLIs**:
    ```bash
