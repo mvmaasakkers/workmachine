@@ -12,7 +12,7 @@
   when: ansible_os_family == "Darwin"
 
 - name: Start Colima (macOS)
-  ansible.builtin.command: colima start
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/colima start"
   when: ansible_os_family == "Darwin"
   register: colima_start
   changed_when: "'already running' not in colima_start.stderr"
@@ -121,10 +121,17 @@
     loop_var: docker_user
   when: ansible_os_family == "Debian" and docker_users is defined
 
-- name: Verify Docker installation
+- name: Verify Docker installation (macOS)
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/docker --version"
+  register: docker_version
+  changed_when: false
+  when: ansible_os_family == "Darwin"
+
+- name: Verify Docker installation (Linux)
   ansible.builtin.command: docker --version
   register: docker_version
   changed_when: false
+  when: ansible_os_family == "Debian"
 
 - name: Display Docker version
   ansible.builtin.debug:

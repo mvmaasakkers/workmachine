@@ -6,3 +6,4 @@
     name: docker
     state: restarted
   become: true
+  when: ansible_os_family == "Debian"
