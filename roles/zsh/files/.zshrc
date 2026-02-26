@@ -53,7 +53,7 @@ export PATH="$HOME/.local/bin:$PATH"
 export ZSH="$HOME/.oh-my-zsh"
 
 # Theme - https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="agnoster"
+ZSH_THEME="refined"
 
 # Plugins - https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins
 # Note: virtualenvwrapper plugin requires virtualenvwrapper to be installed
@@ -84,9 +84,6 @@ fi
 # ==============================================================================
 # Shell Settings
 # ==============================================================================
-
-# Hide username@hostname when it's your own user (for agnoster theme)
-DEFAULT_USER="$USER"
 
 # 256 color support
 export TERM="xterm-256color"
