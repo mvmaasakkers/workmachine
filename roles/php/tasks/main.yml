@@ -145,9 +145,15 @@
   become: true
   when: ansible_os_family == "Debian"
 
+- name: Tap Symfony CLI repository (macOS)
+  community.general.homebrew_tap:
+    name: symfony-cli/tap
+    state: present
+  when: ansible_os_family == "Darwin"
+
 - name: Install Symfony CLI (macOS)
   community.general.homebrew:
-    name: symfony-cli/tap/symfony-cli
+    name: symfony-cli
     state: present
   when: ansible_os_family == "Darwin"
 
