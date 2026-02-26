@@ -136,3 +136,4 @@
 - name: Display Docker version
   ansible.builtin.debug:
     msg: "Docker installed: {{ docker_version.stdout }}"
+  when: docker_version.stdout is defined
