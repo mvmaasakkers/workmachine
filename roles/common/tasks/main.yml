@@ -71,13 +71,12 @@
   become: true
   when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
 
-- name: Ensure /usr/local/bin exists (Linux)
+- name: Ensure /usr/local/bin exists
   ansible.builtin.file:
     path: /usr/local/bin
     state: directory
     mode: "0755"
   become: true
-  when: ansible_os_family == "Debian"
 
 - name: Check if lazygit is installed
   ansible.builtin.stat:
