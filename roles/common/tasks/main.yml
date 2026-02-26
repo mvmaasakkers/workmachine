@@ -29,6 +29,7 @@
       - fd-find
       - git-delta
       - libimage-exiftool-perl
+      - mkcert
     state: present
   become: true
   when: ansible_os_family == "Debian"
@@ -51,6 +52,7 @@
       - fd
       - git-delta
       - exiftool
+      - mkcert
     state: present
   when: ansible_os_family == "Darwin"
 
@@ -73,7 +75,7 @@
   ansible.builtin.file:
     path: /usr/local/bin
     state: directory
-    mode: '0755'
+    mode: "0755"
   become: true
   when: ansible_os_family == "Debian"
 
@@ -102,7 +104,7 @@
   ansible.builtin.get_url:
     url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_{{ lazygit_platform }}_{{ lazygit_arch }}.tar.gz"
     dest: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
-    mode: '0644'
+    mode: "0644"
     timeout: 30
   when: lazygit_needs_install
 
@@ -130,7 +132,7 @@
 - name: Ensure lazygit is executable
   ansible.builtin.file:
     path: /usr/local/bin/lazygit
-    mode: '0755'
+    mode: "0755"
   become: true
   when: lazygit_needs_install and lazygit_tarball_stat.stat.exists
 
@@ -145,7 +147,7 @@
     path: /usr/bin/sudo
     owner: root
     group: root
-    mode: '4755'
+    mode: "4755"
   become: true
   when: ansible_os_family == "Debian"
 
@@ -153,4 +155,4 @@
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.config"
     state: directory
-    mode: '0755'
+    mode: "0755"
