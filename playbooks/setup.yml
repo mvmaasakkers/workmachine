@@ -48,6 +48,9 @@
     - role: common
       tags: ['common', 'base']
 
+    - role: git
+      tags: ['git', 'base']
+
     - role: zsh
       tags: ['zsh', 'shell']
 
