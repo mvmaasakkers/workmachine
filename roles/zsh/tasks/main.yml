@@ -164,15 +164,24 @@
     dest: "{{ zsh_config_dir }}/"
     mode: preserve
 
-- name: Remove oh-my-zsh generated .zshrc
-  ansible.builtin.file:
+- name: Check current ~/.zshrc status
+  ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.zshrc"
-    state: absent
+  register: zshrc_current
 
 - name: Check if zsh config .zshrc exists
   ansible.builtin.stat:
     path: "{{ zsh_config_dir }}/.zshrc"
   register: zsh_config_zshrc_stat
+
+- name: Remove ~/.zshrc if it is not the correct symlink
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    state: absent
+  when:
+    - zsh_config_zshrc_stat.stat.exists
+    - zshrc_current.stat.exists
+    - not zshrc_current.stat.islnk or zshrc_current.stat.lnk_target != zsh_config_dir + '/.zshrc'
 
 - name: Create symlink from ~/.zshrc to config repo
   ansible.builtin.file:

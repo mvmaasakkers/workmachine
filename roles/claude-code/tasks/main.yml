@@ -2,13 +2,13 @@
 # Install Claude Code CLI using the official installer
 # Documentation: https://code.claude.com/docs/en/overview
 # Uses the same official installer on both macOS and Linux for consistency
+# Installs to ~/.local/bin/claude (symlink to ~/.local/share/claude/versions/*)
 
-# Clean up old installations (npm, nvm, Homebrew) before installing via official installer
+# Clean up old npm/nvm/Homebrew installations (not the official installer)
 - name: Remove old Claude Code npm/nvm installations
   ansible.builtin.shell: |
     set -euo pipefail
     shopt -s nullglob
-    rm -f {{ ansible_env.HOME }}/.local/bin/claude
     rm -rf /opt/homebrew/lib/node_modules/@anthropic-ai
     export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
     if [ -s "$NVM_DIR/nvm.sh" ]; then
@@ -48,12 +48,12 @@
     curl -fsSL https://claude.ai/install.sh | bash
   args:
     executable: /bin/bash
-    creates: "{{ ansible_env.HOME }}/.claude/local/claude"
+    creates: "{{ ansible_env.HOME }}/.local/bin/claude"
   when: not ansible_check_mode
 
 - name: Verify Claude Code CLI installation
   ansible.builtin.shell: |
-    export PATH="$HOME/.claude/local:$PATH"
+    export PATH="$HOME/.local/bin:$PATH"
     claude --version
   args:
     executable: /bin/bash
