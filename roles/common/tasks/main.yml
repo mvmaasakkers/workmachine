@@ -34,6 +34,48 @@
   become: true
   when: ansible_os_family == "Debian"
 
+- name: Create /etc/apt/keyrings directory (Linux)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Download and dearmor Charm signing key (Linux)
+  ansible.builtin.shell: |
+    curl -fsSL https://repo.charm.sh/apt/gpg.key | gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+  args:
+    creates: /etc/apt/keyrings/charm.gpg
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Add Charm apt repository (Linux)
+  ansible.builtin.deb822_repository:
+    name: charm
+    types: [deb]
+    uris: ['https://repo.charm.sh/apt/']
+    suites: ['*']
+    components: ['*']
+    signed_by: /etc/apt/keyrings/charm.gpg
+    state: present
+  become: true
+  register: charm_repo_added
+  when: ansible_os_family == "Debian"
+
+- name: Update apt cache after adding Charm repo (Linux)
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+  when: ansible_os_family == "Debian" and charm_repo_added is changed
+
+- name: Install glow (Linux)
+  ansible.builtin.package:
+    name: glow
+    state: present
+  become: true
+  when: ansible_os_family == "Debian"
+
 - name: Install common CLI tools (macOS)
   community.general.homebrew:
     name:
@@ -53,6 +95,7 @@
       - git-delta
       - exiftool
       - mkcert
+      - glow
     state: present
   when: ansible_os_family == "Darwin"
 

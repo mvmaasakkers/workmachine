@@ -173,6 +173,24 @@ else
   alias ll='ls -lah --color=auto'
 fi
 
+# tmux: attach to session or create it
+tmas() {
+  if [ -z "$1" ]; then
+    echo "Usage: tmas <session-name>"
+    return 1
+  fi
+  tmux new-session -A -s "$1"
+}
+
+# claude code: start in worktree with skip permissions
+cca() {
+  if [ -z "$1" ]; then
+    echo "Usage: cca <worktree-name>"
+    return 1
+  fi
+  claude --dangerously-skip-permissions -w "$1"
+}
+
 # Common aliases (cross-platform)
 # alias gs='git status'
 
