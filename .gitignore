@@ -2,6 +2,7 @@
 .vscode
 .ansible
 .DS_Store
+.claude/
 .venv
 
 # Inventory files (use inventory.ini.example as template)
