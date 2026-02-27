@@ -191,6 +191,9 @@ cca() {
   claude --dangerously-skip-permissions -w "$1"
 }
 
+# claude code: start with skip permissions (no worktree)
+alias ccu='claude --dangerously-skip-permissions'
+
 # Common aliases (cross-platform)
 # alias gs='git status'
 

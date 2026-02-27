@@ -1,5 +1,9 @@
 .PHONY: help setup setup-local setup-remote lint check check-local install-ansible install-ansible-lint install-collections test tags clean
 
+# Activate Python venv for all targets (equivalent to source .venv/bin/activate)
+export VIRTUAL_ENV := $(CURDIR)/.venv
+export PATH := $(CURDIR)/.venv/bin:$(PATH)
+
 # Default target
 help:
 	@echo "Available targets:"
