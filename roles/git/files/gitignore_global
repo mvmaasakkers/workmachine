@@ -33,6 +33,10 @@
 # AI tools state
 .omc/
 .opencode/
+.claude/webhooks
+.cursor/
+.aider*
+.codex/
 
 # Environment and secrets
 .env
