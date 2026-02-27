@@ -276,7 +276,7 @@ The zsh config includes these convenience functions:
 | Command | Expands to | Description |
 |---------|-----------|-------------|
 | `tmas <name>` | `tmux new-session -A -s <name>` | Attach to a tmux session or create it |
-| `cc <name>` | `claude --dangerously-skip-permissions -w <name>` | Start Claude Code in a worktree |
+| `cca <name>` | `claude --dangerously-skip-permissions -w <name>` | Start Claude Code in a worktree |
 
 ## Alacritty Configuration
 

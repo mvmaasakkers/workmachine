@@ -34,7 +34,15 @@
   become: true
   when: ansible_os_family == "Debian"
 
-- name: Add Charm apt repository key (Linux)
+- name: Create /etc/apt/keyrings directory (Linux)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Download and dearmor Charm signing key (Linux)
   ansible.builtin.shell: |
     curl -fsSL https://repo.charm.sh/apt/gpg.key | gpg --dearmor -o /etc/apt/keyrings/charm.gpg
   args:
@@ -43,10 +51,14 @@
   when: ansible_os_family == "Debian"
 
 - name: Add Charm apt repository (Linux)
-  ansible.builtin.copy:
-    dest: /etc/apt/sources.list.d/charm.list
-    content: "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *\n"
-    mode: '0644'
+  ansible.builtin.deb822_repository:
+    name: charm
+    types: [deb]
+    uris: ['https://repo.charm.sh/apt/']
+    suites: ['*']
+    components: ['*']
+    signed_by: /etc/apt/keyrings/charm.gpg
+    state: present
   become: true
   register: charm_repo_added
   when: ansible_os_family == "Debian"
