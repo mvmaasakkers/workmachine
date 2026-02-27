@@ -128,7 +128,7 @@
           - PHP tools: Composer, Symfony CLI, Phpactor
           - Package managers: composer, npm, pip, bun
           - VPN: Netbird client (not connected)
-          - CLI tools: GitHub CLI (gh), Claude Code CLI, lazygit (with syntax highlighting)
+          - CLI tools: GitHub CLI (gh), Claude Code CLI, lazygit (with syntax highlighting), glow
           - DevOps: Terraform {{ terraform_version }}, Packer {{ packer_version }}, Azure CLI, Google Cloud SDK
 
           Next steps:

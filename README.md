@@ -25,7 +25,7 @@ This setup installs and configures:
   - Go 1.26.0
   - Node.js 24 via nvm (+ npm, yarn, pnpm, Bun)
   - Python 3.14 (+ pip, virtualenv, poetry)
-- **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd
+- **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd, glow
 - **AI Tools**: Claude Code CLI
 - **DevOps**: DevPod CLI, Terraform, Packer, Azure CLI, Google Cloud SDK
 
@@ -268,6 +268,15 @@ Located in `roles/zsh/files/`. The setup:
 1. Installs zsh and oh-my-zsh
 2. Deploys config to `~/.config/zsh/`
 3. Creates a symlink from `~/.zshrc` to `~/.config/zsh/.zshrc`
+
+### Shell Shortcuts
+
+The zsh config includes these convenience functions:
+
+| Command | Expands to | Description |
+|---------|-----------|-------------|
+| `tmas <name>` | `tmux new-session -A -s <name>` | Attach to a tmux session or create it |
+| `cc <name>` | `claude --dangerously-skip-permissions -w <name>` | Start Claude Code in a worktree |
 
 ## Alacritty Configuration
 
