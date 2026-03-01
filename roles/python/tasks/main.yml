@@ -97,9 +97,7 @@
   loop:
     - poetry
     - pipenv
-    - black
-    - flake8
-    - pylint
+    - ruff
     - virtualenvwrapper
     - python-lsp-server
   loop_control:

@@ -1,4 +1,4 @@
-.PHONY: help setup setup-local setup-remote lint check check-local install-ansible install-ansible-lint install-collections test tags clean
+.PHONY: help setup setup-local setup-remote lint check check-local install-ansible install-ansible-lint install-collections test tags clean run-role-local
 
 # Activate Python venv for all targets (equivalent to source .venv/bin/activate)
 export VIRTUAL_ENV := $(CURDIR)/.venv
@@ -17,6 +17,7 @@ help:
 	@echo "  make install-collections - Install required Ansible collections"
 	@echo "  make install-ansible-lint - Install ansible-lint"
 	@echo "  make test           - Run playbook in check mode with diff"
+	@echo "  make run-role-local  - Run a specific role locally (TAG=<tag>)"
 	@echo "  make tags           - Show available tags"
 	@echo "  make clean          - Clean up temporary files"
 
@@ -103,6 +104,16 @@ run-role: install-collections
 		exit 1; \
 	fi
 	ansible-playbook -i inventory.ini playbooks/setup.yml --tags $(TAG)
+
+# Run specific role by tag locally
+# Example: make run-role-local TAG=docker
+run-role-local: install-collections
+	@if [ -z "$(TAG)" ]; then \
+		echo "Error: Please specify TAG=<tag>"; \
+		echo "Run 'make tags' to see available tags"; \
+		exit 1; \
+	fi
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass --tags $(TAG)
 
 # Clean temporary files
 clean:

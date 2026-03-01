@@ -41,76 +41,41 @@
         suffix: nerdfonts
       register: fonts_temp_dir
 
-    - name: Download Hack Nerd Font
+    - name: Download Nerd Fonts
       ansible.builtin.get_url:
-        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.zip"
-        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/Hack.zip"
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/{{ zsh_nerd_font_name }}.zip"
+        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/{{ zsh_nerd_font_name }}.zip"
         mode: '0644'
         timeout: 60
-      register: hack_download
-      failed_when: hack_download is failed and 'HTTP Error 404' not in (hack_download.msg | default(''))
-
-    - name: Download Meslo Nerd Font
-      ansible.builtin.get_url:
-        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip"
-        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/Meslo.zip"
-        mode: '0644'
-        timeout: 60
-      register: meslo_download
-      failed_when: meslo_download is failed and 'HTTP Error 404' not in (meslo_download.msg | default(''))
-
-    - name: Download FiraCode Nerd Font
-      ansible.builtin.get_url:
-        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
-        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/FiraCode.zip"
-        mode: '0644'
-        timeout: 60
-      register: firacode_download
-      failed_when: firacode_download is failed and 'HTTP Error 404' not in (firacode_download.msg | default(''))
-
-    - name: Download JetBrainsMono Nerd Font
-      ansible.builtin.get_url:
-        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
-        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/JetBrainsMono.zip"
-        mode: '0644'
-        timeout: 60
-      register: jetbrains_download
-      failed_when: jetbrains_download is failed and 'HTTP Error 404' not in (jetbrains_download.msg | default(''))
+      loop:
+        - Hack
+        - Meslo
+        - FiraCode
+        - JetBrainsMono
+      loop_control:
+        loop_var: zsh_nerd_font_name
+      register: zsh_font_download
+      failed_when: zsh_font_download is failed and 'HTTP Error 404' not in (zsh_font_download.msg | default(''))
 
     - name: Create NerdFonts directory
       ansible.builtin.file:
         path: "{{ font_dir }}/NerdFonts"
         state: directory
         mode: '0755'
-      register: nerd_fonts_dir_created
 
-    - name: Extract Hack Nerd Font
+    - name: Extract Nerd Fonts
       ansible.builtin.unarchive:
-        src: "{{ fonts_temp_dir.path | default('/tmp') }}/Hack.zip"
+        src: "{{ fonts_temp_dir.path | default('/tmp') }}/{{ zsh_nerd_font_name }}.zip"
         dest: "{{ font_dir }}/NerdFonts"
         remote_src: true
-      when: hack_download is succeeded and not ansible_check_mode
-
-    - name: Extract Meslo Nerd Font
-      ansible.builtin.unarchive:
-        src: "{{ fonts_temp_dir.path | default('/tmp') }}/Meslo.zip"
-        dest: "{{ font_dir }}/NerdFonts"
-        remote_src: true
-      when: meslo_download is succeeded and not ansible_check_mode
-
-    - name: Extract FiraCode Nerd Font
-      ansible.builtin.unarchive:
-        src: "{{ fonts_temp_dir.path | default('/tmp') }}/FiraCode.zip"
-        dest: "{{ font_dir }}/NerdFonts"
-        remote_src: true
-      when: firacode_download is succeeded and not ansible_check_mode
-
-    - name: Extract JetBrainsMono Nerd Font
-      ansible.builtin.unarchive:
-        src: "{{ fonts_temp_dir.path | default('/tmp') }}/JetBrainsMono.zip"
-        dest: "{{ font_dir }}/NerdFonts"
-        remote_src: true
-      when: jetbrains_download is succeeded and not ansible_check_mode
+      loop:
+        - Hack
+        - Meslo
+        - FiraCode
+        - JetBrainsMono
+      loop_control:
+        loop_var: zsh_nerd_font_name
+      when: not ansible_check_mode
 
     - name: Clean up temporary font files
       ansible.builtin.file:
@@ -146,6 +111,20 @@
   environment:
     RUNZSH: 'no'
     CHSH: 'no'
+
+- name: Install zsh-autosuggestions plugin
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    depth: 1
+    version: "v{{ zsh_autosuggestions_version }}"
+
+- name: Install zsh-syntax-highlighting plugin
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    depth: 1
+    version: "{{ zsh_syntax_highlighting_version }}"
 
 - name: Check if zsh config is a git repo
   ansible.builtin.stat:

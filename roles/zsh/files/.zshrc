@@ -65,6 +65,8 @@ plugins=(
     npm
     pip
     python
+    zsh-autosuggestions
+    zsh-syntax-highlighting
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -160,16 +162,19 @@ fi
 
 # Platform-specific aliases
 if [[ "$_IS_MACOS" == true ]]; then
-  # macOS-specific aliases
   alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
-  
-  # Use GNU coreutils if installed via Homebrew (for consistent behavior)
-  if command -v gls &> /dev/null; then
-    alias ls='gls --color=auto'
-    alias ll='gls -lah --color=auto'
-  fi
+fi
+
+# eza (modern ls replacement)
+if command -v eza &> /dev/null; then
+  alias ls='eza --icons --group-directories-first'
+  alias ll='eza -lah --icons --group-directories-first --git'
+  alias la='eza -a --icons --group-directories-first'
+  alias lt='eza --tree --icons --group-directories-first --level=2'
+elif [[ "$_IS_MACOS" == true ]] && command -v gls &> /dev/null; then
+  alias ls='gls --color=auto'
+  alias ll='gls -lah --color=auto'
 else
-  # Linux-specific aliases
   alias ll='ls -lah --color=auto'
 fi
 
@@ -218,14 +223,39 @@ fi
 # Unset platform detection variables (they served their purpose)
 # Comment out if you need these variables in your shell session
 # unset _IS_MACOS _IS_LINUX _IS_APPLE_SILICON _HOMEBREW_PREFIX
-# BEGIN ANSIBLE MANAGED BLOCK - Go
-export GOROOT=/usr/local/go
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-# END ANSIBLE MANAGED BLOCK - Go
-# BEGIN ANSIBLE MANAGED BLOCK - nvm
+
+# ==============================================================================
+# Lazy-loaded nvm (defers initialization until first use)
+# ==============================================================================
+
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-# END ANSIBLE MANAGED BLOCK - nvm
+_nvm_lazy_load() {
+  unset -f nvm node npm npx yarn pnpm 2>/dev/null
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+}
+nvm() { _nvm_lazy_load; nvm "$@"; }
+node() { _nvm_lazy_load; node "$@"; }
+npm() { _nvm_lazy_load; npm "$@"; }
+npx() { _nvm_lazy_load; npx "$@"; }
+yarn() { _nvm_lazy_load; yarn "$@"; }
+pnpm() { _nvm_lazy_load; pnpm "$@"; }
+
+# Bun
 export PATH="$HOME/.bun/bin:$PATH"
+
+# ==============================================================================
+# Modern CLI Tools
+# ==============================================================================
+
+# zoxide (smart cd replacement)
+if command -v zoxide &> /dev/null; then
+  eval "$(zoxide init zsh)"
+fi
+
+# bat (modern cat replacement)
+if command -v bat &> /dev/null; then
+  alias cat='bat --style=plain --paging=never'
+elif command -v batcat &> /dev/null; then
+  alias cat='batcat --style=plain --paging=never'
+fi
