@@ -19,3 +19,21 @@
     name: core.excludesFile
     value: "{{ ansible_env.HOME }}/.config/git/ignore"
     scope: global
+
+- name: Configure git global defaults
+  community.general.git_config:
+    name: "{{ git_setting.name }}"
+    value: "{{ git_setting.value }}"
+    scope: global
+  loop:
+    - { name: "init.defaultBranch", value: "main" }
+    - { name: "pull.rebase", value: "true" }
+    - { name: "merge.conflictstyle", value: "zdiff3" }
+    - { name: "diff.colorMoved", value: "default" }
+    - { name: "core.pager", value: "delta --light" }
+    - { name: "interactive.diffFilter", value: "delta --light --color-only" }
+    - { name: "delta.navigate", value: "true" }
+    - { name: "delta.line-numbers", value: "true" }
+    - { name: "delta.light", value: "true" }
+  loop_control:
+    loop_var: git_setting

@@ -30,6 +30,10 @@
       - git-delta
       - libimage-exiftool-perl
       - mkcert
+      - bat
+      - zoxide
+      - yq
+      - tldr
     state: present
   become: true
   when: ansible_os_family == "Debian"
@@ -96,8 +100,74 @@
       - exiftool
       - mkcert
       - glow
+      - bat
+      - eza
+      - zoxide
+      - yq
+      - tldr
     state: present
   when: ansible_os_family == "Darwin"
+
+- name: Create batcat symlink (Linux - Debian/Ubuntu package installs as batcat)
+  ansible.builtin.file:
+    src: /usr/bin/batcat
+    dest: /usr/local/bin/bat
+    state: link
+  become: true
+  when: ansible_os_family == "Debian"
+  failed_when: false
+
+- name: Set eza platform architecture
+  ansible.builtin.set_fact:
+    eza_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'aarch64' }}"
+  when: ansible_os_family == "Debian"
+
+- name: Check if eza is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/eza
+  register: eza_binary
+  when: ansible_os_family == "Debian"
+
+- name: Get installed eza version
+  ansible.builtin.command: /usr/local/bin/eza --version
+  register: installed_eza_version
+  changed_when: false
+  failed_when: false
+  when: ansible_os_family == "Debian" and eza_binary.stat.exists
+
+- name: Set eza needs installation flag
+  ansible.builtin.set_fact:
+    eza_needs_install: "{{ not eza_binary.stat.exists or eza_version not in (installed_eza_version.stdout | default('')) }}"
+  when: ansible_os_family == "Debian"
+
+- name: Download eza (Linux)
+  ansible.builtin.get_url:
+    url: "https://github.com/eza-community/eza/releases/download/v{{ eza_version }}/eza_{{ eza_arch }}-unknown-linux-gnu.tar.gz"
+    dest: "/tmp/eza_{{ eza_version }}.tar.gz"
+    mode: "0644"
+    timeout: 30
+  when: ansible_os_family == "Debian" and eza_needs_install
+
+- name: Extract eza (Linux)
+  ansible.builtin.unarchive:
+    src: "/tmp/eza_{{ eza_version }}.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+  become: true
+  when: ansible_os_family == "Debian" and eza_needs_install
+
+- name: Ensure eza is executable
+  ansible.builtin.file:
+    path: /usr/local/bin/eza
+    mode: "0755"
+  become: true
+  when: ansible_os_family == "Debian" and eza_needs_install
+
+- name: Clean up eza tarball
+  ansible.builtin.file:
+    path: "/tmp/eza_{{ eza_version }}.tar.gz"
+    state: absent
+  when: ansible_os_family == "Debian" and eza_needs_install
 
 - name: Create fd symlink (Linux - Debian/Ubuntu package installs as fdfind)
   ansible.builtin.file:

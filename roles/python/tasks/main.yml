@@ -97,11 +97,10 @@
   loop:
     - poetry
     - pipenv
-    - black
-    - flake8
-    - pylint
+    - ruff
     - virtualenvwrapper
     - python-lsp-server
+    - codegraphcontext
   loop_control:
     loop_var: python_tool
   when: python_tool not in pipx_list.stdout
