@@ -132,6 +132,19 @@
   when: not gopls_binary.stat.exists
   changed_when: true
 
+- name: Check if govulncheck is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/go/bin/govulncheck"
+  register: govulncheck_binary
+
+- name: Install govulncheck
+  ansible.builtin.command:
+    cmd: "{{ go_install_dir }}/go/bin/go install golang.org/x/vuln/cmd/govulncheck@latest"
+  environment:
+    GOPATH: "{{ ansible_env.HOME }}/go"
+  when: not govulncheck_binary.stat.exists
+  changed_when: true
+
 - name: Verify Go installation
   ansible.builtin.command: "{{ go_install_dir }}/go/bin/go version"
   register: go_version_output
