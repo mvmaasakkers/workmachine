@@ -96,6 +96,7 @@
     - typescript-language-server
     - ts-node
     - nodemon
+    - neonctl
   loop_control:
     loop_var: nodejs_package
   register: npm_install_result

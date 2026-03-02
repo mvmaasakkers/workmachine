@@ -230,7 +230,7 @@ fi
 
 export NVM_DIR="$HOME/.nvm"
 _nvm_lazy_load() {
-  unset -f nvm node npm npx yarn pnpm 2>/dev/null
+  unset -f nvm node npm npx yarn pnpm neonctl 2>/dev/null
   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
   [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 }
@@ -240,6 +240,7 @@ npm() { _nvm_lazy_load; npm "$@"; }
 npx() { _nvm_lazy_load; npx "$@"; }
 yarn() { _nvm_lazy_load; yarn "$@"; }
 pnpm() { _nvm_lazy_load; pnpm "$@"; }
+neonctl() { _nvm_lazy_load; neonctl "$@"; }
 
 # Bun
 export PATH="$HOME/.bun/bin:$PATH"
