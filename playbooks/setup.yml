@@ -110,6 +110,9 @@
     - role: gcloud
       tags: ['gcloud', 'gcp', 'cloud', 'devops', 'tools']
 
+    - role: opencode
+      tags: ['opencode', 'ai', 'tools']
+
   post_tasks:
     - name: Display setup completion message
       ansible.builtin.debug:
@@ -128,7 +131,7 @@
           - PHP tools: Composer, Symfony CLI, Phpactor
           - Package managers: composer, npm, pip, bun
           - VPN: Netbird client (not connected)
-          - CLI tools: GitHub CLI (gh), Claude Code CLI, lazygit (with syntax highlighting), glow
+          - CLI tools: GitHub CLI (gh), Claude Code CLI, OpenCode CLI, lazygit (with syntax highlighting), glow
           - DevOps: Terraform {{ terraform_version }}, Packer {{ packer_version }}, Azure CLI, Google Cloud SDK
 
           Next steps:

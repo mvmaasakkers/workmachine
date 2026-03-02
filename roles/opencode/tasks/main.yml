@@ -1,0 +1,27 @@
+---
+# Install OpenCode CLI using the official installer
+# Documentation: https://opencode.ai/docs/#install
+# Uses the same official installer on both macOS and Linux for consistency
+
+- name: Install OpenCode via official installer
+  ansible.builtin.shell: |
+    curl -fsSL https://opencode.ai/install | bash
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.local/bin/opencode"
+  when: not ansible_check_mode
+
+- name: Verify OpenCode CLI installation
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    opencode --version
+  args:
+    executable: /bin/bash
+  register: opencode_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display OpenCode CLI version
+  ansible.builtin.debug:
+    msg: "OpenCode CLI installed: {{ opencode_version_output.stdout }}"
+  when: not ansible_check_mode and opencode_version_output.stdout | default('') | length > 0
