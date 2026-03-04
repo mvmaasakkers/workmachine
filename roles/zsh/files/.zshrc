@@ -167,10 +167,18 @@ fi
 
 # eza (modern ls replacement)
 if command -v eza &> /dev/null; then
-  alias ls='eza --icons --group-directories-first'
+  unalias ls 2>/dev/null
   alias ll='eza -lah --icons --group-directories-first --git'
   alias la='eza -a --icons --group-directories-first'
   alias lt='eza --tree --icons --group-directories-first --level=2'
+
+  function ls {
+    if [[ "$#" -eq 1 && "$1" == "-las" ]]; then
+      command eza -la
+    else
+      command eza "$@"
+    fi
+  }
 elif [[ "$_IS_MACOS" == true ]] && command -v gls &> /dev/null; then
   alias ls='gls --color=auto'
   alias ll='gls -lah --color=auto'
