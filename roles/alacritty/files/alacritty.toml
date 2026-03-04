@@ -202,3 +202,14 @@ action = "ClearHistory"
 key = "F"
 mods = "Control|Shift"
 action = "SearchForward"
+
+# macOS Option+Arrow word navigation
+[[keyboard.bindings]]
+key = "Left"
+mods = "Alt"
+chars = "\u001bb"
+
+[[keyboard.bindings]]
+key = "Right"
+mods = "Alt"
+chars = "\u001bf"
