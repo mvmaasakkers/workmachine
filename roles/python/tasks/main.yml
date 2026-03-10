@@ -28,6 +28,21 @@
   become: true
   when: ansible_os_family == "Debian" and python_version is defined
 
+- name: Check pinned Python package availability (Linux)
+  ansible.builtin.command: "apt-cache show python{{ python_version }}"
+  register: python_package_check
+  changed_when: false
+  failed_when: false
+  when: ansible_os_family == "Debian" and python_version is defined
+
+- name: Ensure pinned Python version is available in apt repositories
+  ansible.builtin.assert:
+    that:
+      - python_package_check.rc == 0
+    fail_msg: "python{{ python_version }} is not available for {{ ansible_distribution }} {{ ansible_distribution_version }}. Adjust `python_version` in vars.yml or use a release where the package exists."
+    success_msg: "python{{ python_version }} is available in the configured apt repositories."
+  when: ansible_os_family == "Debian" and python_version is defined
+
 - name: Install specific Python version and development tools (Linux)
   ansible.builtin.package:
     name:
