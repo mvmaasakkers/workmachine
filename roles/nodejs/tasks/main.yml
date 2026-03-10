@@ -24,6 +24,13 @@
     create: true
     mode: '0644'
 
+- name: Remove prefix/globalconfig from .npmrc (incompatible with nvm)
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.npmrc"
+    regexp: "^(prefix|globalconfig)="
+    state: absent
+  failed_when: false
+
 - name: Install Node.js via nvm
   ansible.builtin.shell: |
     export NVM_DIR="$HOME/.nvm"
