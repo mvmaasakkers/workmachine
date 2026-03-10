@@ -1,0 +1,69 @@
+---
+
+- name: Ensure ~/.local/bin exists for Codex
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: Check whether nvm is installed for Codex
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+  register: codex_nvm_installed
+
+- name: Ensure Node.js via nvm is installed before Codex
+  ansible.builtin.assert:
+    that:
+      - codex_nvm_installed.stat.exists
+    fail_msg: "Codex installation requires the nodejs role to run first so npm is available through nvm."
+    success_msg: "nvm is available for Codex installation."
+
+- name: Check installed global npm packages for Codex
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm list -g --depth=0 --json 2>/dev/null || echo '{}'
+  args:
+    executable: /bin/bash
+  register: codex_npm_global_list
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Install Codex CLI via npm
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm install -g @openai/codex@{{ codex_version }}
+  args:
+    executable: /bin/bash
+  register: codex_install_result
+  changed_when: "'added' in codex_install_result.stdout or 'changed' in codex_install_result.stdout or 'removed' in codex_install_result.stdout"
+  when:
+    - not ansible_check_mode
+    - "'@openai/codex' not in ((codex_npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys() or (((codex_npm_global_list.stdout | default('{}') | from_json).dependencies['@openai/codex'].version | default('')) != codex_version)"
+
+- name: Create stable Codex symlink in ~/.local/bin
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    NVM_BIN="$(dirname "$(nvm which default)")"
+    ln -sf "$NVM_BIN/codex" "$HOME/.local/bin/codex"
+  args:
+    executable: /bin/bash
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Verify Codex CLI installation
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    codex --version
+  args:
+    executable: /bin/bash
+  register: codex_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display Codex CLI version
+  ansible.builtin.debug:
+    msg: "Codex CLI installed: {{ codex_version_output.stdout }}"
+  when: not ansible_check_mode and codex_version_output.stdout | default('') | length > 0

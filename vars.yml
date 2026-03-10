@@ -4,14 +4,15 @@
 
 # Versions are on the top as they are most likely to be changed
 lazygit_version: "0.59.0"
-netbird_version: "0.66.0"
-go_version: "1.26.0"
+netbird_version: "0.66.3"
+go_version: "1.26.1"
 nodejs_version: "24"
 php_version: "8.5"
 php_version_short: "8.5"
 composer_version: "2"
 python_version: "3.14"
-nvm_version: "0.40.1"
+nvm_version: "0.40.4"
+codex_version: "0.113.0"
 eza_version: "0.20.22"
 zsh_autosuggestions_version: "0.7.1"
 zsh_syntax_highlighting_version: "0.8.0"

@@ -15,7 +15,6 @@
       - curl
       - wget
       - unzip
-      - btop
       - tmux
       - build-essential
       - ca-certificates
@@ -27,16 +26,65 @@
       - fzf
       - ripgrep
       - fd-find
-      - git-delta
       - libimage-exiftool-perl
-      - mkcert
-      - bat
-      - zoxide
-      - yq
-      - tldr
     state: present
   become: true
   when: ansible_os_family == "Debian"
+
+- name: Check optional CLI package availability (Linux)
+  ansible.builtin.command: "apt-cache show {{ common_optional_cli_package }}"
+  loop:
+    - bat
+    - btop
+    - git-delta
+    - mkcert
+    - tldr
+    - yq
+    - zoxide
+  loop_control:
+    loop_var: common_optional_cli_package
+  register: common_optional_package_checks
+  changed_when: false
+  failed_when: false
+  when: ansible_os_family == "Debian"
+
+- name: Set available optional CLI packages (Linux)
+  ansible.builtin.set_fact:
+    common_available_optional_packages: "{{ common_optional_package_checks.results | selectattr('rc', 'eq', 0) | map(attribute='common_optional_cli_package') | list }}"
+    common_unavailable_optional_packages: "{{ common_optional_package_checks.results | rejectattr('rc', 'eq', 0) | map(attribute='common_optional_cli_package') | list }}"
+  when: ansible_os_family == "Debian"
+
+- name: Install optional CLI tools available in apt repositories (Linux)
+  ansible.builtin.package:
+    name: "{{ common_available_optional_packages }}"
+    state: present
+  become: true
+  when:
+    - ansible_os_family == "Debian"
+    - common_available_optional_packages | length > 0
+
+- name: Report optional CLI tools missing from apt repositories (Linux)
+  ansible.builtin.debug:
+    msg: "Skipping optional apt packages unavailable on {{ ansible_distribution }} {{ ansible_distribution_version }}: {{ common_unavailable_optional_packages | join(', ') }}"
+  when:
+    - ansible_os_family == "Debian"
+    - common_unavailable_optional_packages | length > 0
+
+- name: Ensure ~/.local/bin is on PATH in .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    state: present
+    create: true
+    mode: '0644'
+
+- name: Ensure ~/.local/bin is on PATH in .profile
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.profile"
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    state: present
+    create: true
+    mode: '0644'
 
 - name: Create /etc/apt/keyrings directory (Linux)
   ansible.builtin.file:
