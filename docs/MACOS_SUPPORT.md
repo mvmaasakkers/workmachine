@@ -47,7 +47,7 @@ You'll be prompted for your sudo password.
 - ✅ **Neovim** with LazyVim configuration
 
 ### Programming Languages
-- ✅ **Go** 1.26.0
+- ✅ **Go** 1.26.1
 - ✅ **Node.js** 24 (+ npm, yarn, pnpm, TypeScript, Bun)
 - ✅ **Python** 3.14 (+ pipx, poetry, pipenv)
 - ✅ **PHP** 8.5 (+ Composer)
@@ -59,6 +59,8 @@ You'll be prompted for your sudo password.
 
 ### AI Tools
 - ✅ **Claude Code CLI**
+- ✅ **Codex CLI**
+- ✅ **OpenCode CLI**
 
 ### Other Tools
 - ✅ **GitHub CLI** (gh)
@@ -207,6 +209,8 @@ docker ps
 # CLI tools
 gh --version
 lazygit --version
+codex --version
+opencode --version
 ```
 
 ## Differences from Linux Setup

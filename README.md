@@ -4,12 +4,14 @@ Automated configuration for **Linux** (Ubuntu/Debian/Pop!_OS) and **macOS** (Int
 
 ## Platform Support
 
-- ✅ **Linux**: Ubuntu 20.04+, Debian 11+, Pop!_OS 22.04+
+- ✅ **Linux**: Ubuntu 22.04+, Debian 11+, Pop!_OS 22.04+
 - ✅ **macOS**: Intel and Apple Silicon (requires Homebrew)
 
 For remote Linux servers: Assumes a barebone server with SSH access and NOPASSWD sudo rights. Add an entry to inventory.ini and run `make setup`.
 
 For local machines (Linux or macOS): Run `make setup-local` and enter your sudo password when prompted.
+
+Note: very new pinned language versions in `vars.yml` depend on the target distro repositories/PPAs. If Ubuntu or Debian does not offer the configured `python_version` or `php_version`, the playbook now fails early with a clear message instead of a later package-install error.
 
 ## Features
 
@@ -22,11 +24,11 @@ This setup installs and configures:
 - **Editor**: Neovim with plugins and custom config
 - **Languages**:
   - PHP 8.5 (CLI + Composer + Phpactor)
-  - Go 1.26.0
+  - Go 1.26.1
   - Node.js 24 via nvm (+ npm, yarn, pnpm, Bun)
   - Python 3.14 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd, glow
-- **AI Tools**: Claude Code CLI
+- **AI Tools**: Claude Code CLI, Codex CLI, OpenCode CLI
 - **DevOps**: DevPod CLI, Terraform, Packer, Azure CLI, Google Cloud SDK
 
 ## Quick Start
@@ -34,7 +36,7 @@ This setup installs and configures:
 ### Prerequisites
 
 **For Linux:**
-- Ubuntu 20.04+, Debian 11+, or Pop!_OS 22.04+
+- Ubuntu 22.04+, Debian 11+, or Pop!_OS 22.04+
 - Python 3 installed
 - Sudo privileges
   - **Remote**: User with NOPASSWD sudo rights (recommended)
@@ -127,7 +129,7 @@ Available tags:
 - `docker`, `containers` - Docker setup
 - `nvim`, `editor` - Neovim setup
 - `php`, `phpactor`, `go`, `golang`, `nodejs`, `node`, `python`, `languages` - Programming languages
-- `claude-code`, `claude`, `ai`, `tools` - AI coding assistant
+- `claude-code`, `claude`, `codex`, `opencode`, `ai`, `tools` - AI coding assistants
 - `terraform`, `packer`, `iac`, `devops` - Infrastructure as Code tools
 - `azure-cli`, `azure`, `gcloud`, `gcp`, `cloud` - Cloud provider CLIs
 
@@ -136,7 +138,7 @@ Available tags:
 Edit `vars.yml` to customize versions:
 
 ```yaml
-go_version: "1.26.0"
+go_version: "1.26.1"
 nodejs_version: "24"
 php_version: "8.5"
 python_version: "3.14"
@@ -176,6 +178,8 @@ workmachine/
 │   ├── nodejs/                 # Node.js via nvm
 │   ├── python/                 # Python + pip
 │   ├── claude-code/            # Claude Code CLI
+│   ├── codex/                  # Codex CLI
+│   ├── opencode/               # OpenCode CLI
 │   ├── terraform/              # HashiCorp Terraform
 │   ├── packer/                 # HashiCorp Packer
 │   ├── azure-cli/              # Microsoft Azure CLI
@@ -206,6 +210,8 @@ After the setup completes:
    python3 --version
    nvim --version
    claude --version
+   codex --version
+   opencode --version
    terraform --version
    packer --version
    az --version
@@ -214,6 +220,7 @@ After the setup completes:
 4. **Authenticate AI tools**:
    ```bash
    claude login        # Claude Code CLI
+   codex               # Codex CLI sign-in flow
    ```
 5. **Authenticate cloud CLIs**:
    ```bash
@@ -473,7 +480,7 @@ This setup is fully idempotent - you can run it multiple times safely. It will:
 
 ## Requirements
 
-- **OS**: Ubuntu 20.04+, Debian 11+, Pop!_OS 22.04+, or macOS (Intel/Apple Silicon)
+- **OS**: Ubuntu 22.04+, Debian 11+, Pop!_OS 22.04+, or macOS (Intel/Apple Silicon)
 - **Python**: 3.6+
 - **macOS Only**: Homebrew (package manager)
 - **SSH**: Required for remote setup
