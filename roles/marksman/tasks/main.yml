@@ -1,0 +1,51 @@
+---
+# Marksman role - Install Marksman Markdown LSP server
+# https://github.com/artempyanykh/marksman
+
+- name: Check current Marksman version
+  ansible.builtin.command: marksman --version
+  register: marksman_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Set Marksman architecture mapping for Linux
+  ansible.builtin.set_fact:
+    marksman_arch_map:
+      x86_64: "x64"
+      aarch64: "arm64"
+  when: ansible_os_family == "Debian"
+
+- name: Set Marksman asset name
+  ansible.builtin.set_fact:
+    marksman_asset: "{{ 'marksman-macos' if ansible_os_family == 'Darwin' else 'marksman-linux-' + marksman_arch_map[ansible_architecture] | default('x64') }}"
+
+# macOS installation via Homebrew
+- name: Install Marksman (macOS)
+  community.general.homebrew:
+    name: marksman
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via GitHub release binary
+- name: Install Marksman (Linux)
+  when:
+    - ansible_os_family == "Debian"
+    - marksman_current_version.rc != 0 or marksman_version not in marksman_current_version.stdout
+  become: true
+  block:
+    - name: Download Marksman binary
+      ansible.builtin.get_url:
+        url: "https://github.com/artempyanykh/marksman/releases/download/{{ marksman_version }}/{{ marksman_asset }}"
+        dest: "/usr/local/bin/marksman"
+        mode: '0755'
+        timeout: 30
+
+- name: Verify Marksman installation
+  ansible.builtin.command: marksman --version
+  register: marksman_version_output
+  changed_when: false
+
+- name: Display Marksman version
+  ansible.builtin.debug:
+    msg: "Marksman installed: {{ marksman_version_output.stdout }}"
+  when: not ansible_check_mode and marksman_version_output.stdout | default('') | length > 0

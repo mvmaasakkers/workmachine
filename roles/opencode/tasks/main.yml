@@ -28,6 +28,18 @@
     state: link
   when: not ansible_check_mode
 
+- name: Ensure OpenCode config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/opencode"
+    state: directory
+    mode: '0755'
+
+- name: Deploy oh-my-opencode config
+  ansible.builtin.copy:
+    src: oh-my-opencode.json
+    dest: "{{ ansible_env.HOME }}/.config/opencode/oh-my-opencode.json"
+    mode: '0644'
+
 - name: Verify OpenCode CLI installation
   ansible.builtin.shell: |
     export PATH="$HOME/.local/bin:$PATH"

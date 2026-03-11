@@ -110,6 +110,9 @@
     - role: gcloud
       tags: ['gcloud', 'gcp', 'cloud', 'devops', 'tools']
 
+    - role: marksman
+      tags: ['marksman', 'lsp', 'editor', 'tools']
+
     - role: opencode
       tags: ['opencode', 'ai', 'tools']
 
@@ -135,6 +138,7 @@
           - Package managers: composer, npm, pip, bun
           - VPN: Netbird client (not connected)
           - CLI tools: GitHub CLI (gh), Claude Code CLI, Codex CLI, OpenCode CLI, lazygit (with syntax highlighting), glow
+          - LSP servers: Marksman (Markdown)
           - DevOps: Terraform {{ terraform_version }}, Packer {{ packer_version }}, Azure CLI, Google Cloud SDK
 
           Next steps:
