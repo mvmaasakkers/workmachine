@@ -21,9 +21,16 @@
     creates: "{{ ansible_env.HOME }}/.opencode/bin/opencode"
   when: not ansible_check_mode
 
+- name: Symlink opencode to ~/.local/bin
+  ansible.builtin.file:
+    src: "{{ ansible_env.HOME }}/.opencode/bin/opencode"
+    dest: "{{ ansible_env.HOME }}/.local/bin/opencode"
+    state: link
+  when: not ansible_check_mode
+
 - name: Verify OpenCode CLI installation
   ansible.builtin.shell: |
-    export PATH="$HOME/.opencode/bin:$HOME/.local/bin:$PATH"
+    export PATH="$HOME/.local/bin:$PATH"
     opencode --version
   args:
     executable: /bin/bash
