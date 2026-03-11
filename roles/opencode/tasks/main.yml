@@ -3,17 +3,27 @@
 # Documentation: https://opencode.ai/docs/#install
 # Uses the same official installer on both macOS and Linux for consistency
 
+- name: Remove stale npm-based opencode (macOS)
+  ansible.builtin.shell: |
+    if /opt/homebrew/bin/npm list -g opencode-ai --depth=0 >/dev/null 2>&1; then
+      /opt/homebrew/bin/npm uninstall -g opencode-ai
+    fi
+  args:
+    executable: /bin/bash
+  when: ansible_os_family == "Darwin" and not ansible_check_mode
+  changed_when: false
+
 - name: Install OpenCode via official installer
   ansible.builtin.shell: |
     curl -fsSL https://opencode.ai/install | bash
   args:
     executable: /bin/bash
-    creates: "{{ ansible_env.HOME }}/.local/bin/opencode"
+    creates: "{{ ansible_env.HOME }}/.opencode/bin/opencode"
   when: not ansible_check_mode
 
 - name: Verify OpenCode CLI installation
   ansible.builtin.shell: |
-    export PATH="$HOME/.local/bin:$PATH"
+    export PATH="$HOME/.opencode/bin:$HOME/.local/bin:$PATH"
     opencode --version
   args:
     executable: /bin/bash
