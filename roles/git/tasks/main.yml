@@ -30,10 +30,10 @@
     - { name: "pull.rebase", value: "true" }
     - { name: "merge.conflictstyle", value: "zdiff3" }
     - { name: "diff.colorMoved", value: "default" }
-    - { name: "core.pager", value: "delta --light" }
-    - { name: "interactive.diffFilter", value: "delta --light --color-only" }
+    - { name: "core.pager", value: "delta" }
+    - { name: "interactive.diffFilter", value: "delta --color-only" }
     - { name: "delta.navigate", value: "true" }
     - { name: "delta.line-numbers", value: "true" }
-    - { name: "delta.light", value: "true" }
+    - { name: "delta.dark", value: "true" }
   loop_control:
     loop_var: git_setting
