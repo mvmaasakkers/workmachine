@@ -311,8 +311,11 @@
   become: true
   when: ansible_os_family == "Debian"
 
-- name: Ensure ~/.config directory exists
+- name: Ensure ~/.config directory exists with correct ownership
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.config"
     state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
     mode: "0755"
+  become: true
