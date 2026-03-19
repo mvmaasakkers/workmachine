@@ -1,6 +1,25 @@
 ---
 # Common role - Install essential CLI tools and utilities
 
+# Cleanup: remove DevPod if previously installed
+- name: Remove DevPod CLI binary (Linux)
+  ansible.builtin.file:
+    path: /usr/local/bin/devpod
+    state: absent
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Remove DevPod CLI (macOS)
+  community.general.homebrew_cask:
+    name: devpod
+    state: absent
+  when: ansible_os_family == "Darwin"
+
+- name: Remove DevPod data directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.devpod"
+    state: absent
+
 - name: Update apt cache (Linux)
   ansible.builtin.apt:
     update_cache: true

@@ -29,7 +29,7 @@ This setup installs and configures:
   - Python 3.14 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd, glow
 - **AI Tools**: Claude Code CLI, Codex CLI, OpenCode CLI
-- **DevOps**: DevPod CLI, Terraform, Packer, Azure CLI, Google Cloud SDK
+- **DevOps**: Terraform, Packer, Azure CLI, Google Cloud SDK
 
 ## Quick Start
 

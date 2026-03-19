@@ -53,8 +53,7 @@ You'll be prompted for your sudo password.
 - ✅ **PHP** 8.5 (+ Composer)
 
 ### Containers
-- ✅ **Colima** (lightweight Docker runtime)
-- ✅ **Docker CLI** (works with Colima)
+- ✅ **Docker CLI**
 - ✅ **docker-compose**
 
 ### AI Tools
@@ -64,7 +63,6 @@ You'll be prompted for your sudo password.
 
 ### Other Tools
 - ✅ **GitHub CLI** (gh)
-- ✅ **DevPod CLI**
 
 ## Platform Differences
 
@@ -83,7 +81,7 @@ You'll be prompted for your sudo password.
 
 ### Docker
 - **Linux**: docker-ce (native daemon)
-- **macOS**: Colima (VM-based, lightweight alternative to Docker Desktop)
+- **macOS**: Docker CLI via Homebrew
 
 ### Font Management
 - **Linux**: Uses fontconfig (`fc-cache`)
@@ -114,10 +112,8 @@ Your personal configuration repositories work on both platforms:
 ## Known Limitations
 
 ### 1. Docker on macOS
-- Uses **Colima** instead of Docker Desktop
-- Colima runs Docker in a lightweight VM
-- Slightly different from native Linux Docker daemon
-- Docker Desktop is also supported but requires manual installation
+- Docker CLI and docker-compose are installed via Homebrew
+- A Docker runtime (Docker Desktop or other) must be installed separately
 
 ### 2. System-Wide Settings
 - `/etc/environment` edits are Linux-only
@@ -145,20 +141,6 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # For Intel
 eval "$(/usr/local/bin/brew shellenv)"
-```
-
-### Colima Won't Start
-
-```bash
-# Check Colima status
-colima status
-
-# Restart Colima
-colima stop
-colima start
-
-# Check Docker works
-docker ps
 ```
 
 ### SSH Keys for Config Repos
@@ -203,7 +185,6 @@ php --version
 
 # Docker
 docker --version
-colima status
 docker ps
 
 # CLI tools
@@ -223,7 +204,7 @@ opencode --version
 
 ### What's Different
 - Package manager (Homebrew instead of apt)
-- Docker runtime (Colima instead of docker-ce)
+- Docker CLI via Homebrew (instead of docker-ce)
 - Font directory location
 - No system-wide environment variable edits
 - No update-alternatives for editor selection
@@ -254,7 +235,6 @@ If you find issues with macOS support:
 ## Future Improvements
 
 Potential enhancements for macOS support:
-- [ ] Optional Docker Desktop installation (instead of Colima)
 - [ ] macOS-specific tool installations (e.g., iTerm2)
 - [ ] Homebrew bundle file support
 - [ ] macOS system preferences automation
@@ -263,5 +243,4 @@ Potential enhancements for macOS support:
 ## References
 
 - [Homebrew Documentation](https://docs.brew.sh/)
-- [Colima GitHub](https://github.com/abiosoft/colima)
 - [Ansible macOS Guide](https://docs.ansible.com/ansible/latest/os_guide/intro_macos.html)

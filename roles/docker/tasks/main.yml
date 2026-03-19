@@ -1,22 +1,26 @@
 ---
 # Docker role - Install Docker and Docker Compose
 
-# macOS installation (using Colima)
-- name: Install Colima and Docker CLI (macOS)
+# Cleanup: remove Colima if previously installed
+- name: Remove Colima (macOS)
+  community.general.homebrew:
+    name: colima
+    state: absent
+  when: ansible_os_family == "Darwin"
+
+- name: Remove Colima data directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.colima"
+    state: absent
+
+# macOS installation
+- name: Install Docker CLI (macOS)
   community.general.homebrew:
     name:
-      - colima
       - docker
       - docker-compose
     state: present
   when: ansible_os_family == "Darwin"
-
-- name: Start Colima (macOS)
-  ansible.builtin.command: colima start
-  when: ansible_os_family == "Darwin"
-  register: colima_start
-  changed_when: "'already running' not in colima_start.stderr"
-  failed_when: false
 
 # Linux installation
 - name: Remove old Docker packages (Linux)
