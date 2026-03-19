@@ -262,7 +262,7 @@ The setup copies the configuration to `~/.config/nvim/` and runs `Lazy! sync` to
 ## tmux Configuration
 
 Located in `roles/tmux/files/`. Features:
-- Catppuccin theme (Frappe flavor)
+- Catppuccin theme (Mocha flavor)
 - Mouse support enabled
 - OSC 52 clipboard (works over SSH)
 - Vi-mode copy bindings

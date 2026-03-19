@@ -2,6 +2,9 @@
 -- Default options that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 -- Add any additional options here
 
+vim.opt.background = "dark"
+vim.opt.termguicolors = true
+
 -- OSC 52 clipboard for SSH sessions
 -- Allows yanking to sync to your local Mac clipboard over SSH
 if vim.env.SSH_TTY then

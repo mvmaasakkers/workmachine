@@ -1,0 +1,55 @@
+---
+# CodeGraphContext role - Install and configure MCP code graph server
+# Documentation: https://github.com/CodeGraphContext/CodeGraphContext
+# Installs via pipx and configures the MCP server for Claude Code
+
+- name: Check if codegraphcontext is installed
+  ansible.builtin.command: pipx list
+  register: pipx_list
+  changed_when: false
+  failed_when: false
+
+- name: Install codegraphcontext via pipx
+  ansible.builtin.command: pipx install codegraphcontext
+  when: "'codegraphcontext' not in pipx_list.stdout"
+  register: pipx_install
+  changed_when: pipx_install.rc == 0
+
+- name: Ensure ~/.claude.json exists
+  ansible.builtin.shell: |
+    if [ ! -f "{{ ansible_env.HOME }}/.claude.json" ]; then
+      echo '{}' > "{{ ansible_env.HOME }}/.claude.json"
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Configure CodeGraphContext MCP server in Claude Code
+  ansible.builtin.shell: |
+    claude_config="{{ ansible_env.HOME }}/.claude.json"
+    if ! jq -e '.mcpServers.CodeGraphContext' "$claude_config" >/dev/null 2>&1; then
+      jq '.mcpServers.CodeGraphContext = {"command": "cgc", "args": ["mcp", "start"], "disabled": false, "alwaysAllow": []}' \
+        "$claude_config" > /tmp/claude_mcp_tmp.json && mv /tmp/claude_mcp_tmp.json "$claude_config"
+      echo "configured"
+    else
+      echo "already configured"
+    fi
+  args:
+    executable: /bin/bash
+  register: mcp_config
+  changed_when: "'configured' in mcp_config.stdout and 'already' not in mcp_config.stdout"
+
+- name: Verify cgc installation
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    cgc --version
+  args:
+    executable: /bin/bash
+  register: cgc_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display cgc version
+  ansible.builtin.debug:
+    msg: "CodeGraphContext installed: {{ cgc_version_output.stdout }}"
+  when: not ansible_check_mode and cgc_version_output.stdout | default('') | length > 0
