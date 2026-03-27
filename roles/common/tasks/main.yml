@@ -46,6 +46,7 @@
       - ripgrep
       - fd-find
       - libimage-exiftool-perl
+      - postgresql-client
     state: present
   become: true
   when: ansible_os_family == "Debian"
@@ -172,7 +173,13 @@
       - zoxide
       - yq
       - tldr
+      - libpq
     state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Link libpq to make psql available on PATH (macOS)
+  ansible.builtin.command: brew link --force libpq
+  changed_when: false
   when: ansible_os_family == "Darwin"
 
 - name: Create batcat symlink (Linux - Debian/Ubuntu package installs as batcat)
