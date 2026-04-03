@@ -137,6 +137,12 @@
     state: absent
   when: zsh_config_git.stat.exists
 
+- name: Deploy custom zsh theme
+  ansible.builtin.copy:
+    src: files/workmachine.zsh-theme
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/workmachine.zsh-theme"
+    mode: '0644'
+
 - name: Deploy zsh configuration
   ansible.builtin.copy:
     src: files/

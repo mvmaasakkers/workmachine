@@ -53,7 +53,7 @@ export PATH="$HOME/.local/bin:$PATH"
 export ZSH="$HOME/.oh-my-zsh"
 
 # Theme - https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="refined"
+ZSH_THEME="workmachine"
 
 # Plugins - https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins
 # Note: virtualenvwrapper plugin requires virtualenvwrapper to be installed
