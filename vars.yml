@@ -3,29 +3,29 @@
 # Override these in your own vars file or via command line
 
 # Versions are on the top as they are most likely to be changed
-lazygit_version: "0.60.0"
-netbird_version: "0.66.4"
-go_version: "1.26.1"
+lazygit_version: "0.61.0"
+netbird_version: "0.67.4"
+go_version: "1.26.2"
 nodejs_version: "24"
 php_version: "8.5"
 php_version_short: "8.5"
 composer_version: "2"
 python_version: "3.14"
 nvm_version: "0.40.4"
-codex_version: "0.115.0"
+codex_version: "0.118.0"
 marksman_version: "2026-02-08"
 eza_version: "0.23.4"
 zsh_autosuggestions_version: "0.7.1"
 zsh_syntax_highlighting_version: "0.8.0"
-gh_version: "2.88.1"
-terraform_version: "1.14.7"
+gh_version: "2.89.0"
+terraform_version: "1.14.8"
 terraform_checksums:
-  linux_amd64: "e8bbcefea8015156e04e2a325cde37a0b2fb761728bda548e2fe3b8ad7c18c96"
-  linux_arm64: "04f88ee8924db27c0e26c379721965273c80c9b6a94bc5d8d8048a69163952ba"
-packer_version: "1.15.0"
+  linux_amd64: "56a5d12f47cbc1c6bedb8f5426ae7d5df984d1929572c24b56f4c82e9f9bf709"
+  linux_arm64: "c953171cde6b25ca0448c3b29a90d2f46c0310121e18742ec8f89631768e770c"
+packer_version: "1.15.1"
 packer_checksums:
-  linux_amd64: "2fd1149c5c6c7604ced64d7b56638af05f6b7ed3f6835182bc913ddaba1f16b8"
-  linux_arm64: "1687f43bd120601f62e54b970b1cc06f83e95897357dc5c679b57ec9d2fb40a7"
+  linux_amd64: "648d704bec73805a5508ed612185a9e5858ca7d57b730b88b1a54c3af3a91f5f"
+  linux_arm64: "a8d68f1746ecacaf8fa9d364aa086249958a0a1f67c90b8a4f165ff024c0e58e"
 
 # Platform detection
 is_macos: "{{ ansible_os_family == 'Darwin' }}"
