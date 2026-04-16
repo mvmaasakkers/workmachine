@@ -59,6 +59,15 @@
     timeout: 60
   when: go_needs_install and go_checksum is defined and go_checksum | length > 0
 
+- name: Clean Go build cache before upgrade
+  ansible.builtin.command:
+    cmd: "{{ go_install_dir }}/go/bin/go clean -cache"
+  environment:
+    GOPATH: "{{ ansible_env.HOME }}/go"
+  when: go_needs_install and go_binary.stat.exists
+  changed_when: true
+  failed_when: false
+
 - name: Remove old Go installation
   ansible.builtin.file:
     path: "{{ go_install_dir }}/go"
