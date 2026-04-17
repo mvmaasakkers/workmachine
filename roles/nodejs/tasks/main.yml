@@ -128,6 +128,20 @@
   changed_when: "'added' in npm_install_result.stdout"
   when: not ansible_check_mode and nodejs_package not in ((npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys()
 
+- name: Symlink global npm bins (yarn/pnpm/neonctl) into ~/.local/bin
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    NVM_BIN="$(dirname "$(nvm which default)")"
+    for bin in yarn pnpm neonctl; do
+      if [ -e "$NVM_BIN/$bin" ]; then
+        ln -sf "$NVM_BIN/$bin" "$HOME/.local/bin/$bin"
+      fi
+    done
+  args:
+    executable: /bin/bash
+  changed_when: true
+
 # Install Bun (cross-platform JavaScript runtime and toolkit)
 - name: Check if Bun is already installed
   ansible.builtin.stat:

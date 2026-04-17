@@ -233,22 +233,24 @@ fi
 # unset _IS_MACOS _IS_LINUX _IS_APPLE_SILICON _HOMEBREW_PREFIX
 
 # ==============================================================================
-# Lazy-loaded nvm (defers initialization until first use)
+# Node.js / nvm
 # ==============================================================================
+# node/npm/npx/yarn/pnpm/neonctl are symlinked into ~/.local/bin by the
+# workmachine nodejs role, so they resolve eagerly via PATH (fast, no shim).
+# Only `nvm` itself needs lazy loading — it is a shell function, not a binary.
 
 export NVM_DIR="$HOME/.nvm"
-_nvm_lazy_load() {
-  unset -f nvm node npm npx yarn pnpm neonctl 2>/dev/null
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+nvm() {
+  unset -f nvm 2>/dev/null
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    nvm "$@"
+  else
+    echo "nvm: not installed at $NVM_DIR (run the nodejs Ansible role)" >&2
+    return 127
+  fi
 }
-nvm() { _nvm_lazy_load; nvm "$@"; }
-node() { _nvm_lazy_load; node "$@"; }
-npm() { _nvm_lazy_load; npm "$@"; }
-npx() { _nvm_lazy_load; npx "$@"; }
-yarn() { _nvm_lazy_load; yarn "$@"; }
-pnpm() { _nvm_lazy_load; pnpm "$@"; }
-neonctl() { _nvm_lazy_load; neonctl "$@"; }
 
 # Bun
 export PATH="$HOME/.bun/bin:$PATH"
