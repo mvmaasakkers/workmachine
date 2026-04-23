@@ -1,0 +1,72 @@
+---
+# ClickHouse client role - Install clickhouse-client
+
+- name: Check current clickhouse-client version
+  ansible.builtin.command: clickhouse-client --version
+  register: clickhouse_current_version
+  changed_when: false
+  failed_when: false
+
+# macOS installation via Homebrew
+- name: Install clickhouse-client (macOS)
+  community.general.homebrew:
+    name: clickhouse
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via official ClickHouse apt repository
+- name: Install clickhouse-client (Linux)
+  when:
+    - ansible_os_family == "Debian"
+    - clickhouse_current_version.rc != 0
+  become: true
+  block:
+    - name: Install apt-transport-https and ca-certificates
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+        state: present
+
+    - name: Add ClickHouse GPG key
+      ansible.builtin.get_url:
+        url: https://packages.clickhouse.com/rpm/lts/repodata/repomd.xml.key
+        dest: /usr/share/keyrings/clickhouse-keyring.asc
+        mode: '0644'
+
+    - name: Add ClickHouse apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/clickhouse-keyring.asc] https://packages.clickhouse.com/deb stable main"
+        state: present
+        filename: clickhouse
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install clickhouse-client package
+      ansible.builtin.apt:
+        name: clickhouse-client
+        state: present
+
+- name: Verify clickhouse-client installation (macOS)
+  ansible.builtin.command: clickhouse client --version
+  register: clickhouse_version_output
+  changed_when: false
+  when: ansible_os_family == "Darwin"
+
+- name: Verify clickhouse-client installation (Linux)
+  ansible.builtin.command: clickhouse-client --version
+  register: clickhouse_version_output_linux
+  changed_when: false
+  when: ansible_os_family == "Debian"
+
+- name: Display clickhouse-client version (macOS)
+  ansible.builtin.debug:
+    msg: "clickhouse-client installed: {{ clickhouse_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and ansible_os_family == "Darwin" and clickhouse_version_output.stdout_lines | length > 0
+
+- name: Display clickhouse-client version (Linux)
+  ansible.builtin.debug:
+    msg: "clickhouse-client installed: {{ clickhouse_version_output_linux.stdout_lines[0] }}"
+  when: not ansible_check_mode and ansible_os_family == "Debian" and clickhouse_version_output_linux.stdout_lines | length > 0

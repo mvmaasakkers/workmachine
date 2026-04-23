@@ -119,6 +119,9 @@
     - role: codegraph
       tags: ['codegraph', 'ai', 'tools']
 
+    - role: clickhouse-client
+      tags: ['clickhouse-client', 'clickhouse', 'database', 'tools']
+
   post_tasks:
     - name: Display setup completion message
       ansible.builtin.debug:
@@ -140,6 +143,7 @@
           - CLI tools: GitHub CLI (gh), Claude Code CLI, Codex CLI, OpenCode CLI, lazygit (with syntax highlighting), glow
           - LSP servers: Marksman (Markdown)
           - DevOps: Terraform {{ terraform_version }}, Packer {{ packer_version }}, Azure CLI, Google Cloud SDK
+          - Database: ClickHouse client
 
           Next steps:
           1. Log out and back in for group changes (docker) to take effect
