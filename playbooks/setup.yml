@@ -116,8 +116,8 @@
     - role: codex
       tags: ['codex', 'ai', 'tools']
 
-    - role: codegraphcontext
-      tags: ['codegraphcontext', 'ai', 'tools']
+    - role: codegraph
+      tags: ['codegraph', 'ai', 'tools']
 
   post_tasks:
     - name: Display setup completion message

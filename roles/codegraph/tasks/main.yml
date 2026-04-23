@@ -1,0 +1,161 @@
+---
+# CodeGraph role - Install and configure the CodeGraph MCP server for Claude Code
+# Documentation: https://github.com/colbymchenry/codegraph
+# Package: @colbymchenry/codegraph (npm, global)
+# Installs via npm through nvm, configures the MCP server, and cleans up the
+# deprecated codegraphcontext (pipx) installation if present.
+
+- name: Ensure ~/.local/bin exists for CodeGraph
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: Check whether nvm is installed for CodeGraph
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+  register: codegraph_nvm_installed
+
+- name: Ensure Node.js via nvm is installed before CodeGraph
+  ansible.builtin.assert:
+    that:
+      - codegraph_nvm_installed.stat.exists
+    fail_msg: "CodeGraph installation requires the nodejs role to run first so npm is available through nvm."
+    success_msg: "nvm is available for CodeGraph installation."
+
+- name: Remove deprecated codegraphcontext pipx install
+  ansible.builtin.command: pipx uninstall codegraphcontext
+  register: codegraph_pipx_uninstall
+  changed_when: codegraph_pipx_uninstall.rc == 0
+  failed_when: false
+
+- name: Check installed global npm packages for CodeGraph
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm list -g --depth=0 --json 2>/dev/null || echo '{}'
+  args:
+    executable: /bin/bash
+  register: codegraph_npm_global_list
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Install CodeGraph CLI via npm
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm install -g @colbymchenry/codegraph
+  args:
+    executable: /bin/bash
+  register: codegraph_install_result
+  changed_when: "'added' in codegraph_install_result.stdout or 'changed' in codegraph_install_result.stdout or 'removed' in codegraph_install_result.stdout"
+  when:
+    - not ansible_check_mode
+    - "'@colbymchenry/codegraph' not in ((codegraph_npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys()"
+
+- name: Create stable codegraph symlink in ~/.local/bin
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    NVM_BIN="$(dirname "$(nvm which default)")"
+    ln -sf "$NVM_BIN/codegraph" "$HOME/.local/bin/codegraph"
+  args:
+    executable: /bin/bash
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Ensure ~/.claude.json exists
+  ansible.builtin.shell: |
+    if [ ! -f "{{ ansible_env.HOME }}/.claude.json" ]; then
+      echo '{}' > "{{ ansible_env.HOME }}/.claude.json"
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Remove deprecated CodeGraphContext MCP server entry from ~/.claude.json
+  ansible.builtin.shell: |
+    claude_config="{{ ansible_env.HOME }}/.claude.json"
+    if jq -e '.mcpServers.CodeGraphContext' "$claude_config" >/dev/null 2>&1; then
+      tmp="$(mktemp)"
+      jq 'del(.mcpServers.CodeGraphContext)' "$claude_config" > "$tmp" && mv "$tmp" "$claude_config"
+      echo "removed"
+    else
+      echo "absent"
+    fi
+  args:
+    executable: /bin/bash
+  register: codegraph_old_mcp_removal
+  changed_when: "'removed' in codegraph_old_mcp_removal.stdout"
+
+- name: Configure CodeGraph MCP server in Claude Code
+  ansible.builtin.shell: |
+    claude_config="{{ ansible_env.HOME }}/.claude.json"
+    desired='{"type":"stdio","command":"codegraph","args":["serve","--mcp"]}'
+    current="$(jq -c '.mcpServers.codegraph // empty' "$claude_config")"
+    if [ "$current" = "$desired" ]; then
+      echo "already configured"
+    else
+      tmp="$(mktemp)"
+      jq --argjson v "$desired" '.mcpServers.codegraph = $v' "$claude_config" > "$tmp" && mv "$tmp" "$claude_config"
+      echo "configured"
+    fi
+  args:
+    executable: /bin/bash
+  register: codegraph_mcp_config
+  changed_when: "'configured' == codegraph_mcp_config.stdout"
+
+- name: Ensure ~/.claude/settings.json exists
+  ansible.builtin.shell: |
+    mkdir -p "{{ ansible_env.HOME }}/.claude"
+    if [ ! -f "{{ ansible_env.HOME }}/.claude/settings.json" ]; then
+      echo '{}' > "{{ ansible_env.HOME }}/.claude/settings.json"
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Auto-allow CodeGraph MCP tools in Claude Code settings
+  ansible.builtin.shell: |
+    settings="{{ ansible_env.HOME }}/.claude/settings.json"
+    tools='[
+      "mcp__codegraph__codegraph_search",
+      "mcp__codegraph__codegraph_context",
+      "mcp__codegraph__codegraph_callers",
+      "mcp__codegraph__codegraph_callees",
+      "mcp__codegraph__codegraph_impact",
+      "mcp__codegraph__codegraph_node",
+      "mcp__codegraph__codegraph_status",
+      "mcp__codegraph__codegraph_files"
+    ]'
+    tmp="$(mktemp)"
+    before="$(jq -S '.permissions.allow // []' "$settings")"
+    jq --argjson add "$tools" '
+      .permissions = (.permissions // {}) |
+      .permissions.allow = ((.permissions.allow // []) + $add | unique)
+    ' "$settings" > "$tmp" && mv "$tmp" "$settings"
+    after="$(jq -S '.permissions.allow // []' "$settings")"
+    if [ "$before" = "$after" ]; then
+      echo "already configured"
+    else
+      echo "configured"
+    fi
+  args:
+    executable: /bin/bash
+  register: codegraph_perms_config
+  changed_when: "'configured' == codegraph_perms_config.stdout"
+
+- name: Verify codegraph installation
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    codegraph --version
+  args:
+    executable: /bin/bash
+  register: codegraph_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display codegraph version
+  ansible.builtin.debug:
+    msg: "CodeGraph installed: {{ codegraph_version_output.stdout }}"
+  when: not ansible_check_mode and codegraph_version_output.stdout | default('') | length > 0
