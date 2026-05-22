@@ -37,3 +37,9 @@
     - { name: "delta.dark", value: "true" }
   loop_control:
     loop_var: git_setting
+
+- name: Remove conflicting delta.light setting
+  community.general.git_config:
+    name: delta.light
+    scope: global
+    state: absent
