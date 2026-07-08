@@ -26,6 +26,18 @@
     state: present
   when: ansible_os_family == "Darwin"
 
+- name: Check HashiCorp tap trust status (macOS)
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/brew tap-info hashicorp/tap"
+  register: packer_tap_info
+  changed_when: false
+  when: ansible_os_family == "Darwin"
+
+- name: Trust HashiCorp tap (macOS)
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/brew trust --tap hashicorp/tap"
+  when:
+    - ansible_os_family == "Darwin"
+    - "'Untrusted' in packer_tap_info.stdout"
+
 - name: Install Packer (macOS)
   community.general.homebrew:
     name: hashicorp/tap/packer

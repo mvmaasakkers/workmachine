@@ -150,6 +150,18 @@
     state: present
   when: ansible_os_family == "Darwin"
 
+- name: Check Symfony CLI tap trust status (macOS)
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/brew tap-info symfony-cli/tap"
+  register: php_symfony_tap_info
+  changed_when: false
+  when: ansible_os_family == "Darwin"
+
+- name: Trust Symfony CLI tap (macOS)
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/brew trust --tap symfony-cli/tap"
+  when:
+    - ansible_os_family == "Darwin"
+    - "'Untrusted' in php_symfony_tap_info.stdout"
+
 - name: Install Symfony CLI (macOS)
   community.general.homebrew:
     name: symfony-cli

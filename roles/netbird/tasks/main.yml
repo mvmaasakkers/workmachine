@@ -9,6 +9,18 @@
   check_mode: false
   when: ansible_os_family == "Darwin"
 
+- name: Check Netbird tap trust status (macOS)
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/brew tap-info netbirdio/tap"
+  register: netbird_tap_info
+  changed_when: false
+  when: ansible_os_family == "Darwin"
+
+- name: Trust Netbird tap (macOS)
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/brew trust --tap netbirdio/tap"
+  when:
+    - ansible_os_family == "Darwin"
+    - "'Untrusted' in netbird_tap_info.stdout"
+
 - name: Install Netbird (macOS)
   community.general.homebrew:
     name: netbird
