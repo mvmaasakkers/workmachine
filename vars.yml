@@ -6,6 +6,7 @@
 lazygit_version: "0.63.0"
 netbird_version: "0.74.2"
 go_version: "1.26.5"
+rust_version: "1.97.0"
 nodejs_version: "24"
 php_version: "8.5"
 php_version_short: "8.5"
