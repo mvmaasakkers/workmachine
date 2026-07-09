@@ -77,6 +77,9 @@
     - role: go
       tags: ['go', 'golang', 'languages']
 
+    - role: rust
+      tags: ['rust', 'rustup', 'cargo', 'languages']
+
     - role: nodejs
       tags: ['nodejs', 'node', 'npm', 'languages']
 
@@ -136,9 +139,9 @@
           - Terminal: Alacritty
           - Container platform: Docker with Docker Compose
           - Editor: Neovim with plugins
-          - Languages: PHP {{ php_version }}, Go {{ go_version }}, Node.js {{ nodejs_version }}, Python 3
+          - Languages: PHP {{ php_version }}, Go {{ go_version }}, Rust {{ rust_version }}, Node.js {{ nodejs_version }}, Python 3
           - PHP tools: Composer, Symfony CLI, Phpactor
-          - Package managers: composer, npm, pip, bun
+          - Package managers: composer, Cargo, npm, pip, bun
           - VPN: Netbird client (not connected)
           - CLI tools: GitHub CLI (gh), Claude Code CLI, Codex CLI, OpenCode CLI, lazygit (with syntax highlighting), glow
           - LSP servers: Marksman (Markdown)
@@ -148,7 +151,7 @@
           Next steps:
           1. Log out and back in for group changes (docker) to take effect
           2. Start a new zsh session: exec zsh
-          3. Verify installations with: docker --version, go version, node --version, php --version
+          3. Verify installations with: docker --version, go version, rustc --version, cargo --version, node --version, php --version
           4. Authenticate GitHub CLI: gh auth login
           5. Authenticate Claude Code: claude login
           6. Authenticate Azure CLI: az login

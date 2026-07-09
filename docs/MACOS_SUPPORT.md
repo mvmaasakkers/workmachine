@@ -48,6 +48,7 @@ You'll be prompted for your sudo password.
 
 ### Programming Languages
 - ✅ **Go** 1.26.1
+- ✅ **Rust** 1.97.0 (+ Cargo via rustup)
 - ✅ **Node.js** 24 (+ npm, yarn, pnpm, TypeScript, Bun)
 - ✅ **Python** 3.14 (+ pipx, poetry, pipenv)
 - ✅ **PHP** 8.5 (+ Composer)
@@ -179,6 +180,8 @@ alacritty --version
 
 # Languages
 go version
+rustc --version
+cargo --version
 node --version
 python3 --version
 php --version
