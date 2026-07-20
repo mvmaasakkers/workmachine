@@ -1,0 +1,73 @@
+---
+# sql-formatter role - Install sql-formatter SQL query formatter
+# https://github.com/sql-formatter-org/sql-formatter
+
+# macOS installation via Homebrew
+- name: Install sql-formatter (macOS)
+  community.general.homebrew:
+    name: sql-formatter
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via npm (Node.js is provided by the nodejs role)
+- name: Check installed global npm packages (Linux)
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm list -g --depth=0 --json 2>/dev/null || echo '{}'
+  args:
+    executable: /bin/bash
+  register: sql_formatter_npm_global_list
+  changed_when: false
+  when: ansible_os_family == "Debian" and not ansible_check_mode
+
+- name: Install sql-formatter via npm (Linux)
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm install -g sql-formatter
+  args:
+    executable: /bin/bash
+  register: sql_formatter_npm_install
+  changed_when: "'added' in sql_formatter_npm_install.stdout"
+  when: >
+    ansible_os_family == "Debian" and not ansible_check_mode
+    and 'sql-formatter' not in ((sql_formatter_npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys()
+
+- name: Symlink sql-formatter into ~/.local/bin (Linux)
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    NVM_BIN="$(dirname "$(nvm which default)")"
+    ln -sf "$NVM_BIN/sql-formatter" "$HOME/.local/bin/sql-formatter"
+  args:
+    executable: /bin/bash
+  changed_when: true
+  when: ansible_os_family == "Debian" and not ansible_check_mode
+
+- name: Verify sql-formatter installation (macOS)
+  ansible.builtin.command: sql-formatter --version
+  register: sql_formatter_version_output
+  changed_when: false
+  when: ansible_os_family == "Darwin"
+
+- name: Verify sql-formatter installation (Linux)
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    sql-formatter --version
+  args:
+    executable: /bin/bash
+  register: sql_formatter_version_output_linux
+  changed_when: false
+  when: ansible_os_family == "Debian" and not ansible_check_mode
+
+- name: Display sql-formatter version (macOS)
+  ansible.builtin.debug:
+    msg: "sql-formatter installed: {{ sql_formatter_version_output.stdout }}"
+  when: not ansible_check_mode and ansible_os_family == "Darwin" and sql_formatter_version_output.stdout | default('') | length > 0
+
+- name: Display sql-formatter version (Linux)
+  ansible.builtin.debug:
+    msg: "sql-formatter installed: {{ sql_formatter_version_output_linux.stdout }}"
+  when: not ansible_check_mode and ansible_os_family == "Debian" and sql_formatter_version_output_linux.stdout | default('') | length > 0

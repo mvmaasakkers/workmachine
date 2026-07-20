@@ -1,0 +1,38 @@
+---
+# SQLFluff role - Install SQLFluff SQL linter and auto-formatter
+# https://docs.sqlfluff.com/
+
+# macOS installation via Homebrew
+- name: Install SQLFluff (macOS)
+  community.general.homebrew:
+    name: sqlfluff
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via pipx (pipx is provided by the python role)
+- name: Check installed pipx packages (Linux)
+  ansible.builtin.command: pipx list
+  register: sqlfluff_pipx_list
+  changed_when: false
+  failed_when: false
+  when: ansible_os_family == "Debian"
+
+- name: Install SQLFluff via pipx (Linux)
+  ansible.builtin.command: pipx install sqlfluff
+  register: sqlfluff_pipx_install
+  changed_when: sqlfluff_pipx_install.rc == 0
+  when: >
+    ansible_os_family == "Debian"
+    and 'sqlfluff' not in sqlfluff_pipx_list.stdout | default('')
+
+- name: Verify SQLFluff installation
+  ansible.builtin.command: sqlfluff --version
+  register: sqlfluff_version_output
+  changed_when: false
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+
+- name: Display SQLFluff version
+  ansible.builtin.debug:
+    msg: "SQLFluff installed: {{ sqlfluff_version_output.stdout }}"
+  when: not ansible_check_mode and sqlfluff_version_output.stdout | default('') | length > 0

@@ -31,6 +31,7 @@ This setup installs and configures:
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd, glow
 - **AI Tools**: Claude Code CLI, Codex CLI, OpenCode CLI
 - **DevOps**: Terraform, Packer, Azure CLI, Google Cloud SDK
+- **SQL Tools**: sql-formatter, SQLFluff
 
 ## Quick Start
 
@@ -133,6 +134,7 @@ Available tags:
 - `claude-code`, `claude`, `codex`, `opencode`, `ai`, `tools` - AI coding assistants
 - `terraform`, `packer`, `iac`, `devops` - Infrastructure as Code tools
 - `azure-cli`, `azure`, `gcloud`, `gcp`, `cloud` - Cloud provider CLIs
+- `sql-formatter`, `sqlfluff`, `sql`, `database` - SQL tools
 
 ### Customizing Versions
 
@@ -186,7 +188,9 @@ workmachine/
 │   ├── terraform/              # HashiCorp Terraform
 │   ├── packer/                 # HashiCorp Packer
 │   ├── azure-cli/              # Microsoft Azure CLI
-│   └── gcloud/                 # Google Cloud SDK
+│   ├── gcloud/                 # Google Cloud SDK
+│   ├── sql-formatter/          # sql-formatter (SQL query formatter)
+│   └── sqlfluff/               # SQLFluff (SQL linter and auto-formatter)
 ├── ansible.cfg                 # Ansible configuration
 ├── inventory.ini               # Server inventory
 ├── vars.yml                    # Version configuration
@@ -221,6 +225,8 @@ After the setup completes:
    packer --version
    az --version
    gcloud --version
+   sql-formatter --version
+   sqlfluff --version
    ```
 4. **Authenticate AI tools**:
    ```bash
