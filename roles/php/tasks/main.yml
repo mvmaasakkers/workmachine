@@ -20,6 +20,37 @@
   become: true
   when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
 
+# Debian's own repos only carry one PHP version per release (trixie: 8.4),
+# so pinned versions come from Sury's repo — the Debian counterpart of the Ondrej PPA.
+- name: Create /etc/apt/keyrings directory (Debian)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+  when: ansible_distribution == "Debian"
+
+- name: Download Sury PHP signing key (Debian)
+  ansible.builtin.get_url:
+    url: https://packages.sury.org/php/apt.gpg
+    dest: /etc/apt/keyrings/sury-php.gpg
+    mode: '0644'
+    timeout: 30
+  become: true
+  when: ansible_distribution == "Debian"
+
+- name: Add Sury PHP apt repository (Debian)
+  ansible.builtin.deb822_repository:
+    name: sury-php
+    types: [deb]
+    uris: ['https://packages.sury.org/php/']
+    suites: ['{{ ansible_distribution_release }}']
+    components: [main]
+    signed_by: /etc/apt/keyrings/sury-php.gpg
+    state: present
+  become: true
+  when: ansible_distribution == "Debian"
+
 - name: Update apt cache
   ansible.builtin.apt:
     update_cache: true
