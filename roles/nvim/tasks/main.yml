@@ -10,19 +10,91 @@
   become: true
   when: ansible_os_family == "Debian"
 
-- name: Add Neovim PPA (Ubuntu/Pop!_OS)
+# Distro/PPA packages lag behind (Debian 13 ships 0.10.x, LazyVim needs >= 0.11.2),
+# so install pinned official release tarballs instead, like eza and lazygit.
+- name: Remove Neovim PPA (Ubuntu/Pop!_OS)
   ansible.builtin.apt_repository:
     repo: ppa:neovim-ppa/unstable
-    state: present
+    state: absent
   become: true
   when: ansible_distribution in ["Ubuntu", "Pop!_OS"]
 
-- name: Install Neovim (Linux)
+- name: Remove distro Neovim package (Linux)
   ansible.builtin.package:
     name: neovim
-    state: present
+    state: absent
   become: true
   when: ansible_os_family == "Debian"
+
+- name: Set Neovim platform architecture (Linux)
+  ansible.builtin.set_fact:
+    neovim_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'arm64' }}"
+  when: ansible_os_family == "Debian"
+
+- name: Check if Neovim is installed (Linux)
+  ansible.builtin.stat:
+    path: /opt/nvim/bin/nvim
+  register: neovim_binary
+  when: ansible_os_family == "Debian"
+
+- name: Get installed Neovim version (Linux)
+  ansible.builtin.command: /opt/nvim/bin/nvim --version
+  register: installed_neovim_version
+  changed_when: false
+  failed_when: false
+  when: ansible_os_family == "Debian" and neovim_binary.stat.exists
+
+- name: Set Neovim needs installation flag (Linux)
+  ansible.builtin.set_fact:
+    neovim_needs_install: "{{ not neovim_binary.stat.exists or neovim_version not in (installed_neovim_version.stdout | default('')) }}"
+  when: ansible_os_family == "Debian"
+
+- name: Download Neovim (Linux)
+  ansible.builtin.get_url:
+    url: "https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-linux-{{ neovim_arch }}.tar.gz"
+    dest: "/tmp/nvim_{{ neovim_version }}.tar.gz"
+    mode: "0644"
+    timeout: 30
+  when: ansible_os_family == "Debian" and neovim_needs_install
+
+- name: Remove previous Neovim install (Linux)
+  ansible.builtin.file:
+    path: /opt/nvim
+    state: absent
+  become: true
+  when: ansible_os_family == "Debian" and neovim_needs_install
+
+- name: Create Neovim install directory (Linux)
+  ansible.builtin.file:
+    path: /opt/nvim
+    state: directory
+    mode: "0755"
+  become: true
+  when: ansible_os_family == "Debian" and neovim_needs_install
+
+- name: Extract Neovim (Linux)
+  ansible.builtin.unarchive:
+    src: "/tmp/nvim_{{ neovim_version }}.tar.gz"
+    dest: /opt/nvim
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+  become: true
+  when: ansible_os_family == "Debian" and neovim_needs_install
+
+- name: Symlink nvim into /usr/local/bin (Linux)
+  ansible.builtin.file:
+    src: /opt/nvim/bin/nvim
+    dest: /usr/local/bin/nvim
+    state: link
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Clean up Neovim tarball (Linux)
+  ansible.builtin.file:
+    path: "/tmp/nvim_{{ neovim_version }}.tar.gz"
+    state: absent
+  when: ansible_os_family == "Debian" and neovim_needs_install
 
 - name: Install Neovim (macOS)
   community.general.homebrew:
@@ -47,11 +119,13 @@
     dest: "{{ neovim_config_dir }}/"
     mode: preserve
 
+# timeout: a headless nvim waiting on an interactive prompt would otherwise hang forever
 - name: Install lazy.nvim and plugins
   ansible.builtin.command: nvim --headless "+Lazy! sync" +qa
   register: nvim_plugin_install
   changed_when: nvim_plugin_install.rc == 0
   failed_when: false
+  timeout: 900
 
 - name: Set nvim as default editor system-wide (Linux)
   ansible.builtin.lineinfile:

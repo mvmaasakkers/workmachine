@@ -4,6 +4,7 @@
 
 # Versions are on the top as they are most likely to be changed
 lazygit_version: "0.63.0"
+neovim_version: "0.12.4"
 netbird_version: "0.74.2"
 go_version: "1.26.5"
 rust_version: "1.97.0"
