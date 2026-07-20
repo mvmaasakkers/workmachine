@@ -175,6 +175,14 @@
     state: link
   when: zsh_config_zshrc_stat.stat.exists
 
+- name: Ensure LC_CTYPE is set in .zshrc
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'export LC_CTYPE=C.UTF-8'
+    state: present
+    create: true
+    mode: '0644'
+
 - name: Get zsh path
   ansible.builtin.command: which zsh
   register: zsh_path_result
