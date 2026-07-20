@@ -58,7 +58,6 @@
     - btop
     - git-delta
     - mkcert
-    - tldr
     - yq
     - zoxide
   loop_control:
@@ -68,10 +67,16 @@
   failed_when: false
   when: ansible_os_family == "Debian"
 
+# apt-cache show exits 0 for purely virtual packages (printing only an "N:" note),
+# so require a real "Package:" stanza before treating a package as installable.
 - name: Set available optional CLI packages (Linux)
   ansible.builtin.set_fact:
-    common_available_optional_packages: "{{ common_optional_package_checks.results | selectattr('rc', 'eq', 0) | map(attribute='common_optional_cli_package') | list }}"
-    common_unavailable_optional_packages: "{{ common_optional_package_checks.results | rejectattr('rc', 'eq', 0) | map(attribute='common_optional_cli_package') | list }}"
+    common_available_optional_packages: "{{ common_optional_package_checks.results | selectattr('rc', 'eq', 0) | selectattr('stdout', 'search', '(?m)^Package:') | map(attribute='common_optional_cli_package') | list }}"
+  when: ansible_os_family == "Debian"
+
+- name: Set unavailable optional CLI packages (Linux)
+  ansible.builtin.set_fact:
+    common_unavailable_optional_packages: "{{ common_optional_package_checks.results | map(attribute='common_optional_cli_package') | list | difference(common_available_optional_packages) }}"
   when: ansible_os_family == "Debian"
 
 - name: Install optional CLI tools available in apt repositories (Linux)
@@ -172,7 +177,6 @@
       - eza
       - zoxide
       - yq
-      - tldr
       - libpq
     state: present
   when: ansible_os_family == "Darwin"
