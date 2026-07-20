@@ -8,7 +8,9 @@
   vars_files:
     - ../vars.yml
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:{{ lookup('env', 'PATH') }}"
+    # /usr/sbin and /sbin must stay present: this override replaces sudo's secure_path
+    # for become tasks, and dpkg refuses to run without ldconfig/start-stop-daemon on PATH
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/sbin:{{ lookup('env', 'PATH') }}"
 
   pre_tasks:
     - name: Display target host information
