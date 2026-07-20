@@ -35,13 +35,28 @@
   failed_when: false
   when: ansible_os_family == "Debian" and python_version is defined
 
-- name: Ensure pinned Python version is available in apt repositories
+# On Ubuntu/Pop!_OS deadsnakes should provide the pin, so a miss there is a hard error.
+# Plain Debian has no deadsnakes equivalent — fall back to the distro python3 instead.
+- name: Ensure pinned Python version is available in apt repositories (Ubuntu/Pop!_OS)
   ansible.builtin.assert:
     that:
       - python_package_check.rc == 0
     fail_msg: "python{{ python_version }} is not available for {{ ansible_distribution }} {{ ansible_distribution_version }}. Adjust `python_version` in vars.yml or use a release where the package exists."
     success_msg: "python{{ python_version }} is available in the configured apt repositories."
+  when: ansible_distribution in ["Ubuntu", "Pop!_OS"] and python_version is defined
+
+- name: Set Python pin availability flag (Linux)
+  ansible.builtin.set_fact:
+    python_pin_available: "{{ python_package_check.rc == 0 }}"
   when: ansible_os_family == "Debian" and python_version is defined
+
+- name: Warn when pinned Python is unavailable (Debian)
+  ansible.builtin.debug:
+    msg: "python{{ python_version }} is not packaged for {{ ansible_distribution }} {{ ansible_distribution_version }}; installing the distro default python3 instead."
+  when:
+    - ansible_os_family == "Debian"
+    - python_version is defined
+    - not python_pin_available
 
 - name: Install specific Python version and development tools (Linux)
   ansible.builtin.package:
@@ -54,7 +69,7 @@
       - pipx
     state: present
   become: true
-  when: ansible_os_family == "Debian" and python_version is defined
+  when: ansible_os_family == "Debian" and python_version is defined and python_pin_available
 
 - name: Install distutils for Python < 3.12
   ansible.builtin.package:
@@ -82,7 +97,7 @@
       - pipx
     state: present
   become: true
-  when: ansible_os_family == "Debian" and python_version is not defined
+  when: ansible_os_family == "Debian" and (python_version is not defined or not python_pin_available | default(true))
 
 - name: Ensure pipx path is configured
   ansible.builtin.command: pipx ensurepath
@@ -126,23 +141,23 @@
   ansible.builtin.command: "python{{ python_version }} --version"
   register: python_specific_version_output
   changed_when: false
-  when: python_version is defined
+  when: python_version is defined and python_pin_available | default(true)
 
 - name: Verify default Python installation
   ansible.builtin.command: python3 --version
   register: python_default_version_output
   changed_when: false
-  when: python_version is not defined
+  when: python_version is not defined or not python_pin_available | default(true)
 
 - name: Display specific Python version
   ansible.builtin.debug:
     msg: "Python installed: {{ python_specific_version_output.stdout }}"
-  when: python_version is defined
+  when: python_version is defined and python_pin_available | default(true)
 
 - name: Display default Python version
   ansible.builtin.debug:
     msg: "Python installed: {{ python_default_version_output.stdout }}"
-  when: python_version is not defined
+  when: python_version is not defined or not python_pin_available | default(true)
 
 - name: Verify pip installation
   ansible.builtin.command: pip3 --version
