@@ -48,9 +48,18 @@
       register: az_distro_codename
       changed_when: false
 
+    # Microsoft lags behind new distro releases (e.g. no trixie suite),
+    # so fall back to the newest suite they do publish when ours is missing
+    - name: Check Azure CLI repo support for this release
+      ansible.builtin.uri:
+        url: "https://packages.microsoft.com/repos/azure-cli/dists/{{ az_distro_codename.stdout }}/Release"
+        method: HEAD
+        status_code: [200, 404]
+      register: az_repo_suite_check
+
     - name: Set Azure CLI distribution (Pop!_OS uses Ubuntu repos)
       ansible.builtin.set_fact:
-        az_distro_codename_resolved: "{{ az_distro_codename.stdout }}"
+        az_distro_codename_resolved: "{{ az_distro_codename.stdout if az_repo_suite_check.status == 200 else ('bookworm' if ansible_distribution == 'Debian' else 'noble') }}"
 
     - name: Add Azure CLI repository
       ansible.builtin.deb822_repository:

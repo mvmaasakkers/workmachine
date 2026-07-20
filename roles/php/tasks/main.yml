@@ -30,12 +30,13 @@
   become: true
   when: ansible_distribution == "Debian"
 
-- name: Download Sury PHP signing key (Debian)
-  ansible.builtin.get_url:
-    url: https://packages.sury.org/php/apt.gpg
+# Key vendored from Sury's official debsuryorg-archive-keyring.deb; a copy beats
+# downloading at run time, which can silently store a bad file that breaks apt verification
+- name: Deploy Sury PHP signing key (Debian)
+  ansible.builtin.copy:
+    src: files/sury-php.gpg
     dest: /etc/apt/keyrings/sury-php.gpg
     mode: '0644'
-    timeout: 30
   become: true
   when: ansible_distribution == "Debian"
 
