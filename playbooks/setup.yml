@@ -64,6 +64,9 @@
     - role: tmux
       tags: ['tmux', 'terminal', 'shell']
 
+    - role: herdr
+      tags: ['herdr', 'multiplexer', 'terminal', 'ai', 'tools']
+
     - role: docker
       tags: ['docker', 'containers']
 
@@ -145,6 +148,7 @@
           - Common utilities: git, curl, wget, tmux, btop, delta
           - Shell: zsh with oh-my-zsh, Nerd Fonts
           - Terminal: Alacritty
+          - Multiplexers: tmux, Herdr {{ herdr_version }}
           - Container platform: Docker with Docker Compose
           - Editor: Neovim with plugins
           - Languages: PHP {{ php_version }}, Go {{ go_version }}, Rust {{ rust_version }}, Node.js {{ nodejs_version }}, Python 3

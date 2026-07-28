@@ -1,0 +1,62 @@
+---
+# Herdr role - Install Herdr, a terminal workspace manager / agent multiplexer
+# https://github.com/ogulcancelik/herdr
+#
+# Distributed as a single static Rust binary per platform, so it is installed
+# straight from the GitHub release into ~/.local/bin instead of via the
+# curl | sh installer. That keeps the version pinned in vars.yml and lets
+# `herdr update` self-update later without sudo. A self-update moves ahead of
+# the pinned version; the next playbook run pins it back.
+
+- name: Ensure ~/.local/bin exists for Herdr
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: Check current Herdr version
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    herdr --version
+  args:
+    executable: /bin/bash
+  register: herdr_current_version
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Set Herdr architecture mapping
+  ansible.builtin.set_fact:
+    herdr_arch_map:
+      x86_64: "x86_64"
+      amd64: "x86_64"
+      aarch64: "aarch64"
+      arm64: "aarch64" # macOS reports as 'arm64' for Apple Silicon
+
+- name: Set Herdr release asset name
+  ansible.builtin.set_fact:
+    herdr_asset: "herdr-{{ 'macos' if ansible_os_family == 'Darwin' else 'linux' }}-{{ herdr_arch_map[ansible_architecture] | default('x86_64') }}"
+
+- name: Install Herdr binary
+  ansible.builtin.get_url:
+    url: "https://github.com/ogulcancelik/herdr/releases/download/v{{ herdr_version }}/{{ herdr_asset }}"
+    dest: "{{ ansible_env.HOME }}/.local/bin/herdr"
+    mode: '0755'
+    force: true
+    timeout: 60
+  when: herdr_current_version.rc | default(1) != 0 or ('herdr ' + herdr_version) not in herdr_current_version.stdout | default('')
+
+- name: Verify Herdr installation
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    herdr --version
+  args:
+    executable: /bin/bash
+  register: herdr_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display Herdr version
+  ansible.builtin.debug:
+    msg: "Herdr installed: {{ herdr_version_output.stdout }}"
+  when: not ansible_check_mode and herdr_version_output.stdout | default('') | length > 0

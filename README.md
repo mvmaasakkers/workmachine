@@ -19,6 +19,7 @@ This setup installs and configures:
 
 - **Shell**: zsh with oh-my-zsh, Nerd Fonts (Hack, Meslo, FiraCode, JetBrainsMono)
 - **Terminal**: Alacritty with custom config
+- **Multiplexers**: tmux (configured), Herdr 0.7.5 (agent multiplexer, for evaluation next to tmux)
 - **Version Control**: git
 - **Containers**: Docker + Docker Compose
 - **Editor**: Neovim with plugins and custom config
@@ -127,7 +128,7 @@ make run-role TAG=languages
 Available tags:
 - `common`, `base` - Basic tools
 - `zsh`, `shell` - Shell setup
-- `alacritty`, `tmux`, `terminal` - Terminal setup
+- `alacritty`, `tmux`, `herdr`, `multiplexer`, `terminal` - Terminal setup
 - `docker`, `containers` - Docker setup
 - `nvim`, `editor` - Neovim setup
 - `php`, `phpactor`, `go`, `golang`, `rust`, `rustup`, `cargo`, `nodejs`, `node`, `python`, `languages` - Programming languages
@@ -172,6 +173,7 @@ workmachine/
 │   ├── tmux/
 │   │   ├── files/              # tmux config (tmux.conf, plugins/)
 │   │   └── tasks/
+│   ├── herdr/                  # Herdr agent multiplexer
 │   ├── nvim/
 │   │   ├── files/              # Neovim config (init.lua, lua/)
 │   │   └── tasks/
@@ -279,6 +281,31 @@ Located in `roles/tmux/files/`. Features:
 - Vi-mode copy bindings
 
 The setup removes any existing `~/.tmux.conf` and deploys to `~/.config/tmux/` (XDG-compliant).
+
+## Herdr
+
+[Herdr](https://github.com/ogulcancelik/herdr) is a terminal workspace manager / agent
+multiplexer, installed alongside tmux so both can be used and compared. It is a single
+static binary, pinned via `herdr_version` in `vars.yml` and downloaded from the GitHub
+release into `~/.local/bin/herdr` (no sudo needed).
+
+Install or update just Herdr:
+
+```bash
+make run-role-local TAG=herdr
+```
+
+Usage:
+
+```bash
+herdr           # launch or attach to the persistent session
+herdr status    # show client and server status
+ctrl+b q        # detach from a session
+```
+
+Herdr keeps its own config in `~/.config/herdr/config.toml`, which this repo does not
+manage yet. `herdr update` self-updates the binary past the pinned version; the next
+playbook run pins it back to `herdr_version`.
 
 ## zsh Configuration
 
