@@ -1,0 +1,26 @@
+---
+# Herdr handlers
+
+# A running Herdr server keeps its config in memory, so a config change only
+# takes effect after a reload (or a restart). Skipped when no server is running.
+- name: Reload Herdr server config
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    if herdr status server | grep -q '^status: not running'; then
+      echo "no Herdr server running; nothing to reload"
+    else
+      herdr server reload-config
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+
+# oh-my-zsh caches completions in ~/.zcompdump*; drop the cache so a new or
+# updated completion file is picked up by the next shell.
+- name: Refresh zsh completion cache
+  ansible.builtin.shell: |
+    find "$HOME" -maxdepth 1 -name '.zcompdump*' -delete
+  args:
+    executable: /bin/bash
+  changed_when: false

@@ -64,9 +64,6 @@
     - role: tmux
       tags: ['tmux', 'terminal', 'shell']
 
-    - role: herdr
-      tags: ['herdr', 'multiplexer', 'terminal', 'ai', 'tools']
-
     - role: docker
       tags: ['docker', 'containers']
 
@@ -127,6 +124,11 @@
     - role: codegraph
       tags: ['codegraph', 'ai', 'tools']
 
+    # After the agent roles: herdr installs its state hooks into the config
+    # directories of claude, codex and opencode.
+    - role: herdr
+      tags: ['herdr', 'multiplexer', 'terminal', 'ai', 'tools']
+
     - role: clickhouse-client
       tags: ['clickhouse-client', 'clickhouse', 'database', 'tools']
 
@@ -148,7 +150,7 @@
           - Common utilities: git, curl, wget, tmux, btop, delta
           - Shell: zsh with oh-my-zsh, Nerd Fonts
           - Terminal: Alacritty
-          - Multiplexers: tmux, Herdr {{ herdr_version }}
+          - Multiplexers: tmux, Herdr {{ herdr_version }} (agent integrations: {{ herdr_integrations | join(', ') }})
           - Container platform: Docker with Docker Compose
           - Editor: Neovim with plugins
           - Languages: PHP {{ php_version }}, Go {{ go_version }}, Rust {{ rust_version }}, Node.js {{ nodejs_version }}, Python 3
@@ -169,6 +171,7 @@
           5. Authenticate Claude Code: claude login
           6. Authenticate Azure CLI: az login
           7. Authenticate Google Cloud: gcloud init
+          8. Try the Herdr multiplexer next to tmux: herdr (detach with ctrl+b q)
 
           Happy coding!
 

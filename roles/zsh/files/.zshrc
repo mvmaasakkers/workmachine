@@ -72,6 +72,12 @@ plugins=(
     zsh-syntax-highlighting
 )
 
+# Completions deployed by ansible roles (e.g. herdr) - must be on fpath before
+# oh-my-zsh runs compinit
+if [[ -d "$HOME/.config/zsh/completions" ]]; then
+  fpath=("$HOME/.config/zsh/completions" $fpath)
+fi
+
 source $ZSH/oh-my-zsh.sh
 
 # Virtualenvwrapper setup (after oh-my-zsh, with proper Python path)

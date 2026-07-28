@@ -1,0 +1,66 @@
+# =============================================================================
+# Herdr configuration (managed by Ansible - roles/herdr/files/config.toml)
+# =============================================================================
+# Deployed to ~/.config/herdr/config.toml. Local edits are overwritten on the
+# next playbook run, so change this file instead.
+#
+# `herdr --default-config` prints every available key with documentation, and
+# `herdr config check` validates this file (it reports unknown keys).
+
+# The notification setup wizard only needs to run when delivery is unset.
+# Delivery is configured below, so skip it.
+onboarding = false
+
+# =============================================================================
+# Theme
+# =============================================================================
+# "catppuccin" is the Mocha flavor, matching nvim (catppuccin-mocha), tmux
+# (@catppuccin_flavor "mocha") and Alacritty in this repo.
+# Other built-ins: terminal, tokyo-night, dracula, nord, gruvbox, one-dark,
+# solarized, kanagawa, rose-pine, vesper.
+
+[theme]
+name = "catppuccin"
+
+# Uncomment to follow the host terminal's light/dark appearance instead.
+# auto_switch = false
+# dark_name = "catppuccin"
+# light_name = "catppuccin-latte"
+
+# =============================================================================
+# Terminal
+# =============================================================================
+# Login shells, for the same reason tmux.conf sets default-command "${SHELL} -l":
+# oh-my-zsh otherwise fails to load in some new panes.
+
+[terminal]
+shell_mode = "login"
+
+# =============================================================================
+# UI
+# =============================================================================
+# Catppuccin Mocha blue, same accent the tmux status line and nvim use.
+
+[ui]
+accent = "#89b4fa"
+
+[ui.toast]
+# off | herdr (in-app) | terminal (OSC 9 desktop notification) | system
+delivery = "herdr"
+
+# =============================================================================
+# Keys
+# =============================================================================
+# The defaults already match this repo's tmux setup: prefix is ctrl+b, panes are
+# focused with prefix+h/j/k/l, detach is prefix+q. Add overrides under [keys],
+# for example:
+#
+# [keys]
+# prefix = "ctrl+b"
+#
+# [[keys.command]]
+# key = "prefix+alt+g"
+# type = "popup"
+# command = "lazygit"
+# width = "80%"
+# height = "80%"

@@ -57,6 +57,16 @@ neovim_config_dir: "{{ ansible_env.HOME }}/.config/nvim"
 # tmux
 tmux_config_dir: "{{ ansible_env.HOME }}/.config/tmux"
 
+# Herdr
+herdr_config_dir: "{{ ansible_env.HOME }}/.config/herdr"
+
+# Herdr agent integrations: hooks that report agent state back to Herdr.
+# Full target list: herdr integration install --help
+herdr_integrations:
+  - claude
+  - codex
+  - opencode
+
 # Zsh
 zsh_config_dir: "{{ ansible_env.HOME }}/.config/zsh"
 

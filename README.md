@@ -19,7 +19,7 @@ This setup installs and configures:
 
 - **Shell**: zsh with oh-my-zsh, Nerd Fonts (Hack, Meslo, FiraCode, JetBrainsMono)
 - **Terminal**: Alacritty with custom config
-- **Multiplexers**: tmux (configured), Herdr 0.7.5 (agent multiplexer, for evaluation next to tmux)
+- **Multiplexers**: tmux (configured), Herdr 0.7.5 (agent multiplexer with Catppuccin theme, agent integrations and agent skill, for evaluation next to tmux)
 - **Version Control**: git
 - **Containers**: Docker + Docker Compose
 - **Editor**: Neovim with plugins and custom config
@@ -173,7 +173,9 @@ workmachine/
 │   ├── tmux/
 │   │   ├── files/              # tmux config (tmux.conf, plugins/)
 │   │   └── tasks/
-│   ├── herdr/                  # Herdr agent multiplexer
+│   ├── herdr/
+│   │   ├── files/              # Herdr config (config.toml) + agent skill (SKILL.md)
+│   │   └── tasks/
 │   ├── nvim/
 │   │   ├── files/              # Neovim config (init.lua, lua/)
 │   │   └── tasks/
@@ -251,6 +253,8 @@ Configuration files are embedded directly in this repository under each role's `
 | tmux | `roles/tmux/files/` | `~/.config/tmux/` |
 | zsh | `roles/zsh/files/` | `~/.config/zsh/` |
 | Alacritty | `roles/alacritty/files/` | `~/.config/alacritty/` |
+| Herdr | `roles/herdr/files/config.toml` | `~/.config/herdr/config.toml` |
+| Herdr agent skill | `roles/herdr/files/SKILL.md` | `~/.claude/skills/herdr/SKILL.md` |
 
 ### Customizing Configs
 
@@ -303,9 +307,57 @@ herdr status    # show client and server status
 ctrl+b q        # detach from a session
 ```
 
-Herdr keeps its own config in `~/.config/herdr/config.toml`, which this repo does not
-manage yet. `herdr update` self-updates the binary past the pinned version; the next
-playbook run pins it back to `herdr_version`.
+The defaults already line up with this repo's tmux setup: prefix is `ctrl+b`, panes are
+focused with `prefix+h/j/k/l`.
+
+`herdr update` self-updates the binary past the pinned version; the next playbook run
+pins it back to `herdr_version`.
+
+### Config
+
+Located in `roles/herdr/files/config.toml`, deployed to `~/.config/herdr/config.toml`.
+Uses the **Catppuccin Mocha** theme, matching nvim, tmux and Alacritty, plus login
+shells for new panes (same reason `tmux.conf` sets `default-command "${SHELL} -l"`).
+
+The playbook validates the deployed file with `herdr config check`, which reports unknown
+keys. `herdr --default-config` prints every available key with documentation. When a
+Herdr server is already running, the role reloads its config after a change.
+
+### zsh completions
+
+Generated from the installed binary with `herdr completion zsh` and deployed to
+`~/.config/zsh/completions/_herdr`. The zsh config adds that directory to `fpath` before
+oh-my-zsh runs `compinit`, so any role can drop completions there.
+
+### Agent integrations
+
+Herdr detects the state of coding agents running in its panes (working, blocked, done)
+through a hook installed in each agent's own config directory. The role installs the
+integrations listed in `herdr_integrations` (`vars.yml`), by default claude, codex and
+opencode. Full target list: `herdr integration install --help`.
+
+An agent whose config directory does not exist yet (for example `~/.codex` before codex
+has run once) is reported and skipped, not failed. Re-run the role after first launching
+that agent, or check the current state with:
+
+```bash
+herdr integration status
+```
+
+### Agent skill (socket API)
+
+`roles/herdr/files/SKILL.md` is upstream's agent skill, vendored from the pinned release
+tag and deployed to `~/.claude/skills/herdr/SKILL.md`. It teaches Claude Code to drive
+Herdr over its socket API: split panes, start named agents, prompt them, wait on their
+state and read their output. The skill only acts inside a Herdr-managed pane
+(`HERDR_ENV=1`), so it stays dormant in a normal terminal.
+
+Bump the vendored copy together with `herdr_version`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ogulcancelik/herdr/v<version>/SKILL.md \
+  -o roles/herdr/files/SKILL.md
+```
 
 ## zsh Configuration
 
