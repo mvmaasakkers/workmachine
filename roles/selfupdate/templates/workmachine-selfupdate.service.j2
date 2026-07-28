@@ -1,0 +1,16 @@
+[Unit]
+# Managed by Ansible (roles/selfupdate)
+Description=workmachine self-update (applies the workmachine playbook to this machine)
+Documentation=https://github.com/mvmaasakkers/workmachine
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User={{ ansible_user_id }}
+Environment=HOME={{ ansible_env.HOME }}
+Environment=LC_ALL=C.UTF-8
+WorkingDirectory={{ ansible_env.HOME }}
+ExecStart={{ ansible_env.HOME }}/.local/bin/workmachine-selfupdate
+# A full run installs packages and syncs Neovim plugins; give it room.
+TimeoutStartSec={{ selfupdate_timeout_sec }}

@@ -33,6 +33,7 @@ This setup installs and configures:
 - **AI Tools**: Claude Code CLI, Codex CLI, OpenCode CLI
 - **DevOps**: Terraform, Packer, Azure CLI, Google Cloud SDK
 - **SQL Tools**: sql-formatter, SQLFluff
+- **Maintenance**: weekly self-update (pulls this repo and re-applies the playbook), weekly upstream version check via GitHub Actions
 
 ## Quick Start
 
@@ -136,6 +137,29 @@ Available tags:
 - `terraform`, `packer`, `iac`, `devops` - Infrastructure as Code tools
 - `azure-cli`, `azure`, `gcloud`, `gcp`, `cloud` - Cloud provider CLIs
 - `sql-formatter`, `sqlfluff`, `sql`, `database` - SQL tools
+- `selfupdate`, `autoupdate`, `maintenance` - Scheduled self-update
+
+### Keeping Versions Up To Date
+
+`scripts/bump-versions.py` compares every pinned version in `vars.yml` with its
+upstream source (GitHub releases, go.dev, static.rust-lang.org, the npm registry and
+releases.hashicorp.com) and can write the new values, including the Terraform and
+Packer SHA256 checksums:
+
+```bash
+make check-versions   # report only
+make bump-versions    # write the new versions into vars.yml
+```
+
+The `Version check` GitHub Actions workflow runs the same script every Monday and
+opens (or refreshes) one pull request titled *Bump pinned tool versions to latest
+releases*, with a table of what changed. Run it by hand from the Actions tab; the
+`dry_run` option reports without touching a branch. A source that cannot be resolved
+does not block the other bumps, but does turn the run red.
+
+Node.js, PHP, Composer and Python are deliberately not checked: they pin a
+major (or major.minor) series that follows the distro repositories, so moving them
+is a decision rather than a bump.
 
 ### Customizing Versions
 
@@ -194,7 +218,12 @@ workmachine/
 │   ├── azure-cli/              # Microsoft Azure CLI
 │   ├── gcloud/                 # Google Cloud SDK
 │   ├── sql-formatter/          # sql-formatter (SQL query formatter)
-│   └── sqlfluff/               # SQLFluff (SQL linter and auto-formatter)
+│   ├── sqlfluff/               # SQLFluff (SQL linter and auto-formatter)
+│   └── selfupdate/             # Scheduled self-update (systemd timer / launchd agent)
+├── scripts/
+│   └── bump-versions.py        # Check pinned versions against upstream
+├── .github/workflows/
+│   └── version-check.yml       # Weekly version-bump pull request
 ├── ansible.cfg                 # Ansible configuration
 ├── inventory.ini               # Server inventory
 ├── vars.yml                    # Version configuration
@@ -242,6 +271,61 @@ After the setup completes:
    az login            # Azure CLI
    gcloud init         # Google Cloud SDK
    ```
+6. **Enable unattended git access** so the self-update can pull this repo:
+   ```bash
+   gh auth login && gh auth setup-git
+   ```
+
+## Scheduled Self-Update
+
+The `selfupdate` role makes a machine keep itself up to date instead of waiting for
+someone to run `make setup-local`. It is pull-based: the machine fetches this
+repository and applies the playbook to itself, so laptops behind NAT need no inbound
+access and no SSH keys have to live in CI.
+
+What gets installed:
+
+| Platform | Schedule | Where |
+|----------|----------|-------|
+| Linux | systemd timer, Mondays 04:00 (+ up to 1h jitter, `Persistent=true`) | `/etc/systemd/system/workmachine-selfupdate.{service,timer}` |
+| macOS | launchd agent, Mondays 04:00 | `~/Library/LaunchAgents/dev.workmachine.selfupdate.plist` |
+| Both | the script itself | `~/.local/bin/workmachine-selfupdate` |
+
+Each run resets a machine-local checkout in `~/.local/share/workmachine` to the
+configured branch and runs `make setup-local-no-pw` there. That checkout is a cache,
+not a workspace: local changes in it are discarded on every run. Output goes to
+`~/.local/state/workmachine/selfupdate.log` (rotated at 5 MiB) and the exit status of
+the last run to `~/.local/state/workmachine/last-run`. A lock keeps two runs from
+overlapping, and a lock left behind by a killed run is taken over.
+
+Requirements: **passwordless sudo** (the playbook installs packages) and git
+credentials that work non-interactively (step 6 above).
+
+Run it by hand, and watch what it does:
+
+```bash
+workmachine-selfupdate
+tail -f ~/.local/state/workmachine/selfupdate.log
+
+# Linux
+systemctl list-timers workmachine-selfupdate.timer
+systemctl start workmachine-selfupdate.service
+journalctl -u workmachine-selfupdate.service
+
+# macOS
+launchctl list | grep workmachine
+launchctl kickstart -k "gui/$(id -u)/dev.workmachine.selfupdate"
+```
+
+Tuning happens in `vars.yml`: `selfupdate_branch`, `selfupdate_oncalendar` (plus the
+`selfupdate_macos_*` equivalents), and `selfupdate_extra_args` for arguments passed
+straight to `ansible-playbook`, for example `--skip-tags nvim`.
+
+Turn it off on a machine — this also removes the timer or agent:
+
+```bash
+make run-role-local TAG=selfupdate EXTRA_ARGS="-e selfupdate_enabled=false"
+```
 
 ## Configuration Files
 

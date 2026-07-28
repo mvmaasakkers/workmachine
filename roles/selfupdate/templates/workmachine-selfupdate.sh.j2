@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# workmachine self-update - managed by Ansible (roles/selfupdate)
+#
+# Pulls this repository into a machine-local checkout and applies the playbook to
+# this machine. Started by a systemd timer (Linux) or launchd agent (macOS), and
+# safe to run by hand:
+#
+#   workmachine-selfupdate
+#
+# Requires passwordless sudo, because the playbook installs packages.
+
+set -euo pipefail
+
+REPO="{{ selfupdate_repo }}"
+BRANCH="{{ selfupdate_branch }}"
+CHECKOUT="{{ selfupdate_checkout_dir }}"
+LOG="{{ selfupdate_log }}"
+STATE_DIR="$(dirname "$LOG")"
+LOCK_DIR="{{ selfupdate_lock_dir }}"
+EXTRA_ARGS="{{ selfupdate_extra_args }}"
+LOG_MAX_BYTES={{ selfupdate_log_max_bytes }}
+
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+mkdir -p "$STATE_DIR" "$(dirname "$CHECKOUT")"
+
+# Keep one previous log around, drop the rest.
+if [ -f "$LOG" ] && [ "$(wc -c <"$LOG")" -gt "$LOG_MAX_BYTES" ]; then
+  mv -f "$LOG" "$LOG.1"
+fi
+exec >>"$LOG" 2>&1
+
+# Single instance. A lock left behind by a killed run is taken over.
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  stale_pid="$(cat "$LOCK_DIR/pid" 2>/dev/null || true)"
+  if [ -n "$stale_pid" ] && kill -0 "$stale_pid" 2>/dev/null; then
+    echo "$(date -u +%FT%TZ) another self-update is running (pid $stale_pid); exiting"
+    exit 0
+  fi
+  echo "$(date -u +%FT%TZ) taking over stale lock $LOCK_DIR"
+  rm -rf "$LOCK_DIR"
+  mkdir "$LOCK_DIR"
+fi
+echo $$ >"$LOCK_DIR/pid"
+
+finish() {
+  status=$?
+  rm -rf "$LOCK_DIR"
+  echo "$(date -u +%FT%TZ) exit=$status" >"$STATE_DIR/last-run"
+  if [ "$status" -ne 0 ]; then
+    echo "$(date -u +%FT%TZ) self-update FAILED (exit $status)"
+    echo "  if git could not authenticate, run: gh auth login && gh auth setup-git"
+    echo "  if sudo asked for a password, give this user NOPASSWD sudo rights"
+  else
+    echo "$(date -u +%FT%TZ) self-update finished successfully"
+  fi
+}
+trap finish EXIT
+
+echo
+echo "=============================================================="
+echo "$(date -u +%FT%TZ) self-update starting on $(hostname) (pid $$)"
+echo "=============================================================="
+
+# The checkout is a managed cache, not a place to edit: local changes are
+# discarded so a half-finished experiment cannot block updates.
+if [ -d "$CHECKOUT/.git" ]; then
+  git -C "$CHECKOUT" remote set-url origin "$REPO"
+  git -C "$CHECKOUT" fetch --prune origin "$BRANCH"
+  git -C "$CHECKOUT" reset --hard "origin/$BRANCH"
+  git -C "$CHECKOUT" clean -fd
+else
+  rm -rf "$CHECKOUT"
+  git clone --branch "$BRANCH" "$REPO" "$CHECKOUT"
+fi
+
+echo "revision: $(git -C "$CHECKOUT" log -1 --format='%h %s')"
+
+make -C "$CHECKOUT" setup-local-no-pw EXTRA_ARGS="$EXTRA_ARGS"

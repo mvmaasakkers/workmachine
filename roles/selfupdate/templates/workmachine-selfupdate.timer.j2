@@ -1,0 +1,14 @@
+[Unit]
+# Managed by Ansible (roles/selfupdate)
+Description=Run workmachine self-update on a schedule
+
+[Timer]
+OnCalendar={{ selfupdate_oncalendar }}
+# Spread the load and avoid every machine hitting GitHub at the same second.
+RandomizedDelaySec={{ selfupdate_randomized_delay_sec }}
+# Laptops are not always on at the scheduled time; catch up after boot.
+Persistent=true
+Unit=workmachine-selfupdate.service
+
+[Install]
+WantedBy=timers.target

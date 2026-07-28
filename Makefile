@@ -1,4 +1,4 @@
-.PHONY: help setup setup-local setup-remote lint check check-local install-ansible install-ansible-lint install-collections test tags clean run-role-local
+.PHONY: help setup setup-local setup-remote lint check check-local install-ansible install-ansible-lint install-collections test tags clean run-role-local check-versions bump-versions
 
 # Activate Python venv for all targets (equivalent to source .venv/bin/activate)
 export VIRTUAL_ENV := $(CURDIR)/.venv
@@ -19,6 +19,8 @@ help:
 	@echo "  make test           - Run playbook in check mode with diff"
 	@echo "  make run-role-local  - Run a specific role locally (TAG=<tag>)"
 	@echo "  make tags           - Show available tags"
+	@echo "  make check-versions - Report pinned tool versions that can be upgraded"
+	@echo "  make bump-versions  - Write the latest versions into vars.yml"
 	@echo "  make clean          - Clean up temporary files"
 
 # Install Ansible if not present
@@ -62,9 +64,11 @@ setup-local: install-collections
 	@echo "Running playbook locally..."
 	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass
 
+# EXTRA_ARGS is passed straight to ansible-playbook, e.g. EXTRA_ARGS="--skip-tags nvim".
+# The self-update timer (roles/selfupdate) uses this target.
 setup-local-no-pw: install-collections
 	@echo "Running playbook locally without asking for become pass..."
-	ansible-playbook -i localhost, playbooks/setup.yml --connection=local
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local $(EXTRA_ARGS)
 
 # Run ansible-lint
 lint: install-ansible-lint
@@ -103,7 +107,7 @@ run-role: install-collections
 		echo "Run 'make tags' to see available tags"; \
 		exit 1; \
 	fi
-	ansible-playbook -i inventory.ini playbooks/setup.yml --tags $(TAG)
+	ansible-playbook -i inventory.ini playbooks/setup.yml --tags $(TAG) $(EXTRA_ARGS)
 
 # Run specific role by tag locally
 # Example: make run-role-local TAG=docker
@@ -113,7 +117,14 @@ run-role-local: install-collections
 		echo "Run 'make tags' to see available tags"; \
 		exit 1; \
 	fi
-	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass --tags $(TAG)
+	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass --tags $(TAG) $(EXTRA_ARGS)
+
+# Version management (same script the Version check workflow runs)
+check-versions:
+	@python3 scripts/bump-versions.py
+
+bump-versions:
+	@python3 scripts/bump-versions.py --write
 
 # Clean temporary files
 clean:

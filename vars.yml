@@ -85,3 +85,25 @@ font_dir: "{{ font_dir_macos if is_macos else font_dir_linux }}"
 # Docker
 docker_users:
   - "{{ ansible_user_id }}"
+
+# Self-update: periodically pull this repo on the machine and apply the playbook.
+# Set selfupdate_enabled: false (per host or with -e) to remove the schedule.
+selfupdate_enabled: true
+selfupdate_repo: "https://github.com/mvmaasakkers/workmachine.git"
+selfupdate_branch: "main"
+selfupdate_checkout_dir: "{{ ansible_env.HOME }}/.local/share/workmachine"
+selfupdate_log: "{{ ansible_env.HOME }}/.local/state/workmachine/selfupdate.log"
+selfupdate_log_max_bytes: 5242880 # 5 MiB, then rotated to .log.1
+selfupdate_lock_dir: "{{ ansible_env.HOME }}/.local/state/workmachine/selfupdate.lock"
+# Extra ansible-playbook arguments, e.g. "--skip-tags nvim"
+selfupdate_extra_args: ""
+selfupdate_timeout_sec: 3600
+
+# Schedule. Keep the Linux and macOS values describing the same moment.
+selfupdate_oncalendar: "Mon *-*-* 04:00:00" # systemd OnCalendar
+selfupdate_randomized_delay_sec: 3600
+selfupdate_macos_weekday: 1 # launchd: 0 and 7 are Sunday, 1 is Monday
+selfupdate_macos_hour: 4
+selfupdate_macos_minute: 0
+selfupdate_launchd_label: "dev.workmachine.selfupdate"
+selfupdate_launchd_plist: "{{ ansible_env.HOME }}/Library/LaunchAgents/dev.workmachine.selfupdate.plist"

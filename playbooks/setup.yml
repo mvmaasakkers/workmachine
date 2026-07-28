@@ -138,6 +138,10 @@
     - role: sqlfluff
       tags: ['sqlfluff', 'sql', 'database', 'tools']
 
+    # Last: installs the schedule that re-runs this playbook on the machine.
+    - role: selfupdate
+      tags: ['selfupdate', 'autoupdate', 'maintenance']
+
   post_tasks:
     - name: Display setup completion message
       ansible.builtin.debug:
@@ -162,6 +166,7 @@
           - DevOps: Terraform {{ terraform_version }}, Packer {{ packer_version }}, Azure CLI, Google Cloud SDK
           - Database: ClickHouse client
           - SQL tools: sql-formatter, SQLFluff
+          - Maintenance: self-update {{ 'enabled (' ~ selfupdate_oncalendar ~ ')' if selfupdate_enabled else 'disabled' }}
 
           Next steps:
           1. Log out and back in for group changes (docker) to take effect

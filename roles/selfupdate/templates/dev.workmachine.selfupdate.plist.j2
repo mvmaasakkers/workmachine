@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Managed by Ansible (roles/selfupdate) -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>{{ selfupdate_launchd_label }}</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{ ansible_env.HOME }}/.local/bin/workmachine-selfupdate</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>{{ selfupdate_macos_weekday }}</integer>
+        <key>Hour</key>
+        <integer>{{ selfupdate_macos_hour }}</integer>
+        <key>Minute</key>
+        <integer>{{ selfupdate_macos_minute }}</integer>
+    </dict>
+
+    <!-- launchd runs a missed calendar job as soon as the Mac wakes up. An
+         occurrence while the Mac was fully powered off is skipped, unlike the
+         systemd timer's Persistent=true on Linux. -->
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>{{ ansible_env.HOME }}/.local/bin:{{ homebrew_prefix }}/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>LC_ALL</key>
+        <string>C.UTF-8</string>
+    </dict>
+
+    <!-- The script writes its own log; only launchd's own errors land here. -->
+    <key>StandardOutPath</key>
+    <string>{{ selfupdate_log }}.launchd</string>
+    <key>StandardErrorPath</key>
+    <string>{{ selfupdate_log }}.launchd</string>
+</dict>
+</plist>

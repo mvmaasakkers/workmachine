@@ -1,0 +1,104 @@
+---
+name: Version check
+
+# Checks the pinned tool versions in vars.yml against their upstream sources and
+# opens (or refreshes) a single pull request with the bump. Runs weekly and can
+# be started by hand from the Actions tab, with a dry-run option that only
+# reports.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only report the available bumps; do not push a branch or open a PR'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  BRANCH: chore/bump-tool-versions
+
+jobs:
+  bump:
+    name: Check and propose version bumps
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # continue-on-error: a source that cannot be resolved (renamed repo,
+      # changed release scheme) should not block the bumps that did resolve. The
+      # run is still marked failed by the last step.
+      - name: Check upstream versions
+        id: check
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/bump-versions.py --write --report report.md
+          {
+            echo "## Version check"
+            echo
+            cat report.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Detect changes
+        id: changes
+        run: |
+          if git diff --quiet -- vars.yml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No version updates available."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git --no-pager diff -- vars.yml
+          fi
+
+      - name: Push bump branch
+        if: steps.changes.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add vars.yml
+          git commit -m "Bump pinned tool versions to latest releases"
+          # Plain --force: this branch is owned by this workflow and is rebuilt
+          # from the default branch every run. --force-with-lease would need a
+          # remote-tracking ref, which the shallow checkout does not have.
+          git push --force origin "$BRANCH"
+
+      - name: Open or update pull request
+        if: steps.changes.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          body="$(cat report.md)
+
+          Checksums for Terraform and Packer were read from their \`SHA256SUMS\`
+          files and updated along with the version.
+
+          Opened by the \`Version check\` workflow. Merging is a deliberate choice:
+          check the upstream release notes for anything that needs a role change."
+
+          existing="$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --body "$body"
+            echo "Updated existing PR #${existing}"
+          else
+            gh pr create \
+              --head "$BRANCH" \
+              --base "${{ github.event.repository.default_branch }}" \
+              --title "Bump pinned tool versions to latest releases" \
+              --body "$body"
+          fi
+
+      - name: Fail if an upstream source could not be checked
+        if: steps.check.outcome == 'failure'
+        run: |
+          echo "::error::One or more upstream sources could not be checked; see the run summary."
+          exit 1

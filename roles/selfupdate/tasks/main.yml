@@ -1,0 +1,119 @@
+---
+# Selfupdate role - Periodically apply this playbook to the machine itself
+#
+# Installs a script that pulls this repository into a machine-local checkout and
+# runs `make setup-local-no-pw`, plus a schedule to trigger it: a systemd timer
+# on Linux, a launchd agent on macOS. Pull-based, so machines behind NAT need no
+# inbound access and no credentials have to live in CI.
+#
+# Requirements on the machine:
+#   - passwordless sudo for this user (the playbook installs packages)
+#   - git credentials for a non-interactive clone (gh auth login && gh auth setup-git)
+#
+# Set selfupdate_enabled: false to remove the schedule again.
+
+- name: Ensure ~/.local/bin exists for the self-update script
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: Ensure self-update state directory exists
+  ansible.builtin.file:
+    path: "{{ selfupdate_log | dirname }}"
+    state: directory
+    mode: '0755'
+
+- name: Deploy self-update script
+  ansible.builtin.template:
+    src: workmachine-selfupdate.sh.j2
+    dest: "{{ ansible_env.HOME }}/.local/bin/workmachine-selfupdate"
+    mode: '0755'
+
+# Linux: systemd timer ------------------------------------------------------
+
+- name: Check whether systemd is running (Linux)
+  ansible.builtin.stat:
+    path: /run/systemd/system
+  register: selfupdate_systemd
+  when: ansible_os_family == "Debian"
+
+- name: Report that the self-update timer is skipped without systemd (Linux)
+  ansible.builtin.debug:
+    msg: >-
+      systemd is not running on this host, so no timer was installed. The
+      workmachine-selfupdate script is in place and can be run by hand or from
+      cron.
+  when:
+    - ansible_os_family == "Debian"
+    - not (selfupdate_systemd.stat.exists | default(false))
+
+- name: Configure the self-update timer (Linux)
+  when:
+    - ansible_os_family == "Debian"
+    - selfupdate_systemd.stat.exists | default(false)
+  become: true
+  block:
+    - name: Deploy self-update systemd service
+      ansible.builtin.template:
+        src: workmachine-selfupdate.service.j2
+        dest: /etc/systemd/system/workmachine-selfupdate.service
+        mode: '0644'
+      notify: Reload systemd for self-update
+
+    - name: Deploy self-update systemd timer
+      ansible.builtin.template:
+        src: workmachine-selfupdate.timer.j2
+        dest: /etc/systemd/system/workmachine-selfupdate.timer
+        mode: '0644'
+      notify: Reload systemd for self-update
+
+    - name: Flush handlers so systemd sees the units before enabling the timer
+      ansible.builtin.meta: flush_handlers
+
+    - name: Enable and start the self-update timer
+      ansible.builtin.systemd_service:
+        name: workmachine-selfupdate.timer
+        enabled: "{{ selfupdate_enabled }}"
+        state: "{{ 'started' if selfupdate_enabled else 'stopped' }}"
+
+# macOS: launchd agent -----------------------------------------------------
+
+- name: Configure the self-update agent (macOS)
+  when: ansible_os_family == "Darwin"
+  block:
+    - name: Ensure ~/Library/LaunchAgents exists
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/Library/LaunchAgents"
+        state: directory
+        mode: '0755'
+
+    - name: Deploy self-update launchd agent
+      ansible.builtin.template:
+        src: dev.workmachine.selfupdate.plist.j2
+        dest: "{{ selfupdate_launchd_plist }}"
+        mode: '0644'
+      when: selfupdate_enabled
+      notify: Reload self-update launchd agent
+
+    - name: Remove self-update launchd agent
+      when: not selfupdate_enabled
+      block:
+        - name: Unload self-update launchd agent
+          ansible.builtin.command: "launchctl bootout gui/{{ ansible_user_uid }}/{{ selfupdate_launchd_label }}"
+          register: selfupdate_bootout
+          changed_when: selfupdate_bootout.rc == 0
+          failed_when: false
+
+        - name: Delete self-update launchd plist
+          ansible.builtin.file:
+            path: "{{ selfupdate_launchd_plist }}"
+            state: absent
+
+- name: Report the self-update schedule
+  ansible.builtin.debug:
+    msg: >-
+      Self-update {{ 'enabled' if selfupdate_enabled else 'disabled' }}
+      ({{ selfupdate_oncalendar if ansible_os_family == 'Debian' else 'weekday ' ~ selfupdate_macos_weekday ~ ' at ' ~ selfupdate_macos_hour ~ ':' ~ '%02d' | format(selfupdate_macos_minute | int) }}),
+      branch {{ selfupdate_branch }}, log {{ selfupdate_log }}
+  when: not ansible_check_mode

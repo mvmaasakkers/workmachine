@@ -1,0 +1,16 @@
+---
+# Selfupdate handlers
+
+- name: Reload systemd for self-update
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  become: true
+
+# launchctl has no reload: the agent is booted out and back in.
+- name: Reload self-update launchd agent
+  ansible.builtin.shell: |
+    launchctl bootout "gui/{{ ansible_user_uid }}/{{ selfupdate_launchd_label }}" 2>/dev/null || true
+    launchctl bootstrap "gui/{{ ansible_user_uid }}" "{{ selfupdate_launchd_plist }}"
+  args:
+    executable: /bin/bash
+  changed_when: true
