@@ -25,7 +25,7 @@ This setup installs and configures:
 - **Languages**:
   - PHP 8.5 (CLI + Composer + Phpactor)
   - Go 1.26.1
-  - Rust 1.97.0 (+ Cargo via rustup)
+  - Rust 1.97.1 (+ Cargo via rustup)
   - Node.js 24 via nvm (+ npm, yarn, pnpm, Bun)
   - Python 3.14 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd, glow
@@ -142,7 +142,7 @@ Edit `vars.yml` to customize versions:
 
 ```yaml
 go_version: "1.26.1"
-rust_version: "1.97.0"
+rust_version: "1.97.1"
 nodejs_version: "24"
 php_version: "8.5"
 python_version: "3.14"
