@@ -2,7 +2,8 @@
 .vscode
 .ansible
 .DS_Store
-.claude/
+.claude/*
+!.claude/skills/
 .venv
 
 # Inventory files (use inventory.ini.example as template)

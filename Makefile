@@ -1,4 +1,4 @@
-.PHONY: help setup setup-local setup-remote lint check check-local install-ansible install-ansible-lint install-collections test tags clean run-role-local
+.PHONY: help setup setup-local setup-remote lint check check-local check-versions install-ansible install-ansible-lint install-collections test tags clean run-role-local
 
 # Activate Python venv for all targets (equivalent to source .venv/bin/activate)
 export VIRTUAL_ENV := $(CURDIR)/.venv
@@ -19,6 +19,7 @@ help:
 	@echo "  make test           - Run playbook in check mode with diff"
 	@echo "  make run-role-local  - Run a specific role locally (TAG=<tag>)"
 	@echo "  make tags           - Show available tags"
+	@echo "  make check-versions - Compare pinned tool versions against latest stable releases"
 	@echo "  make clean          - Clean up temporary files"
 
 # Install Ansible if not present
@@ -114,6 +115,10 @@ run-role-local: install-collections
 		exit 1; \
 	fi
 	ansible-playbook -i localhost, playbooks/setup.yml --connection=local --ask-become-pass --tags $(TAG)
+
+# Compare pinned versions in vars.yml against latest stable releases
+check-versions:
+	@python3 scripts/check-versions.py
 
 # Clean temporary files
 clean:
