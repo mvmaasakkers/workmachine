@@ -94,6 +94,9 @@
     - role: github-cli
       tags: ['github-cli', 'gh', 'tools']
 
+    - role: mise
+      tags: ['mise', 'tools']
+
     - role: claude-code
       tags: ['claude-code', 'claude', 'ai', 'tools']
 
@@ -124,6 +127,12 @@
     - role: codegraph
       tags: ['codegraph', 'ai', 'tools']
 
+    - role: herdr
+      tags: ['herdr', 'ai', 'tools']
+
+    - role: termix
+      tags: ['termix', 'ssh', 'tools']
+
     - role: clickhouse-client
       tags: ['clickhouse-client', 'clickhouse', 'database', 'tools']
 
@@ -152,6 +161,9 @@
           - Package managers: composer, Cargo, npm, pip, bun
           - VPN: Netbird client (not connected)
           - CLI tools: GitHub CLI (gh), Claude Code CLI, Codex CLI, OpenCode CLI, lazygit (with syntax highlighting), glow
+          - Tool version manager: mise (latest)
+          - Agent runtime: Herdr (latest)
+          - SSH management: Termix client (latest)
           - LSP servers: Marksman (Markdown)
           - DevOps: Terraform {{ terraform_version }}, Packer {{ packer_version }}, Azure CLI, Google Cloud SDK
           - Database: ClickHouse client

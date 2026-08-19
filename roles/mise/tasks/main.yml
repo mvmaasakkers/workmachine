@@ -1,0 +1,50 @@
+---
+# Install mise (polyglot dev tool version manager) using the official installer
+# Documentation: https://mise.jdx.dev/installing-mise.html
+# Always installs the latest release; mise is intentionally not version-pinned.
+# Uses the same official installer on both macOS and Linux for consistency.
+
+- name: Ensure ~/.local/bin exists for mise
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: Install mise via official installer
+  ansible.builtin.shell: |
+    curl -fsSL https://mise.run | sh
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.local/bin/mise"
+  when: not ansible_check_mode
+
+- name: Activate mise in .zshrc
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'eval "$($HOME/.local/bin/mise activate zsh)"'
+    state: present
+    create: true
+    mode: '0644'
+
+- name: Activate mise in .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: 'eval "$($HOME/.local/bin/mise activate bash)"'
+    state: present
+    create: true
+    mode: '0644'
+
+- name: Verify mise installation
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    mise --version
+  args:
+    executable: /bin/bash
+  register: mise_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display mise version
+  ansible.builtin.debug:
+    msg: "mise installed: {{ mise_version_output.stdout }}"
+  when: not ansible_check_mode and mise_version_output.stdout | default('') | length > 0

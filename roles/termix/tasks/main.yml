@@ -1,0 +1,101 @@
+---
+# Install the Termix desktop client (SSH server management platform)
+# Documentation: https://docs.termix.site/install
+# Always installs the latest release; Termix is intentionally not version-pinned.
+# macOS: Homebrew cask from the official Termix tap (not in homebrew-core yet)
+# Linux: .deb package from the latest GitHub release
+#
+# Termix is a GUI app, so it is only installed on machines with a desktop
+# environment. macOS always has one; on Linux we detect installed desktop
+# sessions. Override with -e termix_force_install=true to install anyway.
+
+- name: Detect desktop environment sessions (Linux)
+  ansible.builtin.find:
+    paths:
+      - /usr/share/xsessions
+      - /usr/share/wayland-sessions
+    patterns: "*.desktop"
+  register: termix_desktop_sessions
+  when: ansible_os_family == "Debian"
+
+- name: Determine whether this machine has a desktop
+  ansible.builtin.set_fact:
+    termix_has_desktop: >-
+      {{ ansible_os_family == 'Darwin'
+         or (termix_desktop_sessions.matched | default(0)) > 0
+         or (termix_force_install | default(false) | bool) }}
+
+- name: Skip Termix client on headless machines
+  ansible.builtin.debug:
+    msg: "No desktop environment detected; skipping Termix client install. Use -e termix_force_install=true to override."
+  when: not (termix_has_desktop | bool)
+
+- name: Tap the official Termix Homebrew repository (macOS)
+  community.general.homebrew_tap:
+    name: Termix-SSH/Termix
+    url: https://github.com/Termix-SSH/Termix.git
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Homebrew refuses to load casks from non-official taps until they are trusted
+- name: Check whether the Termix Homebrew tap is trusted (macOS)
+  ansible.builtin.command: brew tap-info Termix-SSH/termix --json
+  register: termix_tap_info
+  changed_when: false
+  failed_when: false
+  when: ansible_os_family == "Darwin"
+
+- name: Trust the Termix Homebrew tap (macOS)
+  ansible.builtin.command: brew trust --tap Termix-SSH/termix
+  changed_when: true
+  when:
+    - ansible_os_family == "Darwin"
+    - not ansible_check_mode
+    - not ((termix_tap_info.stdout | default('[{}]') | from_json | first).trusted | default(false))
+
+- name: Install Termix client via Homebrew cask (macOS)
+  community.general.homebrew_cask:
+    name: termix
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Check whether the Termix client is already installed (Linux)
+  ansible.builtin.command: dpkg-query -W termix
+  register: termix_dpkg_check
+  changed_when: false
+  failed_when: false
+  when:
+    - ansible_os_family == "Debian"
+    - termix_has_desktop | bool
+
+- name: Install Termix client from the latest GitHub release .deb (Linux)
+  ansible.builtin.apt:
+    deb: "https://github.com/Termix-SSH/Termix/releases/latest/download/termix_linux_{{ termix_arch_map[ansible_architecture] | default('x64') }}_deb.deb"
+  become: true
+  vars:
+    termix_arch_map:
+      x86_64: "x64"
+      aarch64: "arm64"
+      armv7l: "armv7l"
+  when:
+    - ansible_os_family == "Debian"
+    - termix_has_desktop | bool
+    - not ansible_check_mode
+    - termix_dpkg_check.rc != 0
+
+- name: Get installed Termix client version (Linux)
+  ansible.builtin.command: dpkg-query -W -f='${Version}' termix
+  register: termix_version_output
+  changed_when: false
+  failed_when: false
+  when:
+    - ansible_os_family == "Debian"
+    - termix_has_desktop | bool
+
+- name: Display Termix client version (Linux)
+  ansible.builtin.debug:
+    msg: "Termix client installed: {{ termix_version_output.stdout }}"
+  when:
+    - ansible_os_family == "Debian"
+    - not ansible_check_mode
+    - termix_version_output.stdout | default('') | length > 0
