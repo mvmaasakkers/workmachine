@@ -4,14 +4,14 @@
 - name: Check if nvm is already installed
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
-  register: nvm_installed
+  register: nodejs_nvm_installed
 
 - name: Install nvm
   ansible.builtin.shell: |
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v{{ nvm_version }}/install.sh | bash
   args:
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
-  when: not nvm_installed.stat.exists
+  when: not nodejs_nvm_installed.stat.exists
 
 - name: Ensure nvm is sourced in .bashrc
   ansible.builtin.blockinfile:
@@ -38,8 +38,8 @@
     nvm install {{ nodejs_version }}
   args:
     executable: /bin/bash
-  register: nvm_install_result
-  changed_when: "'is already installed' not in nvm_install_result.stderr"
+  register: nodejs_nvm_install_result
+  changed_when: "'is already installed' not in nodejs_nvm_install_result.stderr"
 
 - name: Set default Node.js version
   ansible.builtin.shell: |
@@ -75,12 +75,12 @@
     node --version
   args:
     executable: /bin/bash
-  register: node_version_output
+  register: nodejs_node_version_output
   changed_when: false
 
 - name: Display Node.js version
   ansible.builtin.debug:
-    msg: "Node.js installed: {{ node_version_output.stdout }}"
+    msg: "Node.js installed: {{ nodejs_node_version_output.stdout }}"
 
 - name: Get npm version
   ansible.builtin.shell: |
@@ -89,12 +89,12 @@
     npm --version
   args:
     executable: /bin/bash
-  register: npm_version_output
+  register: nodejs_npm_version_output
   changed_when: false
 
 - name: Display npm version
   ansible.builtin.debug:
-    msg: "npm installed: {{ npm_version_output.stdout }}"
+    msg: "npm installed: {{ nodejs_npm_version_output.stdout }}"
 
 - name: Check installed global npm packages
   ansible.builtin.shell: |
@@ -103,7 +103,7 @@
     npm list -g --depth=0 --json 2>/dev/null || echo '{}'
   args:
     executable: /bin/bash
-  register: npm_global_list
+  register: nodejs_npm_global_list
   changed_when: false
   when: not ansible_check_mode
 
@@ -124,9 +124,9 @@
     - neonctl
   loop_control:
     loop_var: nodejs_package
-  register: npm_install_result
-  changed_when: "'added' in npm_install_result.stdout"
-  when: not ansible_check_mode and nodejs_package not in ((npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys()
+  register: nodejs_npm_install_result
+  changed_when: "'added' in nodejs_npm_install_result.stdout"
+  when: not ansible_check_mode and nodejs_package not in ((nodejs_npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys()
 
 - name: Symlink global npm bins (yarn/pnpm/neonctl) into ~/.local/bin
   ansible.builtin.shell: |
@@ -146,7 +146,7 @@
 - name: Check if Bun is already installed
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.bun/bin/bun"
-  register: bun_installed
+  register: nodejs_bun_installed
 
 - name: Install Bun
   ansible.builtin.shell: |
@@ -155,7 +155,7 @@
     creates: "{{ ansible_env.HOME }}/.bun/bin/bun"
   environment:
     BUN_INSTALL: "{{ ansible_env.HOME }}/.bun"
-  when: not bun_installed.stat.exists
+  when: not nodejs_bun_installed.stat.exists
 
 - name: Ensure Bun PATH in .zshrc
   ansible.builtin.lineinfile:
@@ -175,11 +175,11 @@
 
 - name: Get Bun version
   ansible.builtin.command: "{{ ansible_env.HOME }}/.bun/bin/bun --version"
-  register: bun_version_output
+  register: nodejs_bun_version_output
   changed_when: false
   failed_when: false
 
 - name: Display Bun version
   ansible.builtin.debug:
-    msg: "Bun installed: {{ bun_version_output.stdout }}"
-  when: bun_version_output.rc == 0 and bun_version_output.stdout | length > 0
+    msg: "Bun installed: {{ nodejs_bun_version_output.stdout }}"
+  when: nodejs_bun_version_output.rc == 0 and nodejs_bun_version_output.stdout | length > 0

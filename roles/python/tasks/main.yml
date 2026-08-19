@@ -80,10 +80,10 @@
   when:
     - python_version is defined
     - python_version is version('3.12', '<')
-  register: distutils_result
-  failed_when: distutils_result is failed and
-    ('Unable to locate package' not in (distutils_result.msg | default('')) and
-    'Unable to locate package' not in (distutils_result.stderr | default('')))
+  register: python_distutils_result
+  failed_when: python_distutils_result is failed and
+    ('Unable to locate package' not in (python_distutils_result.msg | default('')) and
+    'Unable to locate package' not in (python_distutils_result.stderr | default('')))
 
 - name: Install default Python 3 and development tools (Linux)
   ansible.builtin.package:
@@ -101,8 +101,8 @@
 
 - name: Ensure pipx path is configured
   ansible.builtin.command: pipx ensurepath
-  register: pipx_ensurepath
-  changed_when: "'already in PATH' not in pipx_ensurepath.stdout"
+  register: python_pipx_ensurepath
+  changed_when: "'already in PATH' not in python_pipx_ensurepath.stdout"
   failed_when: false
 
 - name: Install common Python tools via apt (PEP 668 compliant, Linux only)
@@ -118,7 +118,7 @@
 
 - name: Check if poetry is installed
   ansible.builtin.command: pipx list
-  register: pipx_list
+  register: python_pipx_list
   changed_when: false
   failed_when: false
 
@@ -132,9 +132,9 @@
     - python-lsp-server
   loop_control:
     loop_var: python_tool
-  when: python_tool not in pipx_list.stdout
-  register: pipx_install
-  changed_when: pipx_install.rc == 0
+  when: python_tool not in python_pipx_list.stdout
+  register: python_pipx_install
+  changed_when: python_pipx_install.rc == 0
   failed_when: false
 
 - name: Verify specific Python version installation
@@ -161,9 +161,9 @@
 
 - name: Verify pip installation
   ansible.builtin.command: pip3 --version
-  register: pip_version_output
+  register: python_pip_version_output
   changed_when: false
 
 - name: Display pip version
   ansible.builtin.debug:
-    msg: "pip installed: {{ pip_version_output.stdout }}"
+    msg: "pip installed: {{ python_pip_version_output.stdout }}"

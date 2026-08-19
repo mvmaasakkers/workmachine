@@ -28,41 +28,41 @@
 
 - name: Set Neovim platform architecture (Linux)
   ansible.builtin.set_fact:
-    neovim_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'arm64' }}"
+    nvim_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'arm64' }}"
   when: ansible_os_family == "Debian"
 
 - name: Check if Neovim is installed (Linux)
   ansible.builtin.stat:
     path: /opt/nvim/bin/nvim
-  register: neovim_binary
+  register: nvim_binary
   when: ansible_os_family == "Debian"
 
 - name: Get installed Neovim version (Linux)
   ansible.builtin.command: /opt/nvim/bin/nvim --version
-  register: installed_neovim_version
+  register: nvim_installed_version
   changed_when: false
   failed_when: false
-  when: ansible_os_family == "Debian" and neovim_binary.stat.exists
+  when: ansible_os_family == "Debian" and nvim_binary.stat.exists
 
 - name: Set Neovim needs installation flag (Linux)
   ansible.builtin.set_fact:
-    neovim_needs_install: "{{ not neovim_binary.stat.exists or neovim_version not in (installed_neovim_version.stdout | default('')) }}"
+    nvim_needs_install: "{{ not nvim_binary.stat.exists or neovim_version not in (nvim_installed_version.stdout | default('')) }}"
   when: ansible_os_family == "Debian"
 
 - name: Download Neovim (Linux)
   ansible.builtin.get_url:
-    url: "https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-linux-{{ neovim_arch }}.tar.gz"
+    url: "https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-linux-{{ nvim_arch }}.tar.gz"
     dest: "/tmp/nvim_{{ neovim_version }}.tar.gz"
     mode: "0644"
     timeout: 30
-  when: ansible_os_family == "Debian" and neovim_needs_install
+  when: ansible_os_family == "Debian" and nvim_needs_install
 
 - name: Remove previous Neovim install (Linux)
   ansible.builtin.file:
     path: /opt/nvim
     state: absent
   become: true
-  when: ansible_os_family == "Debian" and neovim_needs_install
+  when: ansible_os_family == "Debian" and nvim_needs_install
 
 - name: Create Neovim install directory (Linux)
   ansible.builtin.file:
@@ -70,7 +70,7 @@
     state: directory
     mode: "0755"
   become: true
-  when: ansible_os_family == "Debian" and neovim_needs_install
+  when: ansible_os_family == "Debian" and nvim_needs_install
 
 - name: Extract Neovim (Linux)
   ansible.builtin.unarchive:
@@ -80,7 +80,7 @@
     extra_opts:
       - --strip-components=1
   become: true
-  when: ansible_os_family == "Debian" and neovim_needs_install
+  when: ansible_os_family == "Debian" and nvim_needs_install
 
 - name: Symlink nvim into /usr/local/bin (Linux)
   ansible.builtin.file:
@@ -94,7 +94,7 @@
   ansible.builtin.file:
     path: "/tmp/nvim_{{ neovim_version }}.tar.gz"
     state: absent
-  when: ansible_os_family == "Debian" and neovim_needs_install
+  when: ansible_os_family == "Debian" and nvim_needs_install
 
 - name: Install Neovim (macOS)
   community.general.homebrew:
@@ -105,13 +105,13 @@
 - name: Check if Neovim config is a git repo
   ansible.builtin.stat:
     path: "{{ neovim_config_dir }}/.git"
-  register: neovim_config_git
+  register: nvim_config_git
 
 - name: Remove Neovim config directory if it was a git clone
   ansible.builtin.file:
     path: "{{ neovim_config_dir }}"
     state: absent
-  when: neovim_config_git.stat.exists
+  when: nvim_config_git.stat.exists
 
 - name: Deploy Neovim configuration
   ansible.builtin.copy:

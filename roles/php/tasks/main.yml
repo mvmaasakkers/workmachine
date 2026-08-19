@@ -103,7 +103,7 @@
 - name: Check if Composer is installed
   ansible.builtin.stat:
     path: /usr/local/bin/composer
-  register: composer_stat
+  register: php_composer_stat
 
 - name: Download Composer installer
   ansible.builtin.get_url:
@@ -112,7 +112,7 @@
     checksum: "sha384:https://composer.github.io/installer.sig"
     mode: '0644'
     timeout: 30
-  when: not composer_stat.stat.exists
+  when: not php_composer_stat.stat.exists
 
 - name: Install Composer
   ansible.builtin.command: >
@@ -120,19 +120,19 @@
   args:
     creates: /usr/local/bin/composer
   become: true
-  when: not composer_stat.stat.exists
+  when: not php_composer_stat.stat.exists
 
 - name: Check if Composer was actually installed
   ansible.builtin.stat:
     path: /usr/local/bin/composer
-  register: composer_installed
+  register: php_composer_installed
 
 - name: Set Composer executable permissions
   ansible.builtin.file:
     path: /usr/local/bin/composer
     mode: '0755'
   become: "{{ ansible_os_family == 'Debian' }}"
-  when: composer_installed.stat.exists and (composer_installed.stat.mode is not defined or composer_installed.stat.mode != '0755')
+  when: php_composer_installed.stat.exists and (php_composer_installed.stat.mode is not defined or php_composer_installed.stat.mode != '0755')
 
 - name: Verify PHP installation
   ansible.builtin.command: php --version
@@ -146,18 +146,18 @@
 
 - name: Verify Composer installation
   ansible.builtin.command: composer --version
-  register: composer_version_output
+  register: php_composer_version_output
   changed_when: false
 
 - name: Display Composer version
   ansible.builtin.debug:
-    msg: "Composer installed: {{ composer_version_output.stdout_lines[0] }}"
-  when: not ansible_check_mode and composer_version_output.stdout_lines | length > 0
+    msg: "Composer installed: {{ php_composer_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and php_composer_version_output.stdout_lines | length > 0
 
 - name: Check if Symfony CLI is installed
   ansible.builtin.stat:
     path: /usr/bin/symfony
-  register: symfony_cli_stat
+  register: php_symfony_cli_stat
 
 - name: Set up Symfony CLI repository
   ansible.builtin.shell: >
@@ -166,7 +166,7 @@
   args:
     creates: /etc/apt/sources.list.d/symfony-stable.list
   become: true
-  when: ansible_os_family == "Debian" and not symfony_cli_stat.stat.exists
+  when: ansible_os_family == "Debian" and not php_symfony_cli_stat.stat.exists
 
 - name: Install Symfony CLI (Linux)
   ansible.builtin.apt:
@@ -202,11 +202,11 @@
 
 - name: Verify Symfony CLI installation
   ansible.builtin.command: symfony version
-  register: symfony_version_output
+  register: php_symfony_version_output
   changed_when: false
   failed_when: false
 
 - name: Display Symfony CLI version
   ansible.builtin.debug:
-    msg: "Symfony CLI installed: {{ symfony_version_output.stdout_lines[0] }}"
-  when: not ansible_check_mode and symfony_version_output.rc == 0 and symfony_version_output.stdout_lines | length > 0
+    msg: "Symfony CLI installed: {{ php_symfony_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and php_symfony_version_output.rc == 0 and php_symfony_version_output.stdout_lines | length > 0
