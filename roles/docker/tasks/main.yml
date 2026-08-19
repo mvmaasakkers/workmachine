@@ -110,7 +110,7 @@
     state: present
   become: true
   when: ansible_os_family == "Debian"
-  notify: restart docker
+  notify: Restart docker
 
 - name: Ensure Docker service is started and enabled
   ansible.builtin.service:

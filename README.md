@@ -131,7 +131,9 @@ Available tags:
 - `docker`, `containers` - Docker setup
 - `nvim`, `editor` - Neovim setup
 - `php`, `phpactor`, `go`, `golang`, `rust`, `rustup`, `cargo`, `nodejs`, `node`, `python`, `languages` - Programming languages
-- `claude-code`, `claude`, `codex`, `opencode`, `ai`, `tools` - AI coding assistants
+- `claude-code`, `claude`, `codex`, `opencode`, `herdr`, `ai`, `tools` - AI coding assistants
+- `mise` - mise tool version manager
+- `termix`, `ssh` - Termix client (SSH server management)
 - `terraform`, `packer`, `iac`, `devops` - Infrastructure as Code tools
 - `azure-cli`, `azure`, `gcloud`, `gcp`, `cloud` - Cloud provider CLIs
 - `sql-formatter`, `sqlfluff`, `sql`, `database` - SQL tools
@@ -185,6 +187,9 @@ workmachine/
 │   ├── claude-code/            # Claude Code CLI
 │   ├── codex/                  # Codex CLI
 │   ├── opencode/               # OpenCode CLI
+│   ├── herdr/                  # Herdr (runtime for coding agents)
+│   ├── mise/                   # mise (dev tool version manager)
+│   ├── termix/                 # Termix desktop client (SSH management)
 │   ├── terraform/              # HashiCorp Terraform
 │   ├── packer/                 # HashiCorp Packer
 │   ├── azure-cli/              # Microsoft Azure CLI
@@ -221,6 +226,8 @@ After the setup completes:
    claude --version
    codex --version
    opencode --version
+   mise --version
+   herdr --version
    terraform --version
    packer --version
    az --version

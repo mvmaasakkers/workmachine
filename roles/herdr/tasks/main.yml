@@ -1,0 +1,35 @@
+---
+# Install Herdr (persistent runtime for coding agents) using the official installer
+# Documentation: https://herdr.dev/docs/install/
+# Always installs the latest release; Herdr is intentionally not version-pinned
+# and can update itself afterwards via `herdr update`.
+# Uses the same official installer on both macOS and Linux for consistency.
+
+- name: Ensure ~/.local/bin exists for Herdr
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: Install Herdr via official installer
+  ansible.builtin.shell: |
+    curl -fsSL https://herdr.dev/install.sh | sh
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.local/bin/herdr"
+  when: not ansible_check_mode
+
+- name: Verify Herdr installation
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    herdr --version
+  args:
+    executable: /bin/bash
+  register: herdr_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display Herdr version
+  ansible.builtin.debug:
+    msg: "Herdr installed: {{ herdr_version_output.stdout }}"
+  when: not ansible_check_mode and herdr_version_output.stdout | default('') | length > 0

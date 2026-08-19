@@ -8,7 +8,7 @@
 
 - name: Get installed Go version
   ansible.builtin.command: "{{ go_install_dir }}/go/bin/go version"
-  register: installed_go_version
+  register: go_installed_version
   changed_when: false
   failed_when: false
   check_mode: false
@@ -16,11 +16,11 @@
 
 - name: Debug Go version check
   ansible.builtin.debug:
-    msg: "Binary exists: {{ go_binary.stat.exists }}, Installed version: '{{ installed_go_version.stdout | default('N/A') }}', Target version: '{{ go_version }}'"
+    msg: "Binary exists: {{ go_binary.stat.exists }}, Installed version: '{{ go_installed_version.stdout | default('N/A') }}', Target version: '{{ go_version }}'"
 
 - name: Set Go needs installation flag
   ansible.builtin.set_fact:
-    go_needs_install: "{{ not go_binary.stat.exists or go_version not in (installed_go_version.stdout | default('')) }}"
+    go_needs_install: "{{ not go_binary.stat.exists or go_version not in (go_installed_version.stdout | default('')) }}"
 
 - name: Set Go platform
   ansible.builtin.set_fact:

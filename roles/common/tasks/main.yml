@@ -137,14 +137,14 @@
     signed_by: /etc/apt/keyrings/charm.gpg
     state: present
   become: true
-  register: charm_repo_added
+  register: common_charm_repo_added
   when: ansible_os_family == "Debian"
 
 - name: Update apt cache after adding Charm repo (Linux)
   ansible.builtin.apt:
     update_cache: true
   become: true
-  when: ansible_os_family == "Debian" and charm_repo_added is changed
+  when: ansible_os_family == "Debian" and common_charm_repo_added is changed
 
 - name: Install glow (Linux)
   ansible.builtin.package:
@@ -197,34 +197,34 @@
 
 - name: Set eza platform architecture
   ansible.builtin.set_fact:
-    eza_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'aarch64' }}"
+    common_eza_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'aarch64' }}"
   when: ansible_os_family == "Debian"
 
 - name: Check if eza is installed
   ansible.builtin.stat:
     path: /usr/local/bin/eza
-  register: eza_binary
+  register: common_eza_binary
   when: ansible_os_family == "Debian"
 
 - name: Get installed eza version
   ansible.builtin.command: /usr/local/bin/eza --version
-  register: installed_eza_version
+  register: common_installed_eza_version
   changed_when: false
   failed_when: false
-  when: ansible_os_family == "Debian" and eza_binary.stat.exists
+  when: ansible_os_family == "Debian" and common_eza_binary.stat.exists
 
 - name: Set eza needs installation flag
   ansible.builtin.set_fact:
-    eza_needs_install: "{{ not eza_binary.stat.exists or eza_version not in (installed_eza_version.stdout | default('')) }}"
+    common_eza_needs_install: "{{ not common_eza_binary.stat.exists or eza_version not in (common_installed_eza_version.stdout | default('')) }}"
   when: ansible_os_family == "Debian"
 
 - name: Download eza (Linux)
   ansible.builtin.get_url:
-    url: "https://github.com/eza-community/eza/releases/download/v{{ eza_version }}/eza_{{ eza_arch }}-unknown-linux-gnu.tar.gz"
+    url: "https://github.com/eza-community/eza/releases/download/v{{ eza_version }}/eza_{{ common_eza_arch }}-unknown-linux-gnu.tar.gz"
     dest: "/tmp/eza_{{ eza_version }}.tar.gz"
     mode: "0644"
     timeout: 30
-  when: ansible_os_family == "Debian" and eza_needs_install
+  when: ansible_os_family == "Debian" and common_eza_needs_install
 
 - name: Extract eza (Linux)
   ansible.builtin.unarchive:
@@ -232,20 +232,20 @@
     dest: /usr/local/bin
     remote_src: true
   become: true
-  when: ansible_os_family == "Debian" and eza_needs_install
+  when: ansible_os_family == "Debian" and common_eza_needs_install
 
 - name: Ensure eza is executable
   ansible.builtin.file:
     path: /usr/local/bin/eza
     mode: "0755"
   become: true
-  when: ansible_os_family == "Debian" and eza_needs_install
+  when: ansible_os_family == "Debian" and common_eza_needs_install
 
 - name: Clean up eza tarball
   ansible.builtin.file:
     path: "/tmp/eza_{{ eza_version }}.tar.gz"
     state: absent
-  when: ansible_os_family == "Debian" and eza_needs_install
+  when: ansible_os_family == "Debian" and common_eza_needs_install
 
 - name: Create fd symlink (Linux - Debian/Ubuntu package installs as fdfind)
   ansible.builtin.file:
@@ -272,42 +272,42 @@
 - name: Check if lazygit is installed
   ansible.builtin.stat:
     path: /usr/local/bin/lazygit
-  register: lazygit_binary
+  register: common_lazygit_binary
 
 - name: Get installed lazygit version
   ansible.builtin.command: /usr/local/bin/lazygit --version
-  register: installed_lazygit_version
+  register: common_installed_lazygit_version
   changed_when: false
   failed_when: false
-  when: lazygit_binary.stat.exists
+  when: common_lazygit_binary.stat.exists
 
 - name: Set lazygit needs installation flag
   ansible.builtin.set_fact:
-    lazygit_needs_install: "{{ not lazygit_binary.stat.exists or lazygit_version not in (installed_lazygit_version.stdout | default('')) }}"
+    common_lazygit_needs_install: "{{ not common_lazygit_binary.stat.exists or lazygit_version not in (common_installed_lazygit_version.stdout | default('')) }}"
 
 - name: Set platform and architecture for lazygit
   ansible.builtin.set_fact:
-    lazygit_platform: "{{ 'Darwin' if ansible_os_family == 'Darwin' else 'Linux' }}"
-    lazygit_arch: "{{ 'x86_64' if arch_map[ansible_architecture] == 'amd64' else 'arm64' }}"
+    common_lazygit_platform: "{{ 'Darwin' if ansible_os_family == 'Darwin' else 'Linux' }}"
+    common_lazygit_arch: "{{ 'x86_64' if arch_map[ansible_architecture] == 'amd64' else 'arm64' }}"
 
 - name: Download lazygit
   ansible.builtin.get_url:
-    url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_{{ lazygit_platform }}_{{ lazygit_arch }}.tar.gz"
+    url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_{{ common_lazygit_platform }}_{{ common_lazygit_arch }}.tar.gz"
     dest: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
     mode: "0644"
     timeout: 30
-  when: lazygit_needs_install
+  when: common_lazygit_needs_install
 
 - name: Check if lazygit tarball was downloaded
   ansible.builtin.stat:
     path: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
-  register: lazygit_tarball_stat
+  register: common_lazygit_tarball_stat
 
 - name: Extract lazygit (macOS)
   ansible.builtin.shell: |
     tar -xzf "/tmp/lazygit_{{ lazygit_version }}.tar.gz" -C /usr/local/bin lazygit
   become: true
-  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists and ansible_os_family == "Darwin"
+  when: common_lazygit_needs_install and common_lazygit_tarball_stat.stat.exists and ansible_os_family == "Darwin"
 
 - name: Extract lazygit (Linux)
   ansible.builtin.unarchive:
@@ -317,20 +317,20 @@
     include:
       - lazygit
   become: true
-  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists and ansible_os_family == "Debian"
+  when: common_lazygit_needs_install and common_lazygit_tarball_stat.stat.exists and ansible_os_family == "Debian"
 
 - name: Ensure lazygit is executable
   ansible.builtin.file:
     path: /usr/local/bin/lazygit
     mode: "0755"
   become: true
-  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists
+  when: common_lazygit_needs_install and common_lazygit_tarball_stat.stat.exists
 
 - name: Clean up lazygit tarball
   ansible.builtin.file:
     path: "/tmp/lazygit_{{ lazygit_version }}.tar.gz"
     state: absent
-  when: lazygit_needs_install and lazygit_tarball_stat.stat.exists
+  when: common_lazygit_needs_install and common_lazygit_tarball_stat.stat.exists
 
 - name: Ensure sudo has correct ownership and setuid permissions (Linux)
   ansible.builtin.file:

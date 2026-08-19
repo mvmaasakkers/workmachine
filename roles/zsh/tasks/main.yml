@@ -30,21 +30,21 @@
 - name: Check if Nerd Fonts are already installed
   ansible.builtin.stat:
     path: "{{ font_dir }}/NerdFonts"
-  register: nerd_fonts_stat
+  register: zsh_nerd_fonts_stat
 
 - name: Download and install Nerd Fonts (Hack, Meslo, FiraCode, JetBrainsMono)
-  when: not nerd_fonts_stat.stat.exists
+  when: not zsh_nerd_fonts_stat.stat.exists
   block:
     - name: Create temporary directory for fonts
       ansible.builtin.tempfile:
         state: directory
         suffix: nerdfonts
-      register: fonts_temp_dir
+      register: zsh_fonts_temp_dir
 
     - name: Download Nerd Fonts
       ansible.builtin.get_url:
         url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/{{ zsh_nerd_font_name }}.zip"
-        dest: "{{ fonts_temp_dir.path | default('/tmp') }}/{{ zsh_nerd_font_name }}.zip"
+        dest: "{{ zsh_fonts_temp_dir.path | default('/tmp') }}/{{ zsh_nerd_font_name }}.zip"
         mode: '0644'
         timeout: 60
       loop:
@@ -65,7 +65,7 @@
 
     - name: Extract Nerd Fonts
       ansible.builtin.unarchive:
-        src: "{{ fonts_temp_dir.path | default('/tmp') }}/{{ zsh_nerd_font_name }}.zip"
+        src: "{{ zsh_fonts_temp_dir.path | default('/tmp') }}/{{ zsh_nerd_font_name }}.zip"
         dest: "{{ font_dir }}/NerdFonts"
         remote_src: true
       loop:
@@ -79,9 +79,9 @@
 
     - name: Clean up temporary font files
       ansible.builtin.file:
-        path: "{{ fonts_temp_dir.path | default('/tmp/nerdfonts') }}"
+        path: "{{ zsh_fonts_temp_dir.path | default('/tmp/nerdfonts') }}"
         state: absent
-      when: fonts_temp_dir.path is defined
+      when: zsh_fonts_temp_dir.path is defined
 
 - name: Update font cache (Linux only)
   ansible.builtin.command: fc-cache -fv
@@ -91,7 +91,7 @@
 - name: Check if oh-my-zsh is already installed
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.oh-my-zsh"
-  register: ohmyzsh_stat
+  register: zsh_ohmyzsh_stat
 
 - name: Download oh-my-zsh installer
   ansible.builtin.get_url:
@@ -100,8 +100,8 @@
     mode: '0755'
     force: true
     timeout: 30
-  when: not ohmyzsh_stat.stat.exists
-  register: ohmyzsh_download
+  when: not zsh_ohmyzsh_stat.stat.exists
+  register: zsh_ohmyzsh_download
 
 - name: Install oh-my-zsh
   ansible.builtin.shell: |
@@ -152,7 +152,7 @@
 - name: Check current ~/.zshrc status
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.zshrc"
-  register: zshrc_current
+  register: zsh_zshrc_current
 
 - name: Check if zsh config .zshrc exists
   ansible.builtin.stat:
@@ -165,8 +165,8 @@
     state: absent
   when:
     - zsh_config_zshrc_stat.stat.exists
-    - zshrc_current.stat.exists
-    - not zshrc_current.stat.islnk or zshrc_current.stat.lnk_target != zsh_config_dir + '/.zshrc'
+    - zsh_zshrc_current.stat.exists
+    - not zsh_zshrc_current.stat.islnk or zsh_zshrc_current.stat.lnk_target != zsh_config_dir + '/.zshrc'
 
 - name: Create symlink from ~/.zshrc to config repo
   ansible.builtin.file:
@@ -190,7 +190,7 @@
 
 - name: Check if shell is already zsh
   ansible.builtin.shell: "echo $SHELL"
-  register: current_shell_result
+  register: zsh_current_shell_result
   changed_when: false
   check_mode: false
 
@@ -199,7 +199,7 @@
     name: "{{ ansible_user_id }}"
     shell: "{{ zsh_path_result.stdout }}"
   become: true
-  when: "'zsh' not in (current_shell_result.stdout | default(''))"
+  when: "'zsh' not in (zsh_current_shell_result.stdout | default(''))"
 
 - name: Create VS Code Server data directory
   ansible.builtin.file:
