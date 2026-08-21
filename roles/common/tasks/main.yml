@@ -54,10 +54,16 @@
 # Arch carries every tool (including the optional Debian ones) in its official
 # repos, so a single pacman task replaces the whole apt + GitHub-release dance.
 # The Nerd Fonts are included here because they normally come from the zsh
-# role, which is skipped on Arch/Omarchy.
+# role, which is skipped on Arch/Omarchy. Omarchy already ships JetBrains Mono
+# Nerd via its own ttf-jetbrains-mono-nerd-basic package, which conflicts with
+# the full ttf-jetbrains-mono-nerd, so that one is only added elsewhere.
 - name: Install common CLI tools (Arch)
   community.general.pacman:
-    name:
+    name: "{{ common_arch_packages + ([] if is_omarchy else ['ttf-jetbrains-mono-nerd']) }}"
+    state: present
+  become: true
+  vars:
+    common_arch_packages:
       - git
       - curl
       - wget
@@ -84,10 +90,7 @@
       - glow
       - ttf-hack-nerd
       - ttf-firacode-nerd
-      - ttf-jetbrains-mono-nerd
       - ttf-meslo-nerd
-    state: present
-  become: true
   when: is_arch
 
 - name: Check optional CLI package availability (Linux)
