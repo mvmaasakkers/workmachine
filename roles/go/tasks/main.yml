@@ -26,9 +26,11 @@
   ansible.builtin.set_fact:
     go_platform: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
 
+# include=all: the default listing only carries the newest patch per branch,
+# so a pin that is even one patch release behind would otherwise "not exist"
 - name: Fetch and parse Go versions JSON to get checksum
   ansible.builtin.shell: |
-    curl -s 'https://go.dev/dl/?mode=json' | \
+    curl -s 'https://go.dev/dl/?mode=json&include=all' | \
     jq -r '.[] | select(.version == "go{{ go_version }}") | .files[] | select(.filename == "go{{ go_version }}.{{ go_platform }}-{{ go_arch }}.tar.gz") | .sha256' | head -1
   register: go_checksum_result
   changed_when: false
