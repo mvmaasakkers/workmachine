@@ -15,6 +15,45 @@
     state: present
   when: ansible_os_family == "Darwin"
 
+# Arch installation via Google's official tarball (no pacman package exists);
+# extracted to /opt with the CLIs symlinked onto PATH
+- name: Install Google Cloud SDK (Arch)
+  when:
+    - is_arch
+    - gcloud_current_version.rc != 0
+  become: true
+  block:
+    - name: Download Google Cloud CLI tarball
+      ansible.builtin.get_url:
+        url: "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-{{ 'x86_64' if ansible_architecture == 'x86_64' else 'arm' }}.tar.gz"
+        dest: /tmp/google-cloud-cli.tar.gz
+        mode: '0644'
+        timeout: 120
+
+    - name: Extract Google Cloud CLI to /opt
+      ansible.builtin.unarchive:
+        src: /tmp/google-cloud-cli.tar.gz
+        dest: /opt
+        remote_src: true
+        creates: /opt/google-cloud-sdk
+
+    - name: Symlink Google Cloud CLIs into /usr/local/bin
+      ansible.builtin.file:
+        src: "/opt/google-cloud-sdk/bin/{{ gcloud_binary }}"
+        dest: "/usr/local/bin/{{ gcloud_binary }}"
+        state: link
+      loop:
+        - gcloud
+        - gsutil
+        - bq
+      loop_control:
+        loop_var: gcloud_binary
+
+    - name: Clean up Google Cloud CLI tarball
+      ansible.builtin.file:
+        path: /tmp/google-cloud-cli.tar.gz
+        state: absent
+
 # Linux installation via Google's official apt repository
 - name: Install Google Cloud SDK (Linux)
   when: ansible_os_family == "Debian"

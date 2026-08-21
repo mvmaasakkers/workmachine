@@ -32,6 +32,10 @@ packer_checksums:
 # Platform detection
 is_macos: "{{ ansible_os_family == 'Darwin' }}"
 is_linux: "{{ ansible_os_family == 'Debian' }}"
+is_arch: "{{ ansible_os_family == 'Archlinux' }}"
+# Overridden by a pre_task in playbooks/setup.yml when /usr/share/omarchy
+# exists on an Arch host (Omarchy preinstalls and manages many of our tools).
+is_omarchy: false
 
 # Architecture mapping
 # Maps ansible_architecture to common architecture names used in downloads

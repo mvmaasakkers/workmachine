@@ -42,7 +42,9 @@
     state: absent
   become: true
 
-# Install via official installer (same method on both macOS and Linux)
+# Install via official installer (same method on both macOS and Linux).
+# On Omarchy, ~/.local/bin/claude is the Omarchy-managed mise wrapper, so the
+# creates guard leaves that installation alone.
 - name: Install Claude Code via official installer
   ansible.builtin.shell: |
     curl -fsSL https://claude.ai/install.sh | bash

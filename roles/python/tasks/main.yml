@@ -99,6 +99,41 @@
   become: true
   when: ansible_os_family == "Debian" and (python_version is not defined or not python_pin_available | default(true))
 
+# Arch rolls a single current Python; the pinned version check below only
+# decides which verify task runs, mirroring the Debian fallback behaviour.
+- name: Install Python and development tools (Arch)
+  community.general.pacman:
+    name:
+      - python
+      - python-pip
+      - python-pipx
+      - python-setuptools
+      - python-wheel
+      - python-virtualenv
+      - python-pytest
+    state: present
+  become: true
+  when: is_arch
+
+- name: Get Arch Python version
+  ansible.builtin.command: python3 --version
+  register: python_arch_version
+  changed_when: false
+  when: is_arch
+
+- name: Set Python pin availability flag (Arch)
+  ansible.builtin.set_fact:
+    python_pin_available: "{{ ('Python ' ~ python_version ~ '.') in python_arch_version.stdout }}"
+  when: is_arch and python_version is defined
+
+- name: Warn when pinned Python does not match the Arch package (Arch)
+  ansible.builtin.debug:
+    msg: "python{{ python_version }} is pinned but Arch ships {{ python_arch_version.stdout }}; using the distro Python instead."
+  when:
+    - is_arch
+    - python_version is defined
+    - not python_pin_available
+
 - name: Ensure pipx path is configured
   ansible.builtin.command: pipx ensurepath
   register: python_pipx_ensurepath

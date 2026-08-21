@@ -29,6 +29,9 @@ install-ansible:
 	elif which apt > /dev/null 2>&1; then \
 		echo "Installing Ansible via apt..."; \
 		sudo apt update && sudo apt install -y ansible; \
+	elif which pacman > /dev/null 2>&1; then \
+		echo "Installing Ansible via pacman..."; \
+		sudo pacman -S --needed --noconfirm ansible; \
 	else \
 		echo "Installing Ansible via pip..."; \
 		pip3 install --user ansible 2>/dev/null || pip install ansible-core; \
@@ -41,6 +44,9 @@ install-ansible-lint:
 	elif which apt > /dev/null 2>&1; then \
 		echo "Installing ansible-lint via apt..."; \
 		sudo apt install -y ansible-lint 2>/dev/null || pip install ansible-lint; \
+	elif which pacman > /dev/null 2>&1; then \
+		echo "Installing ansible-lint via pacman..."; \
+		sudo pacman -S --needed --noconfirm ansible-lint; \
 	else \
 		echo "Installing ansible-lint via pipx..."; \
 		pipx install ansible-lint; \

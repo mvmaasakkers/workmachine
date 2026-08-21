@@ -51,6 +51,48 @@
   become: true
   when: ansible_os_family == "Debian"
 
+# Arch carries every tool (including the optional Debian ones) in its official
+# repos, so a single pacman task replaces the whole apt + GitHub-release dance.
+# The Nerd Fonts are included here because they normally come from the zsh
+# role, which is skipped on Arch/Omarchy. Omarchy already ships JetBrains Mono
+# Nerd via its own ttf-jetbrains-mono-nerd-basic package, which conflicts with
+# the full ttf-jetbrains-mono-nerd, so that one is only added elsewhere.
+- name: Install common CLI tools (Arch)
+  community.general.pacman:
+    name: "{{ common_arch_packages + ([] if is_omarchy else ['ttf-jetbrains-mono-nerd']) }}"
+    state: present
+  become: true
+  vars:
+    common_arch_packages:
+      - git
+      - curl
+      - wget
+      - unzip
+      - tmux
+      - base-devel
+      - ca-certificates
+      - gnupg
+      - make
+      - jq
+      - fzf
+      - ripgrep
+      - fd
+      - perl-image-exiftool
+      - postgresql # for psql; the server stays disabled
+      - bat
+      - btop
+      - git-delta
+      - mkcert
+      - go-yq # mikefarah yq, the same tool Homebrew ships as yq
+      - zoxide
+      - eza
+      - lazygit
+      - glow
+      - ttf-hack-nerd
+      - ttf-firacode-nerd
+      - ttf-meslo-nerd
+  when: is_arch
+
 - name: Check optional CLI package availability (Linux)
   ansible.builtin.command: "apt-cache show {{ common_optional_cli_package }}"
   loop:
@@ -95,6 +137,8 @@
     - ansible_os_family == "Debian"
     - common_unavailable_optional_packages | length > 0
 
+# Omarchy already appends ~/.local/bin to PATH via its env-bootstrap
+# (/etc/profile.d/omarchy.sh and the default bashrc), so leave its bashrc alone.
 - name: Ensure ~/.local/bin is on PATH in .bashrc
   ansible.builtin.lineinfile:
     path: "{{ ansible_env.HOME }}/.bashrc"
@@ -102,6 +146,7 @@
     state: present
     create: true
     mode: '0644'
+  when: not is_omarchy
 
 - name: Ensure ~/.local/bin is on PATH in .profile
   ansible.builtin.lineinfile:
@@ -110,6 +155,7 @@
     state: present
     create: true
     mode: '0644'
+  when: not is_omarchy
 
 - name: Create /etc/apt/keyrings directory (Linux)
   ansible.builtin.file:
@@ -281,9 +327,10 @@
   failed_when: false
   when: common_lazygit_binary.stat.exists
 
+# On Arch lazygit comes from pacman, so the GitHub-release install never runs there
 - name: Set lazygit needs installation flag
   ansible.builtin.set_fact:
-    common_lazygit_needs_install: "{{ not common_lazygit_binary.stat.exists or lazygit_version not in (common_installed_lazygit_version.stdout | default('')) }}"
+    common_lazygit_needs_install: "{{ not is_arch and (not common_lazygit_binary.stat.exists or lazygit_version not in (common_installed_lazygit_version.stdout | default(''))) }}"
 
 - name: Set platform and architecture for lazygit
   ansible.builtin.set_fact:

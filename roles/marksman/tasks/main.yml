@@ -13,7 +13,7 @@
     marksman_arch_map:
       x86_64: "x64"
       aarch64: "arm64"
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family in ["Debian", "Archlinux"]
 
 - name: Set Marksman asset name
   ansible.builtin.set_fact:
@@ -26,10 +26,10 @@
     state: present
   when: ansible_os_family == "Darwin"
 
-# Linux installation via GitHub release binary
+# Linux installation via GitHub release binary (Debian and Arch)
 - name: Install Marksman (Linux)
   when:
-    - ansible_os_family == "Debian"
+    - ansible_os_family in ["Debian", "Archlinux"]
     - marksman_current_version.rc != 0 or marksman_version not in marksman_current_version.stdout
   become: true
   block:
