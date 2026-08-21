@@ -80,6 +80,11 @@
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       export NVM_DIR="$HOME/.nvm"
       . "$NVM_DIR/nvm.sh"
+    elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
+      # Omarchy: route npm/node through the mise-managed installation; plain
+      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead
+      npm() { mise x node -- npm "$@"; }
+      node() { mise x node -- node "$@"; }
     fi
     node --version
   args:
@@ -96,6 +101,11 @@
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       export NVM_DIR="$HOME/.nvm"
       . "$NVM_DIR/nvm.sh"
+    elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
+      # Omarchy: route npm/node through the mise-managed installation; plain
+      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead
+      npm() { mise x node -- npm "$@"; }
+      node() { mise x node -- node "$@"; }
     fi
     npm --version
   args:
@@ -107,13 +117,18 @@
   ansible.builtin.debug:
     msg: "npm installed: {{ nodejs_npm_version_output.stdout }}"
 
-# The nvm sourcing is a no-op on Omarchy, where npm resolves through the mise
-# shims and installs globals into the mise-managed Node prefix.
+# On Omarchy the shells below route npm through `mise x node`, installing
+# globals into the user-owned mise-managed Node prefix.
 - name: Check installed global npm packages
   ansible.builtin.shell: |
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       export NVM_DIR="$HOME/.nvm"
       . "$NVM_DIR/nvm.sh"
+    elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
+      # Omarchy: route npm/node through the mise-managed installation; plain
+      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead
+      npm() { mise x node -- npm "$@"; }
+      node() { mise x node -- node "$@"; }
     fi
     npm list -g --depth=0 --json 2>/dev/null || echo '{}'
   args:
@@ -127,6 +142,11 @@
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       export NVM_DIR="$HOME/.nvm"
       . "$NVM_DIR/nvm.sh"
+    elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
+      # Omarchy: route npm/node through the mise-managed installation; plain
+      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead
+      npm() { mise x node -- npm "$@"; }
+      node() { mise x node -- node "$@"; }
     fi
     npm install -g {{ nodejs_package }}
   args:
@@ -144,6 +164,13 @@
   register: nodejs_npm_install_result
   changed_when: "'added' in nodejs_npm_install_result.stdout"
   when: not ansible_check_mode and nodejs_package not in ((nodejs_npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys()
+
+# Regenerate the mise shims so freshly installed npm globals (yarn, pnpm, ...)
+# resolve in every shell without an explicit `mise x`
+- name: Refresh mise shims for global npm binaries (Omarchy)
+  ansible.builtin.command: mise reshim
+  changed_when: false
+  when: is_omarchy and not ansible_check_mode
 
 - name: Symlink global npm bins (yarn/pnpm/neonctl) into ~/.local/bin
   ansible.builtin.shell: |

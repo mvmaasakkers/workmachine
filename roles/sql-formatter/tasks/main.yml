@@ -16,6 +16,10 @@
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       export NVM_DIR="$HOME/.nvm"
       . "$NVM_DIR/nvm.sh"
+    elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
+      # Omarchy: route npm through the mise-managed installation; plain PATH
+      # lookup here finds the root-owned pacman npm (/usr/lib) instead
+      npm() { mise x node -- npm "$@"; }
     fi
     npm list -g --depth=0 --json 2>/dev/null || echo '{}'
   args:
@@ -29,6 +33,10 @@
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       export NVM_DIR="$HOME/.nvm"
       . "$NVM_DIR/nvm.sh"
+    elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
+      # Omarchy: route npm through the mise-managed installation; plain PATH
+      # lookup here finds the root-owned pacman npm (/usr/lib) instead
+      npm() { mise x node -- npm "$@"; }
     fi
     npm install -g sql-formatter
   args:
@@ -38,6 +46,12 @@
   when: >
     ansible_os_family in ["Debian", "Archlinux"] and not ansible_check_mode
     and 'sql-formatter' not in ((sql_formatter_npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys()
+
+# Regenerate the mise shims so the sql-formatter binary resolves in every shell
+- name: Refresh mise shims for the sql-formatter binary (Omarchy)
+  ansible.builtin.command: mise reshim
+  changed_when: false
+  when: is_omarchy and not ansible_check_mode
 
 - name: Symlink sql-formatter into ~/.local/bin (Linux)
   ansible.builtin.shell: |
@@ -61,8 +75,12 @@
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       export NVM_DIR="$HOME/.nvm"
       . "$NVM_DIR/nvm.sh"
+      sql-formatter --version
+    elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
+      mise x node -- sql-formatter --version
+    else
+      sql-formatter --version
     fi
-    sql-formatter --version
   args:
     executable: /bin/bash
   register: sql_formatter_version_output_linux

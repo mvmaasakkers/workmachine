@@ -39,6 +39,10 @@
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       export NVM_DIR="$HOME/.nvm"
       . "$NVM_DIR/nvm.sh"
+    elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
+      # Omarchy: route npm through the mise-managed installation; plain PATH
+      # lookup here finds the root-owned pacman npm (/usr/lib) instead
+      npm() { mise x node -- npm "$@"; }
     fi
     npm list -g --depth=0 --json 2>/dev/null || echo '{}'
   args:
@@ -52,6 +56,10 @@
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       export NVM_DIR="$HOME/.nvm"
       . "$NVM_DIR/nvm.sh"
+    elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
+      # Omarchy: route npm through the mise-managed installation; plain PATH
+      # lookup here finds the root-owned pacman npm (/usr/lib) instead
+      npm() { mise x node -- npm "$@"; }
     fi
     npm install -g @colbymchenry/codegraph
   args:
@@ -62,8 +70,15 @@
     - not ansible_check_mode
     - "'@colbymchenry/codegraph' not in ((codegraph_npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys()"
 
-# On Omarchy the mise-managed Node bin directory is already on PATH, and its
-# path changes on Node upgrades, so a symlink would go stale — skip it there.
+# Regenerate the mise shims so the codegraph binary resolves in every shell
+# (the MCP server config below relies on `codegraph` being on PATH)
+- name: Refresh mise shims for the codegraph binary (Omarchy)
+  ansible.builtin.command: mise reshim
+  changed_when: false
+  when: is_omarchy and not ansible_check_mode
+
+# On Omarchy the mise shims cover codegraph, and the Node bin path changes on
+# upgrades, so a symlink would go stale — skip it there.
 - name: Create stable codegraph symlink in ~/.local/bin
   ansible.builtin.shell: |
     export NVM_DIR="$HOME/.nvm"
@@ -158,8 +173,12 @@
 
 - name: Verify codegraph installation
   ansible.builtin.shell: |
-    export PATH="$HOME/.local/bin:$PATH"
-    codegraph --version
+    if command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1 && [ ! -s "$HOME/.nvm/nvm.sh" ]; then
+      mise x node -- codegraph --version
+    else
+      export PATH="$HOME/.local/bin:$PATH"
+      codegraph --version
+    fi
   args:
     executable: /bin/bash
   register: codegraph_version_output
