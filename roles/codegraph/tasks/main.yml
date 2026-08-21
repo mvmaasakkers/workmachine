@@ -41,8 +41,10 @@
       . "$NVM_DIR/nvm.sh"
     elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
       # Omarchy: route npm through the mise-managed installation; plain PATH
-      # lookup here finds the root-owned pacman npm (/usr/lib) instead
-      npm() { mise x node -- npm "$@"; }
+      # lookup here finds the root-owned pacman npm (/usr/lib) instead. Pin
+      # the global prefix to the mise install so no session npm_config_prefix
+      # (or other config source) can redirect it to /usr.
+      npm() { env npm_config_prefix="$(mise where node)" NPM_CONFIG_PREFIX="$(mise where node)" mise x node -- npm "$@"; }
     fi
     npm list -g --depth=0 --json 2>/dev/null || echo '{}'
   args:
@@ -58,8 +60,10 @@
       . "$NVM_DIR/nvm.sh"
     elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
       # Omarchy: route npm through the mise-managed installation; plain PATH
-      # lookup here finds the root-owned pacman npm (/usr/lib) instead
-      npm() { mise x node -- npm "$@"; }
+      # lookup here finds the root-owned pacman npm (/usr/lib) instead. Pin
+      # the global prefix to the mise install so no session npm_config_prefix
+      # (or other config source) can redirect it to /usr.
+      npm() { env npm_config_prefix="$(mise where node)" NPM_CONFIG_PREFIX="$(mise where node)" mise x node -- npm "$@"; }
     fi
     npm install -g @colbymchenry/codegraph
   args:

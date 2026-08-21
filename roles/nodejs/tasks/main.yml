@@ -82,8 +82,10 @@
       . "$NVM_DIR/nvm.sh"
     elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
       # Omarchy: route npm/node through the mise-managed installation; plain
-      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead
-      npm() { mise x node -- npm "$@"; }
+      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead.
+      # Pin the global prefix to the mise install so no session
+      # npm_config_prefix (or other config source) can redirect it to /usr.
+      npm() { env npm_config_prefix="$(mise where node)" NPM_CONFIG_PREFIX="$(mise where node)" mise x node -- npm "$@"; }
       node() { mise x node -- node "$@"; }
     fi
     node --version
@@ -103,8 +105,10 @@
       . "$NVM_DIR/nvm.sh"
     elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
       # Omarchy: route npm/node through the mise-managed installation; plain
-      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead
-      npm() { mise x node -- npm "$@"; }
+      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead.
+      # Pin the global prefix to the mise install so no session
+      # npm_config_prefix (or other config source) can redirect it to /usr.
+      npm() { env npm_config_prefix="$(mise where node)" NPM_CONFIG_PREFIX="$(mise where node)" mise x node -- npm "$@"; }
       node() { mise x node -- node "$@"; }
     fi
     npm --version
@@ -126,8 +130,10 @@
       . "$NVM_DIR/nvm.sh"
     elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
       # Omarchy: route npm/node through the mise-managed installation; plain
-      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead
-      npm() { mise x node -- npm "$@"; }
+      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead.
+      # Pin the global prefix to the mise install so no session
+      # npm_config_prefix (or other config source) can redirect it to /usr.
+      npm() { env npm_config_prefix="$(mise where node)" NPM_CONFIG_PREFIX="$(mise where node)" mise x node -- npm "$@"; }
       node() { mise x node -- node "$@"; }
     fi
     npm list -g --depth=0 --json 2>/dev/null || echo '{}'
@@ -144,8 +150,10 @@
       . "$NVM_DIR/nvm.sh"
     elif command -v mise >/dev/null 2>&1 && mise which node >/dev/null 2>&1; then
       # Omarchy: route npm/node through the mise-managed installation; plain
-      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead
-      npm() { mise x node -- npm "$@"; }
+      # PATH lookup here finds the root-owned pacman npm (/usr/lib) instead.
+      # Pin the global prefix to the mise install so no session
+      # npm_config_prefix (or other config source) can redirect it to /usr.
+      npm() { env npm_config_prefix="$(mise where node)" NPM_CONFIG_PREFIX="$(mise where node)" mise x node -- npm "$@"; }
       node() { mise x node -- node "$@"; }
     fi
     npm install -g {{ nodejs_package }}
