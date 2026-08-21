@@ -11,13 +11,22 @@
     state: directory
     mode: '0755'
 
+# Omarchy ships herdr as a pacman package (/usr/bin/herdr) and its own
+# migrations actively delete a user-level copy: a stale ~/.local/bin/herdr can
+# shadow the packaged client with an older wire protocol. Mirror that here.
+- name: Remove user-level Herdr that would shadow the packaged client (Omarchy)
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin/herdr"
+    state: absent
+  when: is_omarchy
+
 - name: Install Herdr via official installer
   ansible.builtin.shell: |
     curl -fsSL https://herdr.dev/install.sh | sh
   args:
     executable: /bin/bash
     creates: "{{ ansible_env.HOME }}/.local/bin/herdr"
-  when: not ansible_check_mode
+  when: not is_omarchy and not ansible_check_mode
 
 - name: Verify Herdr installation
   ansible.builtin.shell: |

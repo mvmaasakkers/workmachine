@@ -1,5 +1,8 @@
 ---
 # Node.js role - Install Node.js via nvm (cross-platform)
+# On Omarchy, Node.js is already managed by mise (seeded by the Omarchy
+# installer), so the whole nvm path is skipped there and the global packages
+# are installed through the mise-managed npm instead.
 
 - name: Check if nvm is already installed
   ansible.builtin.stat:
@@ -11,7 +14,7 @@
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v{{ nvm_version }}/install.sh | bash
   args:
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
-  when: not nodejs_nvm_installed.stat.exists
+  when: not is_omarchy and not nodejs_nvm_installed.stat.exists
 
 - name: Ensure nvm is sourced in .bashrc
   ansible.builtin.blockinfile:
@@ -23,6 +26,7 @@
       [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
     create: true
     mode: '0644'
+  when: not is_omarchy
 
 - name: Remove prefix/globalconfig from .npmrc (incompatible with nvm)
   ansible.builtin.lineinfile:
@@ -40,6 +44,7 @@
     executable: /bin/bash
   register: nodejs_nvm_install_result
   changed_when: "'is already installed' not in nodejs_nvm_install_result.stderr"
+  when: not is_omarchy
 
 - name: Set default Node.js version
   ansible.builtin.shell: |
@@ -49,6 +54,7 @@
   args:
     executable: /bin/bash
   changed_when: false
+  when: not is_omarchy
 
 - name: Ensure ~/.local/bin exists
   ansible.builtin.file:
@@ -67,11 +73,14 @@
   args:
     executable: /bin/bash
   changed_when: true
+  when: not is_omarchy
 
 - name: Get Node.js version
   ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+      export NVM_DIR="$HOME/.nvm"
+      . "$NVM_DIR/nvm.sh"
+    fi
     node --version
   args:
     executable: /bin/bash
@@ -84,8 +93,10 @@
 
 - name: Get npm version
   ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+      export NVM_DIR="$HOME/.nvm"
+      . "$NVM_DIR/nvm.sh"
+    fi
     npm --version
   args:
     executable: /bin/bash
@@ -96,10 +107,14 @@
   ansible.builtin.debug:
     msg: "npm installed: {{ nodejs_npm_version_output.stdout }}"
 
+# The nvm sourcing is a no-op on Omarchy, where npm resolves through the mise
+# shims and installs globals into the mise-managed Node prefix.
 - name: Check installed global npm packages
   ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+      export NVM_DIR="$HOME/.nvm"
+      . "$NVM_DIR/nvm.sh"
+    fi
     npm list -g --depth=0 --json 2>/dev/null || echo '{}'
   args:
     executable: /bin/bash
@@ -109,8 +124,10 @@
 
 - name: Install common global npm packages
   ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+      export NVM_DIR="$HOME/.nvm"
+      . "$NVM_DIR/nvm.sh"
+    fi
     npm install -g {{ nodejs_package }}
   args:
     executable: /bin/bash
@@ -141,6 +158,7 @@
   args:
     executable: /bin/bash
   changed_when: true
+  when: not is_omarchy
 
 # Install Bun (cross-platform JavaScript runtime and toolkit)
 - name: Check if Bun is already installed
@@ -157,6 +175,7 @@
     BUN_INSTALL: "{{ ansible_env.HOME }}/.bun"
   when: not nodejs_bun_installed.stat.exists
 
+# On Omarchy the shell is bash and no ~/.zshrc exists; don't create a stray one
 - name: Ensure Bun PATH in .zshrc
   ansible.builtin.lineinfile:
     path: "{{ ansible_env.HOME }}/.zshrc"
@@ -164,6 +183,7 @@
     state: present
     create: true
     mode: '0644'
+  when: not is_omarchy
 
 - name: Ensure Bun PATH in .bashrc
   ansible.builtin.lineinfile:

@@ -112,13 +112,25 @@
   when: ansible_os_family == "Debian"
   notify: Restart docker
 
+# Arch installation (Omarchy ships these in its base install already)
+- name: Install Docker (Arch)
+  community.general.pacman:
+    name:
+      - docker
+      - docker-compose
+      - docker-buildx
+    state: present
+  become: true
+  when: ansible_os_family == "Archlinux"
+  notify: Restart docker
+
 - name: Ensure Docker service is started and enabled
   ansible.builtin.service:
     name: docker
     state: started
     enabled: true
   become: true
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family in ["Debian", "Archlinux"]
 
 - name: Add user to docker group
   ansible.builtin.user:
@@ -129,7 +141,7 @@
   loop: "{{ docker_users }}"
   loop_control:
     loop_var: docker_user
-  when: ansible_os_family == "Debian" and docker_users is defined
+  when: ansible_os_family in ["Debian", "Archlinux"] and docker_users is defined
 
 - name: Verify Docker installation
   ansible.builtin.command: docker --version

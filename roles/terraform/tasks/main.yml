@@ -44,10 +44,11 @@
     state: present
   when: ansible_os_family == "Darwin"
 
-# Linux installation via zip download
+# Linux installation via zip download (Debian and Arch: the pinned HashiCorp
+# release keeps versions consistent with vars.yml on both)
 - name: Install Terraform (Linux)
   when:
-    - ansible_os_family == "Debian"
+    - ansible_os_family in ["Debian", "Archlinux"]
     - terraform_needs_install
   become: true
   block:

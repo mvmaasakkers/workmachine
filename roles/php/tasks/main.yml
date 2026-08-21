@@ -100,11 +100,59 @@
   become: true
   when: ansible_os_family == "Debian"
 
+# Arch is a rolling release and carries a single current PHP (matching the
+# pin as long as vars.yml tracks the latest stable). Most extensions ship
+# inside the main php package as disabled shared modules; the split packages
+# below add the rest. The amqp extension has no official Arch package — grab
+# AUR php-amqp manually if a project needs it.
+- name: Install PHP, Composer and Symfony CLI (Arch)
+  community.general.pacman:
+    name:
+      - php
+      - php-gd
+      - php-pgsql
+      - php-sqlite
+      - php-redis
+      - composer
+      - symfony-cli
+    state: present
+  become: true
+  when: is_arch
+
+# Shared modules are shipped disabled on Arch. Build the enable list from what
+# is actually available as a module and not already compiled in, so the
+# generated ini never double-loads an extension (which would warn on every run).
+- name: Determine PHP extensions to enable (Arch)
+  ansible.builtin.shell: |
+    set -o pipefail
+    builtin_modules=$(php -n -m | tr '[:upper:]' '[:lower:]')
+    for ext in bcmath curl gd gmp iconv intl mbstring pdo_pgsql pgsql pdo_sqlite sqlite3 soap sodium redis zip; do
+      if ! printf '%s\n' "$builtin_modules" | grep -qx "$ext" && [ -f "/usr/lib/php/modules/$ext.so" ]; then
+        echo "extension=$ext"
+      fi
+    done
+  args:
+    executable: /bin/bash
+  register: php_arch_extensions
+  changed_when: false
+  when: is_arch and not ansible_check_mode
+
+- name: Enable PHP extensions (Arch)
+  ansible.builtin.copy:
+    content: |
+      ; Managed by workmachine ansible - extensions used by our projects
+      {{ php_arch_extensions.stdout }}
+    dest: /etc/php/conf.d/workmachine.ini
+    mode: '0644'
+  become: true
+  when: is_arch and not ansible_check_mode
+
 - name: Check if Composer is installed
   ansible.builtin.stat:
     path: /usr/local/bin/composer
   register: php_composer_stat
 
+# On Arch composer comes from pacman (/usr/bin/composer), so skip the installer
 - name: Download Composer installer
   ansible.builtin.get_url:
     url: https://getcomposer.org/installer
@@ -112,7 +160,7 @@
     checksum: "sha384:https://composer.github.io/installer.sig"
     mode: '0644'
     timeout: 30
-  when: not php_composer_stat.stat.exists
+  when: not is_arch and not php_composer_stat.stat.exists
 
 - name: Install Composer
   ansible.builtin.command: >
@@ -120,7 +168,7 @@
   args:
     creates: /usr/local/bin/composer
   become: true
-  when: not php_composer_stat.stat.exists
+  when: not is_arch and not php_composer_stat.stat.exists
 
 - name: Check if Composer was actually installed
   ansible.builtin.stat:

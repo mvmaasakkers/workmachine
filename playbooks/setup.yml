@@ -24,9 +24,21 @@
     - name: Ensure system is supported
       ansible.builtin.assert:
         that:
-          - ansible_os_family in ["Debian", "Darwin"]
-        fail_msg: "This playbook only supports Debian/Ubuntu/Pop!_OS and macOS systems"
+          - ansible_os_family in ["Debian", "Darwin", "Archlinux"]
+        fail_msg: "This playbook only supports Debian/Ubuntu/Pop!_OS, Arch Linux (incl. Omarchy) and macOS systems"
         success_msg: "Compatible OS detected: {{ ansible_distribution }}"
+      tags: ['always']
+
+    - name: Detect Omarchy (Arch with /usr/share/omarchy)
+      ansible.builtin.stat:
+        path: /usr/share/omarchy
+      register: omarchy_install_dir
+      tags: ['always']
+
+    - name: Record whether this host runs Omarchy
+      ansible.builtin.set_fact:
+        is_omarchy: "{{ ansible_os_family == 'Archlinux' and omarchy_install_dir.stat.exists }}"
+      tags: ['always']
 
     - name: Update apt cache (Linux)
       ansible.builtin.apt:
@@ -34,6 +46,12 @@
         cache_valid_time: 3600
       become: true
       when: ansible_os_family == "Debian"
+
+    - name: Update pacman cache (Arch)
+      community.general.pacman:
+        update_cache: true
+      become: true
+      when: ansible_os_family == "Archlinux"
 
     - name: Ensure Homebrew is installed (macOS)
       ansible.builtin.stat:
@@ -55,8 +73,11 @@
     - role: git
       tags: ['git', 'base']
 
+    # Skipped on Arch/Omarchy for now: Omarchy's shell layer (aliases, mise,
+    # starship, zoxide) lives in bash. Revisit if zsh is wanted there later.
     - role: zsh
       tags: ['zsh', 'shell']
+      when: ansible_os_family != "Archlinux"
 
     - role: alacritty
       tags: ['alacritty', 'terminal', 'shell']

@@ -101,6 +101,7 @@
     path: /tmp/rustup-init.sh
     state: absent
 
+# On Omarchy the shell is bash and no ~/.zshrc exists; don't create a stray one
 - name: Add Cargo binaries to shell PATH
   ansible.builtin.lineinfile:
     path: "{{ ansible_env.HOME }}/{{ rust_shell_file }}"
@@ -108,10 +109,7 @@
     state: present
     create: true
     mode: "0644"
-  loop:
-    - .bashrc
-    - .profile
-    - .zshrc
+  loop: "{{ ['.bashrc', '.profile'] + ([] if is_omarchy else ['.zshrc']) }}"
   loop_control:
     loop_var: rust_shell_file
 

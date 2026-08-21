@@ -1,4 +1,7 @@
 ---
+# On Omarchy, codex is installed and updated through the Omarchy-managed mise
+# wrapper (~/.local/bin/codex), so the npm/nvm path below is skipped there —
+# reinstalling via npm would shadow the mise-managed copy.
 
 - name: Ensure ~/.local/bin exists for Codex
   ansible.builtin.file:
@@ -10,6 +13,7 @@
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
   register: codex_nvm_installed
+  when: not is_omarchy
 
 - name: Ensure Node.js via nvm is installed before Codex
   ansible.builtin.assert:
@@ -17,6 +21,7 @@
       - codex_nvm_installed.stat.exists
     fail_msg: "Codex installation requires the nodejs role to run first so npm is available through nvm."
     success_msg: "nvm is available for Codex installation."
+  when: not is_omarchy
 
 - name: Check installed global npm packages for Codex
   ansible.builtin.shell: |
@@ -27,7 +32,7 @@
     executable: /bin/bash
   register: codex_npm_global_list
   changed_when: false
-  when: not ansible_check_mode
+  when: not is_omarchy and not ansible_check_mode
 
 - name: Install Codex CLI via npm
   ansible.builtin.shell: |
@@ -39,6 +44,7 @@
   register: codex_install_result
   changed_when: "'added' in codex_install_result.stdout or 'changed' in codex_install_result.stdout or 'removed' in codex_install_result.stdout"
   when:
+    - not is_omarchy
     - not ansible_check_mode
     - "'@openai/codex' not in ((codex_npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys() or (((codex_npm_global_list.stdout | default('{}') | from_json).dependencies['@openai/codex'].version | default('')) != codex_version)"
 
@@ -51,7 +57,7 @@
   args:
     executable: /bin/bash
   changed_when: false
-  when: not ansible_check_mode
+  when: not is_omarchy and not ansible_check_mode
 
 - name: Verify Codex CLI installation
   ansible.builtin.shell: |

@@ -66,6 +66,58 @@
   become: true
   when: ansible_os_family == "Debian" and netbird_version is not defined
 
+# Arch has no official Netbird package; install the pinned GitHub release
+# binary and register the systemd service (without connecting).
+- name: Check current Netbird version (Arch)
+  ansible.builtin.command: netbird version
+  register: netbird_current_arch
+  changed_when: false
+  failed_when: false
+  when: is_arch
+
+- name: Install Netbird client (Arch)
+  when:
+    - is_arch
+    - netbird_current_arch.rc != 0 or netbird_version not in netbird_current_arch.stdout
+  become: true
+  block:
+    - name: Download Netbird release tarball
+      ansible.builtin.get_url:
+        url: "https://github.com/netbirdio/netbird/releases/download/v{{ netbird_version }}/netbird_{{ netbird_version }}_linux_{{ arch_map[ansible_architecture] | default('amd64') }}.tar.gz"
+        dest: "/tmp/netbird_{{ netbird_version }}.tar.gz"
+        mode: '0644'
+        timeout: 60
+
+    - name: Extract Netbird binary
+      ansible.builtin.unarchive:
+        src: "/tmp/netbird_{{ netbird_version }}.tar.gz"
+        dest: /usr/local/bin
+        remote_src: true
+        include:
+          - netbird
+
+    - name: Ensure Netbird binary is executable
+      ansible.builtin.file:
+        path: /usr/local/bin/netbird
+        mode: '0755'
+
+    - name: Register Netbird system service
+      ansible.builtin.command: /usr/local/bin/netbird service install
+      args:
+        creates: /etc/systemd/system/netbird.service
+
+    - name: Restart and enable Netbird service
+      ansible.builtin.systemd_service:
+        name: netbird
+        state: restarted
+        enabled: true
+        daemon_reload: true
+
+    - name: Clean up Netbird tarball
+      ansible.builtin.file:
+        path: "/tmp/netbird_{{ netbird_version }}.tar.gz"
+        state: absent
+
 - name: Get installed Netbird version
   ansible.builtin.command: netbird version
   register: netbird_version_output

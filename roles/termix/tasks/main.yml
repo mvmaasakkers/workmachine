@@ -16,7 +16,7 @@
       - /usr/share/wayland-sessions
     patterns: "*.desktop"
   register: termix_desktop_sessions
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family in ["Debian", "Archlinux"]
 
 - name: Determine whether this machine has a desktop
   ansible.builtin.set_fact:
@@ -58,6 +58,74 @@
     name: termix
     state: present
   when: ansible_os_family == "Darwin"
+
+# Arch installation: Termix publishes no pacman package, so use the AppImage
+# release with a wrapper symlink and desktop entry.
+- name: Install AppImage runtime dependency (Arch)
+  community.general.pacman:
+    name: fuse2
+    state: present
+  become: true
+  when: is_arch and termix_has_desktop | bool
+
+- name: Check whether the Termix AppImage is already installed (Arch)
+  ansible.builtin.stat:
+    path: /opt/termix/termix.AppImage
+  register: termix_appimage_stat
+  when: is_arch and termix_has_desktop | bool
+
+- name: Install Termix client from the latest GitHub release AppImage (Arch)
+  when:
+    - is_arch
+    - termix_has_desktop | bool
+    - not ansible_check_mode
+    - not termix_appimage_stat.stat.exists
+  become: true
+  vars:
+    termix_arch_map:
+      x86_64: "x64"
+      aarch64: "arm64"
+      armv7l: "armv7l"
+  block:
+    - name: Create /opt/termix directory
+      ansible.builtin.file:
+        path: /opt/termix
+        state: directory
+        mode: '0755'
+
+    - name: Download Termix AppImage
+      ansible.builtin.get_url:
+        url: "https://github.com/Termix-SSH/Termix/releases/latest/download/termix_linux_{{ termix_arch_map[ansible_architecture] | default('x64') }}_appimage.AppImage"
+        dest: /opt/termix/termix.AppImage
+        mode: '0755'
+        timeout: 120
+
+    - name: Symlink termix into /usr/local/bin
+      ansible.builtin.file:
+        src: /opt/termix/termix.AppImage
+        dest: /usr/local/bin/termix
+        state: link
+
+    - name: Install Termix desktop entry
+      ansible.builtin.copy:
+        content: |
+          [Desktop Entry]
+          Name=Termix
+          Comment=SSH server management platform
+          Exec=/opt/termix/termix.AppImage
+          Type=Application
+          Categories=Network;RemoteAccess;
+          Terminal=false
+        dest: /usr/local/share/applications/termix.desktop
+        mode: '0644'
+
+- name: Display Termix client status (Arch)
+  ansible.builtin.debug:
+    msg: "Termix client installed as AppImage at /opt/termix/termix.AppImage"
+  when:
+    - is_arch
+    - not ansible_check_mode
+    - termix_has_desktop | bool
 
 - name: Check whether the Termix client is already installed (Linux)
   ansible.builtin.command: dpkg-query -W termix

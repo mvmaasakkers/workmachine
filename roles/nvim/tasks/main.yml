@@ -96,6 +96,14 @@
     state: absent
   when: ansible_os_family == "Debian" and nvim_needs_install
 
+# Arch (and Omarchy, which preinstalls it) tracks the latest stable release
+- name: Install Neovim (Arch)
+  community.general.pacman:
+    name: neovim
+    state: present
+  become: true
+  when: is_arch
+
 - name: Install Neovim (macOS)
   community.general.homebrew:
     name: neovim
@@ -119,6 +127,70 @@
     dest: "{{ neovim_config_dir }}/"
     mode: preserve
 
+# The colorscheme lives outside files/ so it can differ per platform: a fixed
+# Catppuccin Mocha everywhere, except on Omarchy where the colorscheme comes
+# from the active Omarchy theme (see the symlinks below) and a competing
+# colorscheme spec would fight it.
+- name: Deploy fixed Catppuccin colorscheme (non-Omarchy)
+  ansible.builtin.template:
+    src: colorscheme.lua
+    dest: "{{ neovim_config_dir }}/lua/plugins/colorscheme.lua"
+    mode: '0644'
+  when: not is_omarchy
+
+- name: Remove fixed colorscheme in favor of Omarchy theming (Omarchy)
+  ansible.builtin.file:
+    path: "{{ neovim_config_dir }}/lua/plugins/colorscheme.lua"
+    state: absent
+  when: is_omarchy
+
+- name: Ensure plugin/after directory exists (Omarchy)
+  ansible.builtin.file:
+    path: "{{ neovim_config_dir }}/plugin/after"
+    state: directory
+    mode: '0755'
+  when: is_omarchy
+
+# Theme integration from the omarchy-nvim package: theme.lua points at the
+# active theme's generated colorscheme spec, the /usr/share links track the
+# package so `omarchy update` keeps them current, and the hotreload plugin
+# reapplies colors live on `omarchy theme set`.
+- name: Link Omarchy theme integration into the Neovim config (Omarchy)
+  ansible.builtin.file:
+    src: "{{ nvim_omarchy_link.src }}"
+    dest: "{{ neovim_config_dir }}/{{ nvim_omarchy_link.dest }}"
+    state: link
+    force: true
+  loop:
+    - src: "{{ ansible_env.HOME }}/.local/state/omarchy/current/theme/neovim.lua"
+      dest: lua/plugins/theme.lua
+    - src: /usr/share/omarchy-nvim/config/lua/plugins/all-themes.lua
+      dest: lua/plugins/all-themes.lua
+    - src: /usr/share/omarchy-nvim/config/lua/plugins/omarchy-theme-hotreload.lua
+      dest: lua/plugins/omarchy-theme-hotreload.lua
+    - src: /usr/share/omarchy-nvim/config/plugin/after/transparency.lua
+      dest: plugin/after/transparency.lua
+  loop_control:
+    loop_var: nvim_omarchy_link
+  when: is_omarchy
+
+# Leftovers from the omarchy-nvim /etc/skel seed that this role does not
+# manage; the remaining plugin specs would otherwise keep loading alongside
+# our own (e.g. our snacks.lua config).
+- name: Remove unmanaged Omarchy skeleton files (Omarchy)
+  ansible.builtin.file:
+    path: "{{ neovim_config_dir }}/{{ nvim_omarchy_leftover }}"
+    state: absent
+  loop:
+    - lua/plugins/disable-news-alert.lua
+    - lua/plugins/snacks-animated-scrolling-off.lua
+    - lua/config/remote_clipboard.lua
+    - README.md
+    - LICENSE
+  loop_control:
+    loop_var: nvim_omarchy_leftover
+  when: is_omarchy
+
 # timeout: a headless nvim waiting on an interactive prompt would otherwise hang forever
 - name: Install lazy.nvim and plugins
   ansible.builtin.command: nvim --headless "+Lazy! sync" +qa
@@ -134,7 +206,7 @@
     line: 'EDITOR=nvim'
     state: present
   become: true
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family in ["Debian", "Archlinux"]
 
 - name: Set nvim as default VISUAL editor system-wide (Linux)
   ansible.builtin.lineinfile:
@@ -143,7 +215,7 @@
     line: 'VISUAL=nvim'
     state: present
   become: true
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family in ["Debian", "Archlinux"]
 
 - name: Update alternatives for editor to nvim (Linux)
   community.general.alternatives:

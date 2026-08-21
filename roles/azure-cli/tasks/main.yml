@@ -15,6 +15,14 @@
     state: present
   when: ansible_os_family == "Darwin"
 
+# Arch installation via the official repos
+- name: Install Azure CLI (Arch)
+  community.general.pacman:
+    name: azure-cli
+    state: present
+  become: true
+  when: is_arch
+
 # Linux installation via Microsoft's official method
 - name: Install Azure CLI (Linux)
   when: ansible_os_family == "Debian"

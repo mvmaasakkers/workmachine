@@ -9,6 +9,14 @@
     state: present
   when: ansible_os_family == "Darwin"
 
+# Arch carries sqlfluff in its official repos
+- name: Install SQLFluff (Arch)
+  community.general.pacman:
+    name: sqlfluff
+    state: present
+  become: true
+  when: is_arch
+
 # Linux installation via pipx (pipx is provided by the python role)
 - name: Check installed pipx packages (Linux)
   ansible.builtin.command: pipx list

@@ -13,20 +13,23 @@
   when: ansible_os_family == "Darwin" and not ansible_check_mode
   changed_when: false
 
+# On Omarchy, opencode is provided through the Omarchy-managed mise wrapper at
+# ~/.local/bin/opencode; running the installer and symlinking over it would
+# break that wrapper, so both are skipped there.
 - name: Install OpenCode via official installer
   ansible.builtin.shell: |
     curl -fsSL https://opencode.ai/install | bash
   args:
     executable: /bin/bash
     creates: "{{ ansible_env.HOME }}/.opencode/bin/opencode"
-  when: not ansible_check_mode
+  when: not is_omarchy and not ansible_check_mode
 
 - name: Symlink opencode to ~/.local/bin
   ansible.builtin.file:
     src: "{{ ansible_env.HOME }}/.opencode/bin/opencode"
     dest: "{{ ansible_env.HOME }}/.local/bin/opencode"
     state: link
-  when: not ansible_check_mode
+  when: not is_omarchy and not ansible_check_mode
 
 - name: Ensure OpenCode config directory exists
   ansible.builtin.file:

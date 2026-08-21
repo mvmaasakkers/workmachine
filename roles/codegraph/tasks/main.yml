@@ -11,10 +11,14 @@
     state: directory
     mode: '0755'
 
+# On Omarchy npm resolves through the mise shims instead of nvm, so the nvm
+# presence check only applies elsewhere and the shells below source nvm
+# conditionally.
 - name: Check whether nvm is installed for CodeGraph
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
   register: codegraph_nvm_installed
+  when: not is_omarchy
 
 - name: Ensure Node.js via nvm is installed before CodeGraph
   ansible.builtin.assert:
@@ -22,6 +26,7 @@
       - codegraph_nvm_installed.stat.exists
     fail_msg: "CodeGraph installation requires the nodejs role to run first so npm is available through nvm."
     success_msg: "nvm is available for CodeGraph installation."
+  when: not is_omarchy
 
 - name: Remove deprecated codegraphcontext pipx install
   ansible.builtin.command: pipx uninstall codegraphcontext
@@ -31,8 +36,10 @@
 
 - name: Check installed global npm packages for CodeGraph
   ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+      export NVM_DIR="$HOME/.nvm"
+      . "$NVM_DIR/nvm.sh"
+    fi
     npm list -g --depth=0 --json 2>/dev/null || echo '{}'
   args:
     executable: /bin/bash
@@ -42,8 +49,10 @@
 
 - name: Install CodeGraph CLI via npm
   ansible.builtin.shell: |
-    export NVM_DIR="$HOME/.nvm"
-    . "$NVM_DIR/nvm.sh"
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+      export NVM_DIR="$HOME/.nvm"
+      . "$NVM_DIR/nvm.sh"
+    fi
     npm install -g @colbymchenry/codegraph
   args:
     executable: /bin/bash
@@ -53,6 +62,8 @@
     - not ansible_check_mode
     - "'@colbymchenry/codegraph' not in ((codegraph_npm_global_list.stdout | default('{}') | from_json).dependencies | default({})).keys()"
 
+# On Omarchy the mise-managed Node bin directory is already on PATH, and its
+# path changes on Node upgrades, so a symlink would go stale — skip it there.
 - name: Create stable codegraph symlink in ~/.local/bin
   ansible.builtin.shell: |
     export NVM_DIR="$HOME/.nvm"
@@ -62,7 +73,7 @@
   args:
     executable: /bin/bash
   changed_when: false
-  when: not ansible_check_mode
+  when: not is_omarchy and not ansible_check_mode
 
 - name: Ensure ~/.claude.json exists
   ansible.builtin.shell: |

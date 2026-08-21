@@ -16,7 +16,15 @@
   args:
     executable: /bin/bash
     creates: "{{ ansible_env.HOME }}/.local/bin/mise"
-  when: not ansible_check_mode
+  when: not is_arch and not ansible_check_mode
+
+# Arch packages mise (and Omarchy preinstalls it as the primary tool manager)
+- name: Install mise (Arch)
+  community.general.pacman:
+    name: mise
+    state: present
+  become: true
+  when: is_arch
 
 - name: Activate mise in .zshrc
   ansible.builtin.lineinfile:
@@ -25,6 +33,7 @@
     state: present
     create: true
     mode: '0644'
+  when: not is_arch
 
 - name: Activate mise in .bashrc
   ansible.builtin.lineinfile:
@@ -33,6 +42,18 @@
     state: present
     create: true
     mode: '0644'
+  when: not is_arch
+
+# Omarchy's default bash rc chain already runs `mise activate bash`; only a
+# plain Arch install needs the hook, pointing at the pacman binary.
+- name: Activate mise in .bashrc (Arch)
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: 'eval "$(/usr/bin/mise activate bash)"'
+    state: present
+    create: true
+    mode: '0644'
+  when: is_arch and not is_omarchy
 
 - name: Verify mise installation
   ansible.builtin.shell: |

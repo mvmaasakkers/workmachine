@@ -36,6 +36,14 @@
   become: true
   when: ansible_os_family == "Debian"
 
+# Preinstalled on Omarchy; a plain Arch host gets it from the official repos
+- name: Install Alacritty (Arch)
+  community.general.pacman:
+    name: alacritty
+    state: present
+  become: true
+  when: is_arch
+
 - name: Check if Alacritty is already installed (macOS)
   ansible.builtin.stat:
     path: /Applications/Alacritty.app
@@ -64,6 +72,24 @@
     src: files/
     dest: "{{ alacritty_config_dir }}/"
     mode: preserve
+
+# alacritty.toml imports colors.toml; which colors land there is per platform.
+# follow: false so a copy never writes through a leftover Omarchy theme symlink.
+- name: Deploy static Catppuccin colors (non-Omarchy)
+  ansible.builtin.copy:
+    src: files/colors-catppuccin.toml
+    dest: "{{ alacritty_config_dir }}/colors.toml"
+    mode: '0644'
+    follow: false
+  when: not is_omarchy
+
+- name: Link colors.toml to the active Omarchy theme (Omarchy)
+  ansible.builtin.file:
+    src: "{{ ansible_env.HOME }}/.local/state/omarchy/current/theme/alacritty.toml"
+    dest: "{{ alacritty_config_dir }}/colors.toml"
+    state: link
+    force: true
+  when: is_omarchy
 
 - name: Verify Alacritty installation
   ansible.builtin.shell: |

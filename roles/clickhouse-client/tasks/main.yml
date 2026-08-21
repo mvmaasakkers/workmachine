@@ -14,6 +14,32 @@
     state: present
   when: ansible_os_family == "Darwin"
 
+# Arch has no official ClickHouse package; install the official static
+# multi-call binary and expose it under the clickhouse-client name.
+- name: Install clickhouse-client (Arch)
+  when:
+    - is_arch
+    - clickhouse_current_version.rc != 0
+  become: true
+  block:
+    - name: Download and install ClickHouse static binary
+      ansible.builtin.shell: |
+        set -euo pipefail
+        tmpdir=$(mktemp -d)
+        cd "$tmpdir"
+        curl -fsSL https://clickhouse.com/ | sh
+        install -m 0755 clickhouse /usr/local/bin/clickhouse
+        rm -rf "$tmpdir"
+      args:
+        executable: /bin/bash
+        creates: /usr/local/bin/clickhouse
+
+    - name: Symlink clickhouse-client to the multi-call binary
+      ansible.builtin.file:
+        src: /usr/local/bin/clickhouse
+        dest: /usr/local/bin/clickhouse-client
+        state: link
+
 # Linux installation via official ClickHouse apt repository
 - name: Install clickhouse-client (Linux)
   when:
@@ -59,7 +85,7 @@
   ansible.builtin.command: clickhouse-client --version
   register: clickhouse_version_output_linux
   changed_when: false
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family in ["Debian", "Archlinux"]
 
 - name: Display clickhouse-client version (macOS)
   ansible.builtin.debug:
@@ -69,4 +95,4 @@
 - name: Display clickhouse-client version (Linux)
   ansible.builtin.debug:
     msg: "clickhouse-client installed: {{ clickhouse_version_output_linux.stdout_lines[0] }}"
-  when: not ansible_check_mode and ansible_os_family == "Debian" and clickhouse_version_output_linux.stdout_lines | length > 0
+  when: not ansible_check_mode and ansible_os_family in ["Debian", "Archlinux"] and clickhouse_version_output_linux.stdout_lines | length > 0

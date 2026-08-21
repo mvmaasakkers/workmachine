@@ -1,10 +1,11 @@
 # Development Environment Setup with Ansible
 
-Automated configuration for **Linux** (Ubuntu/Debian/Pop!_OS) and **macOS** (Intel/Apple Silicon) using Ansible. This repository provides a complete, idempotent setup for a full-featured development environment.
+Automated configuration for **Linux** (Ubuntu/Debian/Pop!_OS and Arch/Omarchy) and **macOS** (Intel/Apple Silicon) using Ansible. This repository provides a complete, idempotent setup for a full-featured development environment.
 
 ## Platform Support
 
 - ✅ **Linux**: Ubuntu 22.04+, Debian 11+, Pop!_OS 22.04+
+- ✅ **Arch Linux**: including [Omarchy](https://omarchy.org/) 4 (see [Omarchy notes](#omarchy-4-arch-linux))
 - ✅ **macOS**: Intel and Apple Silicon (requires Homebrew)
 
 For remote Linux servers: Assumes a barebone server with SSH access and NOPASSWD sudo rights. Add an entry to inventory.ini and run `make setup`.
@@ -271,11 +272,23 @@ make setup-local
 
 Changes are deployed atomically with the rest of your environment setup.
 
+## Omarchy 4 (Arch Linux)
+
+On [Omarchy](https://omarchy.org/) the playbook deploys the same personal configs, but leans on what the distro already provides:
+
+- **Packages come from pacman** instead of apt/PPAs/GitHub tarballs (neovim, alacritty, tmux, lazygit, docker, mise, and the common CLI tools are preinstalled by Omarchy; the rest is installed from the official repos).
+- **Theme sync**: apps follow `omarchy theme set` where Omarchy supports it. The Neovim config links the omarchy-nvim theme integration (`theme.lua`, `all-themes.lua`, hot-reload, transparency) instead of the fixed Catppuccin colorscheme, and the Alacritty `colors.toml` is a symlink to the active theme. tmux and lazygit have no Omarchy theme hook, so they keep their own Catppuccin config.
+- **Skipped on Omarchy** because Omarchy manages them (via pacman or its mise wrappers in `~/.local/bin`): herdr, claude, codex, opencode, gh, nvm/Node.js (global npm packages are installed through the mise-managed Node instead).
+- **zsh is skipped on Arch/Omarchy** for now — Omarchy's shell layer (aliases, mise/starship/zoxide init) lives in bash. Revisit later if wanted.
+- **Not packaged for Arch**: the php `amqp` extension (grab AUR `php-amqp` if a project needs it). Netbird, ClickHouse, gcloud, and Termix install from official release binaries.
+
+Note on Omarchy updates: `omarchy update` migrations occasionally patch configs like `~/.config/tmux/tmux.conf` in place. Re-running the playbook restores the repo version; run `make check-local` after a big Omarchy update to review drift before overwriting it.
+
 ## Neovim Configuration
 
 Located in `roles/nvim/files/`. Uses [LazyVim](https://www.lazyvim.org/) as the base configuration.
 
-The setup copies the configuration to `~/.config/nvim/` and runs `Lazy! sync` to install plugins.
+The setup copies the configuration to `~/.config/nvim/` and runs `Lazy! sync` to install plugins. The colorscheme is deployed separately (`roles/nvim/templates/colorscheme.lua`): fixed Catppuccin Mocha everywhere except Omarchy, where the colorscheme follows the active Omarchy theme.
 
 ## tmux Configuration
 
@@ -498,7 +511,7 @@ This setup is fully idempotent - you can run it multiple times safely. It will:
 
 ## Requirements
 
-- **OS**: Ubuntu 22.04+, Debian 11+, Pop!_OS 22.04+, or macOS (Intel/Apple Silicon)
+- **OS**: Ubuntu 22.04+, Debian 11+, Pop!_OS 22.04+, Arch Linux (incl. Omarchy 4), or macOS (Intel/Apple Silicon)
 - **Python**: 3.6+
 - **macOS Only**: Homebrew (package manager)
 - **SSH**: Required for remote setup

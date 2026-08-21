@@ -6,7 +6,7 @@
     path: "{{ lazygit_config_dir_linux }}"
     state: directory
     mode: '0755'
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family in ["Debian", "Archlinux"]
 
 - name: Ensure lazygit config directory exists (macOS)
   ansible.builtin.file:
@@ -15,12 +15,14 @@
     mode: '0755'
   when: ansible_os_family == "Darwin"
 
+# On Omarchy this replaces the shipped lazygit default (a one-time seed;
+# nothing in Omarchy puts it back automatically)
 - name: Deploy lazygit config (Linux)
   ansible.builtin.copy:
     src: config.yml
     dest: "{{ lazygit_config_dir_linux }}/config.yml"
     mode: '0644'
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family in ["Debian", "Archlinux"]
 
 - name: Deploy lazygit config (macOS)
   ansible.builtin.copy:
