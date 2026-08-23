@@ -396,3 +396,17 @@
     group: "{{ ansible_user_gid }}"
     mode: "0755"
   become: true
+
+# Bash stays intact as the fallback shell on Omarchy (zsh is the login shell
+# via the zsh role). Omarchy aliases ls/lsa/lt to eza but ships no ll, so add
+# the one from our .zshrc here too; ~/.bashrc is Omarchy's designated place
+# for personal alias overrides.
+- name: Add ll alias to .bashrc (Omarchy)
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - shell aliases"
+    block: |
+      alias ll='eza -lah --icons --group-directories-first --git'
+    create: true
+    mode: '0644'
+  when: is_omarchy | default(false)
