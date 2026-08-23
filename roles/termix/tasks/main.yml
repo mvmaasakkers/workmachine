@@ -100,11 +100,63 @@
         mode: '0755'
         timeout: 120
 
+# Kept outside the download block so they are repaired on every run, even
+# when the AppImage itself is already present.
+- name: Integrate the Termix AppImage into the system (Arch)
+  when:
+    - is_arch
+    - termix_has_desktop | bool
+    - not ansible_check_mode
+  become: true
+  block:
     - name: Symlink termix into /usr/local/bin
       ansible.builtin.file:
         src: /opt/termix/termix.AppImage
         dest: /usr/local/bin/termix
         state: link
+
+    - name: Check whether the Termix icon is already extracted
+      ansible.builtin.stat:
+        path: /opt/termix/termix.png
+      register: termix_icon_stat
+
+    - name: Extract the Termix icon from the AppImage
+      when: not termix_icon_stat.stat.exists
+      block:
+        - name: Create a temporary icon extraction directory
+          ansible.builtin.tempfile:
+            state: directory
+            suffix: -termix-icon
+          register: termix_icon_tmp
+
+        # --appimage-extract unpacks from the embedded squashfs without FUSE.
+        # .DirIcon is a relative symlink into the image, so extract the link
+        # first, then its target.
+        - name: Extract the icon into /opt/termix
+          ansible.builtin.shell: |
+            set -euo pipefail
+            /opt/termix/termix.AppImage --appimage-extract '.DirIcon' > /dev/null
+            if [ -L squashfs-root/.DirIcon ]; then
+              /opt/termix/termix.AppImage --appimage-extract "$(readlink squashfs-root/.DirIcon)" > /dev/null
+            fi
+            install -m 0644 "$(readlink -f squashfs-root/.DirIcon)" /opt/termix/termix.png
+          args:
+            chdir: "{{ termix_icon_tmp.path }}"
+            executable: /bin/bash
+          changed_when: true
+
+        - name: Remove the temporary icon extraction directory
+          ansible.builtin.file:
+            path: "{{ termix_icon_tmp.path }}"
+            state: absent
+
+    # Arch ships no /usr/local/share/applications, but it is on the default
+    # XDG_DATA_DIRS search path.
+    - name: Create the local desktop entry directory
+      ansible.builtin.file:
+        path: /usr/local/share/applications
+        state: directory
+        mode: '0755'
 
     - name: Install Termix desktop entry
       ansible.builtin.copy:
@@ -113,6 +165,7 @@
           Name=Termix
           Comment=SSH server management platform
           Exec=/opt/termix/termix.AppImage
+          Icon=/opt/termix/termix.png
           Type=Application
           Categories=Network;RemoteAccess;
           Terminal=false
