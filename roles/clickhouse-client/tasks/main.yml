@@ -28,11 +28,16 @@
         tmpdir=$(mktemp -d)
         cd "$tmpdir"
         curl -fsSL https://clickhouse.com/ | sh
+        # The download is a self-extracting stub that decompresses itself in
+        # place on first run. Trigger that here, while it is still in a
+        # writable tmpdir, so the installed binary works for unprivileged
+        # users (the stub cannot rewrite itself inside /usr/local/bin).
+        ./clickhouse --version > /dev/null
         install -m 0755 clickhouse /usr/local/bin/clickhouse
         rm -rf "$tmpdir"
       args:
         executable: /bin/bash
-        creates: /usr/local/bin/clickhouse
+      changed_when: true
 
     - name: Symlink clickhouse-client to the multi-call binary
       ansible.builtin.file:

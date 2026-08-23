@@ -13,6 +13,14 @@
   become: true
   when: ansible_os_family == "Debian"
 
+- name: Install zsh (Arch Linux)
+  ansible.builtin.package:
+    name:
+      - zsh
+    state: present
+  become: true
+  when: ansible_os_family == "Archlinux"
+
 - name: Install zsh and dependencies (macOS)
   community.general.homebrew:
     name:
@@ -21,19 +29,24 @@
     state: present
   when: ansible_os_family == "Darwin"
 
+# Skipped on Arch: Omarchy already ships Nerd Fonts
 - name: Create fonts directory
   ansible.builtin.file:
     path: "{{ font_dir }}"
     state: directory
     mode: '0755'
+  when: ansible_os_family != "Archlinux"
 
 - name: Check if Nerd Fonts are already installed
   ansible.builtin.stat:
     path: "{{ font_dir }}/NerdFonts"
   register: zsh_nerd_fonts_stat
+  when: ansible_os_family != "Archlinux"
 
 - name: Download and install Nerd Fonts (Hack, Meslo, FiraCode, JetBrainsMono)
-  when: not zsh_nerd_fonts_stat.stat.exists
+  when:
+    - ansible_os_family != "Archlinux"
+    - not zsh_nerd_fonts_stat.stat.exists
   block:
     - name: Create temporary directory for fonts
       ansible.builtin.tempfile:

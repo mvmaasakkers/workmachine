@@ -30,6 +30,15 @@ case "$OSTYPE" in
     ;;
 esac
 
+# Detect Omarchy (Arch Linux + Hyprland distro). On Omarchy this .zshrc
+# defers to Omarchy's own shell environment (starship prompt, eza aliases,
+# EDITOR) — see the omarchy.zsh sourced at the bottom.
+if [[ -d "/usr/share/omarchy" ]]; then
+  _IS_OMARCHY=true
+else
+  _IS_OMARCHY=false
+fi
+
 # ==============================================================================
 # PATH Configuration
 # ==============================================================================
@@ -56,7 +65,13 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export ZSH="$HOME/.oh-my-zsh"
 
 # Theme - https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="workmachine"
+# On Omarchy the prompt comes from starship (initialized in omarchy.zsh) so
+# it follows `omarchy theme set`; skip the oh-my-zsh theme there.
+if [[ "$_IS_OMARCHY" == true ]]; then
+  ZSH_THEME=""
+else
+  ZSH_THEME="workmachine"
+fi
 
 # Plugins - https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins
 # Note: virtualenvwrapper plugin requires virtualenvwrapper to be installed
@@ -90,16 +105,23 @@ fi
 # Shell Settings
 # ==============================================================================
 
-# 256 color support
-export TERM="xterm-256color"
+# 256 color support. Not on Omarchy: overriding TERM breaks kitty detection
+# (the ff alias' image preview) and other terminal features.
+if [[ "$_IS_OMARCHY" != true ]]; then
+  export TERM="xterm-256color"
+fi
 
-# Default editor (use nvim if available, fall back to vim)
-if command -v nvim &> /dev/null; then
-  export EDITOR="nvim"
-  export VISUAL="nvim"
-elif command -v vim &> /dev/null; then
-  export EDITOR="vim"
-  export VISUAL="vim"
+# Default editor (use nvim if available, fall back to vim).
+# On Omarchy, EDITOR is left unset here so Omarchy's envs sets it to
+# `omarchy-launch-editor --inline` (sourced via omarchy.zsh).
+if [[ "$_IS_OMARCHY" != true ]]; then
+  if command -v nvim &> /dev/null; then
+    export EDITOR="nvim"
+    export VISUAL="nvim"
+  elif command -v vim &> /dev/null; then
+    export EDITOR="vim"
+    export VISUAL="vim"
+  fi
 fi
 
 # ==============================================================================
@@ -169,7 +191,11 @@ if [[ "$_IS_MACOS" == true ]]; then
 fi
 
 # eza (modern ls replacement)
-if command -v eza &> /dev/null; then
+# On Omarchy the eza aliases (ls/lsa/lt/lta) come from Omarchy's own aliases
+# file (sourced via omarchy.zsh); only add ll, which Omarchy does not define.
+if [[ "$_IS_OMARCHY" == true ]]; then
+  alias ll='eza -lah --icons --group-directories-first --git'
+elif command -v eza &> /dev/null; then
   unalias ls 2>/dev/null
   alias ll='eza -lah --icons --group-directories-first --git'
   alias la='eza -a --icons --group-directories-first'
@@ -262,8 +288,8 @@ export PATH="$HOME/.bun/bin:$PATH"
 # Modern CLI Tools
 # ==============================================================================
 
-# zoxide (smart cd replacement)
-if command -v zoxide &> /dev/null; then
+# zoxide (smart cd replacement) — on Omarchy this is initialized in omarchy.zsh
+if [[ "$_IS_OMARCHY" != true ]] && command -v zoxide &> /dev/null; then
   eval "$(zoxide init zsh)"
 fi
 
@@ -272,4 +298,15 @@ if command -v bat &> /dev/null; then
   alias cat='bat --style=plain --paging=never'
 elif command -v batcat &> /dev/null; then
   alias cat='batcat --style=plain --paging=never'
+fi
+
+# ==============================================================================
+# Omarchy (Arch Linux + Hyprland)
+# ==============================================================================
+
+# Layer in Omarchy's shell environment: envs, aliases, fns, mise/starship/
+# zoxide init, and the omarchy completion. Sourced last so Omarchy's aliases
+# and prompt win over anything defined above.
+if [[ "$_IS_OMARCHY" == true ]]; then
+  source "$HOME/.config/zsh/omarchy.zsh"
 fi

@@ -73,11 +73,10 @@
     - role: git
       tags: ['git', 'base']
 
-    # Skipped on Arch/Omarchy for now: Omarchy's shell layer (aliases, mise,
-    # starship, zoxide) lives in bash. Revisit if zsh is wanted there later.
+    # On Arch/Omarchy, omarchy.zsh (sourced from .zshrc) layers Omarchy's
+    # shell environment (envs, aliases, fns, mise/starship/zoxide) into zsh.
     - role: zsh
       tags: ['zsh', 'shell']
-      when: ansible_os_family != "Archlinux"
 
     - role: alacritty
       tags: ['alacritty', 'terminal', 'shell']
