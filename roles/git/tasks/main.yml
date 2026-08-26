@@ -1,5 +1,5 @@
 ---
-# Git role - Configure global gitignore
+# Git role - Configure global gitignore, defaults and SSH commit signing
 # User-specific settings (name, email) should be configured manually
 
 - name: Ensure git config directory exists
@@ -43,3 +43,44 @@
     name: delta.light
     scope: global
     state: absent
+
+# Commit signing with a dedicated SSH key, kept separate from the
+# authentication key so both can be rotated independently. The public key
+# still needs to be added to GitHub manually as a signing key.
+- name: Generate SSH signing keypair
+  community.crypto.openssh_keypair:
+    path: "{{ git_signing_key }}"
+    type: ed25519
+    comment: "git-signing-{{ ansible_hostname }}"
+    mode: '0600'
+  register: git_signing_keypair
+
+- name: Configure SSH commit signing
+  community.general.git_config:
+    name: "{{ git_setting.name }}"
+    value: "{{ git_setting.value }}"
+    scope: global
+  loop:
+    - { name: "gpg.format", value: "ssh" }
+    - { name: "user.signingKey", value: "{{ git_signing_key }}.pub" }
+    - { name: "commit.gpgsign", value: "true" }
+    - { name: "tag.gpgsign", value: "true" }
+    - { name: "gpg.ssh.allowedSignersFile", value: "{{ ansible_env.HOME }}/.config/git/allowed_signers" }
+  loop_control:
+    loop_var: git_setting
+
+- name: Read configured git user email
+  ansible.builtin.command: git config --global user.email
+  register: git_user_email
+  changed_when: false
+  failed_when: false
+
+# Allows verification of your own signatures (git log --show-signature)
+- name: Generate allowed_signers file
+  ansible.builtin.copy:
+    content: "{{ git_user_email.stdout }} {{ git_signing_keypair.public_key }}\n"
+    dest: "{{ ansible_env.HOME }}/.config/git/allowed_signers"
+    mode: '0644'
+  when:
+    - git_user_email.rc == 0
+    - git_user_email.stdout | length > 0
