@@ -96,6 +96,20 @@
     - not ansible_check_mode
     - rust_version not in rust_default_toolchain.stdout
 
+# rust-analyzer (LSP) is not part of the default rustup profile
+- name: Install rust-analyzer component
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_env.HOME }}/.cargo/bin/rustup"
+      - component
+      - add
+      - rust-analyzer
+      - --toolchain
+      - "{{ rust_version }}"
+  register: rust_analyzer_add
+  changed_when: "'installing' in rust_analyzer_add.stderr"
+  when: not ansible_check_mode
+
 - name: Remove rustup installer
   ansible.builtin.file:
     path: /tmp/rustup-init.sh

@@ -24,6 +24,10 @@ terraform_version: "1.15.9"
 terraform_checksums:
   linux_amd64: "76edd0b22d2f27d3d2e097cd793209646f719cf60f02ff3af626b07361137da1"
   linux_arm64: "0afa6c29f61ca5ea270e950e43e50ecf2418b598507bf580e8ae76e1e6699b19"
+terraform_ls_version: "0.39.0"
+terraform_ls_checksums:
+  linux_amd64: "7750edc736845fd8c04ff0fc6332423c12d8275b358668c8c17e8aedc43ef971"
+  linux_arm64: "62f32ea22cb78e5e5667ed638ad6e0fbde30ab59228d073c3c9bb249f89c7f5a"
 packer_version: "1.16.0"
 packer_checksums:
   linux_amd64: "5edcd14ab59b535040c512dbecd6ec9ef976a000b073c19d93e4c431c948581e"

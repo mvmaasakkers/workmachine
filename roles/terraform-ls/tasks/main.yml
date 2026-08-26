@@ -1,0 +1,85 @@
+---
+# Terraform-ls role - Install the HashiCorp Terraform Language Server
+
+- name: Check current terraform-ls version
+  ansible.builtin.command: terraform-ls version
+  register: terraform_ls_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Set terraform-ls needs installation flag
+  ansible.builtin.set_fact:
+    terraform_ls_needs_install: "{{ terraform_ls_current_version.rc != 0 or terraform_ls_version not in terraform_ls_current_version.stdout }}"
+
+- name: Set terraform-ls architecture
+  ansible.builtin.set_fact:
+    terraform_ls_arch: "{{ arch_map[ansible_architecture] | default('amd64') }}"
+
+# macOS installation via Homebrew
+- name: Tap HashiCorp Homebrew repository (macOS)
+  community.general.homebrew_tap:
+    name: hashicorp/tap
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Check HashiCorp tap trust status (macOS)
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/brew tap-info hashicorp/tap"
+  register: terraform_ls_tap_info
+  changed_when: false
+  when: ansible_os_family == "Darwin"
+
+- name: Trust HashiCorp tap (macOS)
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/brew trust --tap hashicorp/tap"
+  when:
+    - ansible_os_family == "Darwin"
+    - "'Untrusted' in terraform_ls_tap_info.stdout"
+
+- name: Install terraform-ls (macOS)
+  community.general.homebrew:
+    name: hashicorp/tap/terraform-ls
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via zip download (Debian and Arch: the pinned HashiCorp
+# release keeps versions consistent with vars.yml on both)
+- name: Install terraform-ls (Linux)
+  when:
+    - ansible_os_family in ["Debian", "Archlinux"]
+    - terraform_ls_needs_install
+  become: true
+  block:
+    - name: Download terraform-ls zip
+      ansible.builtin.get_url:
+        url: "https://releases.hashicorp.com/terraform-ls/{{ terraform_ls_version }}/terraform-ls_{{ terraform_ls_version }}_linux_{{ terraform_ls_arch }}.zip"
+        dest: "/tmp/terraform-ls_{{ terraform_ls_version }}.zip"
+        checksum: "sha256:{{ terraform_ls_checksums['linux_' + terraform_ls_arch] }}"
+        mode: '0644'
+        timeout: 60
+
+    - name: Install unzip if needed
+      ansible.builtin.package:
+        name: unzip
+        state: present
+
+    - name: Extract terraform-ls binary
+      ansible.builtin.unarchive:
+        src: "/tmp/terraform-ls_{{ terraform_ls_version }}.zip"
+        dest: /usr/local/bin
+        remote_src: true
+        mode: '0755'
+
+    - name: Clean up downloaded zip
+      ansible.builtin.file:
+        path: "/tmp/terraform-ls_{{ terraform_ls_version }}.zip"
+        state: absent
+
+- name: Verify terraform-ls installation
+  ansible.builtin.command: terraform-ls version
+  register: terraform_ls_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display terraform-ls version
+  ansible.builtin.debug:
+    msg: "terraform-ls installed: {{ terraform_ls_version_output.stdout_lines[0] }}"
+  when: not ansible_check_mode and terraform_ls_version_output.stdout_lines | default([]) | length > 0
