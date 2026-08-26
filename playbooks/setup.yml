@@ -126,6 +126,9 @@
     - role: terraform
       tags: ['terraform', 'iac', 'devops', 'tools']
 
+    - role: terraform-ls
+      tags: ['terraform-ls', 'terraform', 'lsp', 'iac', 'devops', 'tools']
+
     - role: packer
       tags: ['packer', 'iac', 'devops', 'tools']
 

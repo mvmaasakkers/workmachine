@@ -31,7 +31,7 @@ This setup installs and configures:
   - Python 3.14 (+ pip, virtualenv, poetry)
 - **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd, glow
 - **AI Tools**: Claude Code CLI, Codex CLI, OpenCode CLI
-- **DevOps**: Terraform, Packer, Azure CLI, Google Cloud SDK
+- **DevOps**: Terraform (+ terraform-ls), Packer, Azure CLI, Google Cloud SDK
 - **SQL Tools**: sql-formatter, SQLFluff
 
 ## Quick Start
@@ -135,7 +135,7 @@ Available tags:
 - `claude-code`, `claude`, `codex`, `opencode`, `herdr`, `ai`, `tools` - AI coding assistants
 - `mise` - mise tool version manager
 - `termix`, `ssh` - Termix client (SSH server management)
-- `terraform`, `packer`, `iac`, `devops` - Infrastructure as Code tools
+- `terraform`, `terraform-ls`, `packer`, `iac`, `lsp`, `devops` - Infrastructure as Code tools
 - `azure-cli`, `azure`, `gcloud`, `gcp`, `cloud` - Cloud provider CLIs
 - `sql-formatter`, `sqlfluff`, `sql`, `database` - SQL tools
 
@@ -192,6 +192,7 @@ workmachine/
 │   ├── mise/                   # mise (dev tool version manager)
 │   ├── termix/                 # Termix desktop client (SSH management)
 │   ├── terraform/              # HashiCorp Terraform
+│   ├── terraform-ls/           # HashiCorp Terraform Language Server
 │   ├── packer/                 # HashiCorp Packer
 │   ├── azure-cli/              # Microsoft Azure CLI
 │   ├── gcloud/                 # Google Cloud SDK

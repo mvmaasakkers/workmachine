@@ -11,8 +11,8 @@ Pin policies:
   - php_version and python_version are minor lines (e.g. "8.5"), compared
     against the newest stable minor line.
   - composer_version is a major line (e.g. "2").
-When terraform or packer is outdated, the new linux amd64/arm64 SHA256
-checksums are printed ready to paste into vars.yml.
+When terraform, terraform-ls, or packer is outdated, the new linux
+amd64/arm64 SHA256 checksums are printed ready to paste into vars.yml.
 
 Set GITHUB_TOKEN to raise the GitHub API rate limit if needed.
 """
@@ -119,6 +119,7 @@ CHECKS = [
      lambda: github_latest_stable_tag("zsh-users/zsh-syntax-highlighting")),
     ("gh_version", "latest release", lambda: github_latest("cli/cli")),
     ("terraform_version", "latest stable", lambda: hashicorp_latest("terraform")),
+    ("terraform_ls_version", "latest stable", lambda: hashicorp_latest("terraform-ls")),
     ("packer_version", "latest stable", lambda: hashicorp_latest("packer")),
 ]
 
@@ -153,15 +154,16 @@ def main():
         print(f"{key:<34} {current:<14} {latest:<14} {status}")
 
     for key, _current, latest in outdated:
-        product = key.removesuffix("_version")
-        if product in ("terraform", "packer"):
+        var_prefix = key.removesuffix("_version")
+        product = var_prefix.replace("_", "-")
+        if product in ("terraform", "terraform-ls", "packer"):
             try:
                 sums = hashicorp_checksums(product, latest)
             except Exception as exc:
-                print(f"\n{product}_checksums for {latest}: fetch failed: {exc}")
+                print(f"\n{var_prefix}_checksums for {latest}: fetch failed: {exc}")
                 continue
-            print(f"\n{product}_version: \"{latest}\"")
-            print(f"{product}_checksums:")
+            print(f"\n{var_prefix}_version: \"{latest}\"")
+            print(f"{var_prefix}_checksums:")
             for arch, digest in sorted(sums.items()):
                 print(f"  {arch}: \"{digest}\"")
 
