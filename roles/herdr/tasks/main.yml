@@ -28,6 +28,34 @@
     creates: "{{ ansible_env.HOME }}/.local/bin/herdr"
   when: not is_omarchy and not ansible_check_mode
 
+# Keybindings: use ctrl+space as the prefix on every machine, matching the
+# Omarchy 4 default, so the muscle memory is the same everywhere. Only the
+# prefix line is managed; other machine-local settings in config.toml survive.
+- name: Ensure Herdr config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/herdr"
+    state: directory
+    mode: '0755'
+
+- name: Set Herdr prefix key to ctrl+space
+  community.general.ini_file:
+    path: "{{ ansible_env.HOME }}/.config/herdr/config.toml"
+    section: keys
+    option: prefix
+    value: '"ctrl+space"'
+    mode: '0644'
+  register: herdr_prefix_result
+
+- name: Reload Herdr server config if it is running
+  ansible.builtin.shell: |
+    export PATH="$HOME/.local/bin:$PATH"
+    herdr server reload-config
+  args:
+    executable: /bin/bash
+  when: herdr_prefix_result is changed and not ansible_check_mode
+  failed_when: false
+  changed_when: true
+
 - name: Verify Herdr installation
   ansible.builtin.shell: |
     export PATH="$HOME/.local/bin:$PATH"

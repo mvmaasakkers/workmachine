@@ -53,7 +53,8 @@
     creates: "{{ ansible_env.HOME }}/.local/bin/claude"
   when: not ansible_check_mode
 
-# Global settings: strip Claude attribution from commits, PRs, and session URLs.
+# Global settings: strip Claude attribution from commits, PRs, and session URLs,
+# and default to the Concise output style.
 # Merged into any existing settings.json so machine-local settings survive.
 - name: Ensure ~/.claude directory exists
   ansible.builtin.file:
@@ -72,16 +73,17 @@
   register: claude_settings_raw
   when: claude_settings_stat.stat.exists
 
-- name: Merge attribution settings into global Claude settings
+- name: Merge managed settings into global Claude settings
   vars:
-    claude_attribution_settings:
+    claude_managed_settings:
       attribution:
         commit: ""
         pr: ""
         sessionUrl: false
+      outputStyle: "Concise"
     claude_existing_settings: "{{ (claude_settings_raw.content | b64decode | from_json) if claude_settings_stat.stat.exists else {} }}"
   ansible.builtin.copy:
-    content: "{{ claude_existing_settings | combine(claude_attribution_settings, recursive=true) | to_nice_json }}\n"
+    content: "{{ claude_existing_settings | combine(claude_managed_settings, recursive=true) | to_nice_json }}\n"
     dest: "{{ ansible_env.HOME }}/.claude/settings.json"
     mode: '0644'
 
