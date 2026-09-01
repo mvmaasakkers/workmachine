@@ -114,10 +114,6 @@
     - role: github-cli
       tags: ['github-cli', 'gh', 'tools']
 
-    - role: obsidian-vault-replica
-      tags: ['obsidian-vault', 'second-brain', 'tools']
-      when: ansible_hostname == 'ws-linux-01'
-
     - role: mise
       tags: ['mise', 'tools']
 
