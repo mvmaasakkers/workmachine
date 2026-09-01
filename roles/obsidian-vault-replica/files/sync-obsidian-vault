@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+vault="${OBSIDIAN_VAULT_PATH:-$HOME/Documents/Obsidian Vault}"
+lock_file="${XDG_RUNTIME_DIR:-/tmp}/obsidian-vault-sync.lock"
+
+exec 9>"$lock_file"
+flock -n 9 || exit 0
+
+git -C "$vault" fetch --prune origin main
+git -C "$vault" reset --hard origin/main
+git -C "$vault" clean -fd
