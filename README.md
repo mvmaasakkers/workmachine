@@ -29,7 +29,8 @@ This setup installs and configures:
   - Rust 1.98.0 (+ Cargo via rustup)
   - Node.js 24 via nvm (+ npm, yarn, pnpm, Bun)
   - Python 3.14 (+ pip, virtualenv, poetry)
-- **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd, glow
+- **CLI Tools**: curl, wget, unzip, btop, tmux, lazygit, fzf, ripgrep, fd, glow, [Task](https://taskfile.dev) (go-task)
+- **Web server**: [Caddy](https://caddyserver.com) (binary only, service not enabled)
 - **AI Tools**: Claude Code CLI, Codex CLI, OpenCode CLI
 - **DevOps**: Terraform (+ terraform-ls), Packer, Azure CLI, Google Cloud SDK
 - **SQL Tools**: sql-formatter, SQLFluff
@@ -134,6 +135,8 @@ Available tags:
 - `php`, `phpactor`, `go`, `golang`, `rust`, `rustup`, `cargo`, `nodejs`, `node`, `python`, `languages` - Programming languages
 - `claude-code`, `claude`, `codex`, `opencode`, `herdr`, `ai`, `tools` - AI coding assistants
 - `mise` - mise tool version manager
+- `task`, `go-task` - Task runner (Taskfile)
+- `caddy`, `webserver` - Caddy web server
 - `termix`, `ssh` - Termix client (SSH server management)
 - `terraform`, `terraform-ls`, `packer`, `iac`, `lsp`, `devops` - Infrastructure as Code tools
 - `azure-cli`, `azure`, `gcloud`, `gcp`, `cloud` - Cloud provider CLIs
@@ -190,6 +193,8 @@ workmachine/
 │   ├── opencode/               # OpenCode CLI
 │   ├── herdr/                  # Herdr (runtime for coding agents)
 │   ├── mise/                   # mise (dev tool version manager)
+│   ├── task/                   # Task (go-task task runner)
+│   ├── caddy/                  # Caddy web server
 │   ├── termix/                 # Termix desktop client (SSH management)
 │   ├── terraform/              # HashiCorp Terraform
 │   ├── terraform-ls/           # HashiCorp Terraform Language Server
@@ -281,7 +286,7 @@ On [Omarchy](https://omarchy.org/) the playbook deploys the same personal config
 - **Theme sync**: apps follow `omarchy theme set` where Omarchy supports it. The Neovim config links the omarchy-nvim theme integration (`theme.lua`, `all-themes.lua`, hot-reload, transparency) instead of the fixed Catppuccin colorscheme, and the Alacritty `colors.toml` is a symlink to the active theme. tmux and lazygit have no Omarchy theme hook, so they keep their own Catppuccin config.
 - **Skipped on Omarchy** because Omarchy manages them (via pacman or its mise wrappers in `~/.local/bin`): herdr, claude, codex, opencode, gh, nvm/Node.js (global npm packages are installed through the mise-managed Node instead).
 - **zsh is skipped on Arch/Omarchy** for now — Omarchy's shell layer (aliases, mise/starship/zoxide init) lives in bash. Revisit later if wanted.
-- **Not packaged for Arch**: the php `amqp` extension (grab AUR `php-amqp` if a project needs it). Netbird, ClickHouse, gcloud, and Termix install from official release binaries.
+- **Not packaged for Arch**: the php `amqp` extension (grab AUR `php-amqp` if a project needs it). Netbird, ClickHouse, gcloud, Termix, and Task install from official release binaries (the Arch `go-task` package ships the binary as `go-task`, so Task goes to `/usr/local/bin/task` instead).
 
 Note on Omarchy updates: `omarchy update` migrations occasionally patch configs like `~/.config/tmux/tmux.conf` in place. Re-running the playbook restores the repo version; run `make check-local` after a big Omarchy update to review drift before overwriting it.
 

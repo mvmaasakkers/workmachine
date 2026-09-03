@@ -1,0 +1,89 @@
+---
+# Task role - Install Task (go-task), a task runner / Make alternative
+# https://github.com/go-task/task
+# The Arch `go-task` package installs the binary as `go-task` (taskwarrior owns
+# /usr/bin/task), so on Arch the pinned GitHub release is installed to
+# /usr/local/bin/task to keep the `task` command consistent across platforms.
+
+- name: Check current Task version
+  ansible.builtin.command: task --version
+  register: task_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Set architecture for Task
+  ansible.builtin.set_fact:
+    task_arch: "{{ arch_map[ansible_architecture] | default('amd64') }}"
+
+# macOS installation via Homebrew (formula go-task, binary task)
+- name: Install Task (macOS)
+  community.general.homebrew:
+    name: go-task
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux installation via .deb package
+- name: Install Task (Debian)
+  when:
+    - ansible_os_family == "Debian"
+    - task_current_version.rc != 0 or ('v' + task_version) not in task_current_version.stdout
+  become: true
+  block:
+    - name: Download Task .deb package
+      ansible.builtin.get_url:
+        url: "https://github.com/go-task/task/releases/download/v{{ task_version }}/task_{{ task_version }}_linux_{{ task_arch }}.deb"
+        dest: "/tmp/task_{{ task_version }}_linux_{{ task_arch }}.deb"
+        mode: '0644'
+        timeout: 30
+
+    - name: Install Task from .deb package
+      ansible.builtin.apt:
+        deb: "/tmp/task_{{ task_version }}_linux_{{ task_arch }}.deb"
+        state: present
+
+    - name: Clean up downloaded .deb file
+      ansible.builtin.file:
+        path: "/tmp/task_{{ task_version }}_linux_{{ task_arch }}.deb"
+        state: absent
+
+# Arch installation via GitHub release tarball
+- name: Install Task (Arch)
+  when:
+    - is_arch
+    - task_current_version.rc != 0 or ('v' + task_version) not in task_current_version.stdout
+  become: true
+  block:
+    - name: Download Task release tarball
+      ansible.builtin.get_url:
+        url: "https://github.com/go-task/task/releases/download/v{{ task_version }}/task_linux_{{ task_arch }}.tar.gz"
+        dest: "/tmp/task_{{ task_version }}.tar.gz"
+        mode: '0644'
+        timeout: 30
+
+    - name: Extract Task binary
+      ansible.builtin.unarchive:
+        src: "/tmp/task_{{ task_version }}.tar.gz"
+        dest: /usr/local/bin
+        remote_src: true
+        include:
+          - task
+
+    - name: Ensure Task binary is executable
+      ansible.builtin.file:
+        path: /usr/local/bin/task
+        mode: '0755'
+
+    - name: Clean up Task tarball
+      ansible.builtin.file:
+        path: "/tmp/task_{{ task_version }}.tar.gz"
+        state: absent
+
+- name: Verify Task installation
+  ansible.builtin.command: task --version
+  register: task_version_output
+  changed_when: false
+
+- name: Display Task version
+  ansible.builtin.debug:
+    msg: "Task installed: {{ task_version_output.stdout }}"
+  when: not ansible_check_mode and task_version_output.stdout | default('') | length > 0
