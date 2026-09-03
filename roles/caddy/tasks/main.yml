@@ -1,0 +1,73 @@
+---
+# Caddy role - Install the Caddy web server
+# https://github.com/caddyserver/caddy
+# Installs the binary only. The Debian .deb enables and starts caddy.service
+# (listening on :80); it is stopped and disabled here so Caddy behaves like the
+# Homebrew and pacman packages, which leave the service off. Run `caddy run`
+# for a project or enable the service yourself when you need it.
+
+- name: Check current Caddy version
+  ansible.builtin.command: caddy version
+  register: caddy_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Set architecture for Caddy
+  ansible.builtin.set_fact:
+    caddy_arch: "{{ arch_map[ansible_architecture] | default('amd64') }}"
+
+# macOS installation via Homebrew
+- name: Install Caddy (macOS)
+  community.general.homebrew:
+    name: caddy
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Arch installation via pacman (official extra repo)
+- name: Install Caddy (Arch)
+  community.general.pacman:
+    name: caddy
+    state: present
+  become: true
+  when: is_arch
+
+# Linux installation via .deb package from the GitHub release
+- name: Install Caddy (Debian)
+  when:
+    - ansible_os_family == "Debian"
+    - caddy_current_version.rc != 0 or ('v' + caddy_version) not in caddy_current_version.stdout
+  become: true
+  block:
+    - name: Download Caddy .deb package
+      ansible.builtin.get_url:
+        url: "https://github.com/caddyserver/caddy/releases/download/v{{ caddy_version }}/caddy_{{ caddy_version }}_linux_{{ caddy_arch }}.deb"
+        dest: "/tmp/caddy_{{ caddy_version }}_linux_{{ caddy_arch }}.deb"
+        mode: '0644'
+        timeout: 30
+
+    - name: Install Caddy from .deb package
+      ansible.builtin.apt:
+        deb: "/tmp/caddy_{{ caddy_version }}_linux_{{ caddy_arch }}.deb"
+        state: present
+
+    - name: Stop and disable caddy service enabled by the .deb
+      ansible.builtin.systemd_service:
+        name: caddy
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Clean up downloaded .deb file
+      ansible.builtin.file:
+        path: "/tmp/caddy_{{ caddy_version }}_linux_{{ caddy_arch }}.deb"
+        state: absent
+
+- name: Verify Caddy installation
+  ansible.builtin.command: caddy version
+  register: caddy_version_output
+  changed_when: false
+
+- name: Display Caddy version
+  ansible.builtin.debug:
+    msg: "Caddy installed: {{ caddy_version_output.stdout }}"
+  when: not ansible_check_mode and caddy_version_output.stdout | default('') | length > 0

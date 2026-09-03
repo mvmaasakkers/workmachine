@@ -118,6 +118,8 @@ CHECKS = [
     ("zsh_syntax_highlighting_version", "latest stable tag",
      lambda: github_latest_stable_tag("zsh-users/zsh-syntax-highlighting")),
     ("gh_version", "latest release", lambda: github_latest("cli/cli")),
+    ("task_version", "latest release", lambda: github_latest("go-task/task")),
+    ("caddy_version", "latest release", lambda: github_latest("caddyserver/caddy")),
     ("terraform_version", "latest stable", lambda: hashicorp_latest("terraform")),
     ("terraform_ls_version", "latest stable", lambda: hashicorp_latest("terraform-ls")),
     ("packer_version", "latest stable", lambda: hashicorp_latest("packer")),

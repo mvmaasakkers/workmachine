@@ -123,6 +123,12 @@
     - role: lazygit
       tags: ['lazygit', 'git', 'tools']
 
+    - role: task
+      tags: ['task', 'go-task', 'tools']
+
+    - role: caddy
+      tags: ['caddy', 'webserver', 'tools']
+
     - role: terraform
       tags: ['terraform', 'iac', 'devops', 'tools']
 
@@ -183,7 +189,8 @@
           - PHP tools: Composer, Symfony CLI, Phpactor
           - Package managers: composer, Cargo, npm, pip, bun
           - VPN: Netbird client (not connected)
-          - CLI tools: GitHub CLI (gh), Claude Code CLI, Codex CLI, OpenCode CLI, lazygit (with syntax highlighting), glow
+          - CLI tools: GitHub CLI (gh), Claude Code CLI, Codex CLI, OpenCode CLI, lazygit (with syntax highlighting), glow, Task {{ task_version }}
+          - Web server: Caddy {{ caddy_version }} (service not enabled)
           - Tool version manager: mise (latest)
           - Agent runtime: Herdr (latest)
           - SSH management: Termix client (latest)
